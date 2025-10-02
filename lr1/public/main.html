@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tetris — Игра</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>Игрок: <strong id="playerName"></strong></div>
+    <div>Очки: <span id="score">0</span></div>
+    <div>Уровень: <span id="level">1</span></div>
+    <div>Следующая фигура:</div>
+    <div id="nextPiece" class="next-canvas"></div>
+    <div class="controls">
+      <button id="btnPause">Пауза</button>
+      <button id="btnRestart">Рестарт</button>
+      <button id="btnScores">Рекорды</button>
+    </div>
+  </header>
+
+  <main class="game-area">
+    <canvas id="playfield" width="300" height="600"></canvas>
+    <aside class="help">
+      <h3>Управление</h3>
+      <ul>
+        <li>← → — движение вбок</li>
+        <li>↑ — поворот на 90°</li>
+        <li>↓ — мягкий дроп</li>
+        <li>Пробел — уронить (hard drop)</li>
+      </ul>
+    </aside>
+  </main>
+
+  <div id="gameOver" class="overlay hidden">
+    <div class="card">
+      <h2>Игра окончена</h2>
+      <p>Ваш счёт: <span id="finalScore">0</span></p>
+      <label>Сохранить в рекорды? (имя подтянуто автоматически)</label>
+      <div class="row">
+        <button id="saveScore">Сохранить</button>
+        <button id="backToLogin">На ввод имени</button>
+        <button id="playAgain">Играть снова</button>
+      </div>
+    </div>
+  </div>
+
+<script src="tetris.js"></script>
+</body>
+</html>
+

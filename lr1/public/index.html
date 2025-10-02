@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Вход — Tetris</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="centered">
+  <main class="card">
+    <h1>Добро пожаловать в Tetris</h1>
+    <form id="loginForm" onsubmit="onSubmit(event)">
+      <label>
+        Введите имя:
+        <input id="username" name="username" placeholder="Имя пользователя" required>
+      </label>
+      <div class="row">
+        <button type="submit">Ввести и начать</button>
+        <button type="button" onclick="goToScores()">Таблица рекордов</button>
+      </div>
+    </form>
+    <p class="muted">Имя сохраняется локально и подставляется при следующем посещении.</p>
+  </main>
+
+<script>
+  const key = "tetris.username";
+  const nameInput = document.getElementById("username");
+  nameInput.value = localStorage.getItem(key) || "";
+
+  function onSubmit(e) {
+    e.preventDefault();
+    const v = nameInput.value.trim();
+    if (!v) return alert("Введите имя пользователя");
+    localStorage.setItem(key, v);
+    window.location.href = "main.html";
+  }
+
+  function goToScores() {
+    window.location.href = "scores.html";
+  }
+</script>
+</body>
+</html>
+
