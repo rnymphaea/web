@@ -1,350 +1,260 @@
-(() => {
-  const COLS = 10, ROWS = 20;
-  const CELL = 30;
-  const START_SPEED = 800;
-  const LEVEL_STEP = 1;
-  const LINES_PER_LEVEL = 10;
-  const USER_KEY = "tetris.username";
-  const HS_KEY = "tetris.highscores";
-
-  const canvas = document.getElementById("playfield");
-  canvas.width = COLS * CELL;
-  canvas.height = ROWS * CELL;
-  const ctx = canvas.getContext("2d");
-  const nextDiv = document.getElementById("nextPiece");
-  nextDiv.innerHTML = "<canvas id='nextCanvas' width='120' height='120'></canvas>";
-  const nextCanvas = document.getElementById("nextCanvas");
-  const nCtx = nextCanvas.getContext("2d");
-
-  const playerNameEl = document.getElementById("playerName");
-  const scoreEl = document.getElementById("score");
-  const levelEl = document.getElementById("level");
-  const gameOverOverlay = document.getElementById("gameOver");
-  const finalScoreEl = document.getElementById("finalScore");
-
-  document.getElementById("btnPause").addEventListener("click", togglePause);
-  document.getElementById("btnRestart").addEventListener("click", restart);
-  document.getElementById("btnScores").addEventListener("click", ()=>location.href="scores.html");
-  document.getElementById("saveScore").addEventListener("click", saveScore);
-  document.getElementById("backToLogin").addEventListener("click", ()=>location.href="index.html");
-  document.getElementById("playAgain").addEventListener("click", ()=>{ restart(); hideGameOver(); });
-
-  const playerName = localStorage.getItem(USER_KEY) || "Игрок";
-  playerNameEl.textContent = playerName;
-
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function beep(freq=440, dur=0.06, type='sine', gain=0.06){
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    o.type = type; o.frequency.value = freq;
-    g.gain.value = gain;
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start();
-    o.stop(audioCtx.currentTime + dur);
-  }
-
-  const TETROMINO = {
-    I: { color:'#00f0f0', blocks: [[0,1],[1,1],[2,1],[3,1]] },
-    J: { color:'#0000f0', blocks: [[0,0],[0,1],[1,1],[2,1]] },
-    L: { color:'#f0a000', blocks: [[2,0],[0,1],[1,1],[2,1]] },
-    O: { color:'#f0f000', blocks: [[1,0],[2,0],[1,1],[2,1]] },
-    S: { color:'#00f000', blocks: [[1,0],[2,0],[0,1],[1,1]] },
-    T: { color:'#a000f0', blocks: [[1,0],[0,1],[1,1],[2,1]] },
-    Z: { color:'#f00000', blocks: [[0,0],[1,0],[1,1],[2,1]] },
-  };
-  const NAMES = Object.keys(TETROMINO);
-
-  function createEmpty() {
-    return Array.from({length:ROWS}, ()=>Array(COLS).fill(null));
-  }
-
-  function bagGenerator(){
-    let bag = [];
-    return function nextFromBag(){
-      if(bag.length===0){
-        bag = shuffle(NAMES.slice());
-      }
-      return bag.pop();
-    };
-  }
-  function shuffle(a){
-    for(let i=a.length-1;i>0;i--){
-      const j=Math.floor(Math.random()*(i+1));
-      [a[i],a[j]]=[a[j],a[i]];
+class Tetris {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.nextCanvas = document.getElementById('nextCanvas');
+        this.nextCtx = this.nextCanvas.getContext('2d');
+        
+        this.board = Array(20).fill().map(() => Array(10).fill(0));
+        this.currentPiece = this.randomPiece();
+        this.nextPiece = this.randomPiece();
+        this.score = 0;
+        this.level = 1;
+        this.gameOver = false;
+        
+        this.pieceX = 3;
+        this.pieceY = 0;
+        
+        this.setupEventListeners();
+        this.gameLoop();
     }
-    return a;
-  }
 
-  const nextNameGen = bagGenerator();
+    pieces = [
+        [[1,1,1,1]], // I
+        [[1,1],[1,1]], // O
+        [[1,1,1],[0,1,0]], // T
+        [[1,1,1],[1,0,0]], // L
+        [[1,1,1],[0,0,1]], // J
+        [[0,1,1],[1,1,0]], // S
+        [[1,1,0],[0,1,1]]  // Z
+    ];
 
-  let grid = createEmpty();
-  let current = null;
-  let next = null;
-  let dropTimer = null;
-  let speed = START_SPEED;
-  let score = 0;
-  let level = 1;
-  let linesCleared = 0;
-  let paused = false;
-  let running = false;
-
-  function makePiece(name){
-    const def = TETROMINO[name];
-    return {
-      name,
-      color: def.color,
-      coords: def.blocks.map(([x,y])=>[x,y]),
-      x: Math.floor((COLS - 4) / 2),
-      y: -1, 
-      rotation: 0
-    };
-  }
-
-  function rotateCoords(coords){
-    return coords.map(([x,y])=>[y, -x]);
-  }
-
-  function getCells(piece){
-    return piece.coords.map(([bx,by])=>[piece.x + bx, piece.y + by]);
-  }
-
-  function collides(piece, gx = grid){
-    for(const [cx,cy] of getCells(piece)){
-      if(cx < 0 || cx >= COLS) return true;
-      if(cy >= ROWS) return true;
-      if(cy >= 0 && gx[cy][cx]) return true;
+    randomPiece() {
+        const piece = this.pieces[Math.floor(Math.random() * this.pieces.length)];
+        return {
+            shape: piece,
+            color: `hsl(${Math.random() * 360}, 70%, 60%)`
+        };
     }
-    return false;
-  }
 
-  function lockPiece(piece){
-    for(const [cx,cy] of getCells(piece)){
-      if(cy>=0 && cy<ROWS && cx>=0 && cx<COLS){
-        grid[cy][cx] = { color: piece.color };
-      } else if (cy < 0) {
-        endGame();
-      }
+    draw() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.nextCtx.clearRect(0, 0, this.nextCanvas.width, this.nextCanvas.height);
+
+        this.drawBoard();
+        
+        this.drawPiece(this.ctx, this.currentPiece, this.pieceX, this.pieceY);
+        
+        this.drawNextPiece();
+        
+        this.updateInfo();
     }
-  }
 
-  function clearLines(){
-    let removed = 0;
-    for(let r=ROWS-1;r>=0;){
-      if(grid[r].every(cell => cell !== null)){
-        grid.splice(r,1);
-        grid.unshift(Array(COLS).fill(null));
-        removed++;
-      } else r--;
-    }
-    if(removed>0){
-      linesCleared += removed;
-      const points = [0,100,300,500,800][removed] || (removed*300);
-      score += points * level;
-      const newLevel = Math.floor(linesCleared / LINES_PER_LEVEL) + 1;
-      if(newLevel > level){
-        level = newLevel;
-        speed = Math.max(80, START_SPEED - (level-1)*70);
-        beep(880, 0.08, 'square', 0.08);
-      } else {
-        beep(720, 0.06, 'sine', 0.05);
-      }
-      updateUI();
-    }
-  }
-
-  function spawn(){
-    current = next || makePiece(nextNameGen());
-    next = makePiece(nextNameGen());
-    current.x = Math.floor((COLS - 4) / 2);
-    current.y = -2;
-    if(collides(current)) endGame();
-    drawNext();
-  }
-
-  function stepDown() {
-    if(!current) return;
-    current.y += 1;
-    if(collides(current)){
-      current.y -= 1;
-      lockPiece(current);
-      clearLines();
-      spawn();
-    }
-    draw();
-  }
-
-  function hardDrop() {
-    if(!current) return;
-    while(!collides(current)){
-      current.y += 1;
-    }
-    current.y -= 1;
-    lockPiece(current);
-    clearLines();
-    score += 2 * level;
-    spawn();
-    updateUI();
-    beep(1000,0.03,'sine',0.06);
-    draw();
-  }
-
-  function move(deltaX) {
-    if(!current) return;
-    current.x += deltaX;
-    if(collides(current)) current.x -= deltaX;
-    draw();
-  }
-
-  function rotatePiece() {
-    if(!current) return;
-    const cx = current.coords.map(c => c.slice());
-    const rotated = rotateCoords(cx);
-    const oldCoords = current.coords;
-    current.coords = rotated;
-    const kicks = [[0,0],[-1,0],[1,0],[0,-1],[0,1],[-2,0],[2,0]];
-    let ok = false;
-    for(const [kx,ky] of kicks){
-      current.x += kx;
-      current.y += ky;
-      if(!collides(current)){ ok = true; break; }
-      current.x -= kx;
-      current.y -= ky;
-    }
-    if(!ok) current.coords = oldCoords;
-    draw();
-  }
-
-  function drawCell(x,y,color){
-    ctx.fillStyle = color;
-    ctx.fillRect(x*CELL+1, y*CELL+1, CELL-2, CELL-2);
-    ctx.strokeStyle = "rgba(0,0,0,0.25)";
-    ctx.strokeRect(x*CELL+1, y*CELL+1, CELL-2, CELL-2);
-  }
-
-  function draw() {
-    ctx.fillStyle = "#041022";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    for(let r=0;r<ROWS;r++){
-      for(let c=0;c<COLS;c++){
-        if(grid[r][c]){
-          drawCell(c,r,grid[r][c].color);
-        } else {
-          ctx.strokeStyle = "rgba(255,255,255,0.02)";
-          ctx.strokeRect(c*CELL, r*CELL, CELL, CELL);
+    drawBoard() {
+        for (let y = 0; y < 20; y++) {
+            for (let x = 0; x < 10; x++) {
+                if (this.board[y][x]) {
+                    this.ctx.fillStyle = this.board[y][x];
+                    this.ctx.fillRect(x * 30, y * 30, 29, 29);
+                }
+            }
         }
-      }
     }
 
-    if(current){
-      for(const [cx,cy] of getCells(current)){
-        if(cy >= 0) drawCell(cx, cy, current.color);
-      }
+    drawPiece(ctx, piece, x, y) {
+        ctx.fillStyle = piece.color;
+        piece.shape.forEach((row, dy) => {
+            row.forEach((value, dx) => {
+                if (value) {
+                    ctx.fillRect((x + dx) * 30, (y + dy) * 30, 29, 29);
+                }
+            });
+        });
     }
-  }
 
-  function drawNext(){
-    nCtx.clearRect(0,0,nextCanvas.width,nextCanvas.height);
-    nCtx.fillStyle = "#05121a";
-    nCtx.fillRect(0,0,nextCanvas.width,nextCanvas.height);
-    if(!next) return;
-    const box = 4;
-    const scale = 20;
-    const offsetX = (nextCanvas.width - box*scale)/2;
-    const offsetY = (nextCanvas.height - box*scale)/2;
-    for(const [bx,by] of next.coords){
-      nCtx.fillStyle = next.color;
-      nCtx.fillRect(offsetX + bx*scale + 2, offsetY + by*scale + 2, scale-4, scale-4);
+    drawNextPiece() {
+        this.nextCtx.fillStyle = this.nextPiece.color;
+        this.nextPiece.shape.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value) {
+                    this.nextCtx.fillRect(x * 20, y * 20, 19, 19);
+                }
+            });
+        });
     }
-  }
 
-  function updateUI(){
-    scoreEl.textContent = score;
-    levelEl.textContent = level;
-  }
-
-  function start(){
-    if(running) return;
-    running = true;
-    paused = false;
-    grid = createEmpty();
-    score = 0; level = 1; linesCleared = 0;
-    speed = START_SPEED;
-    next = makePiece(nextNameGen());
-    spawn();
-    scheduleDrop();
-    updateUI();
-    draw();
-  }
-
-  function scheduleDrop(){
-    if(dropTimer) clearInterval(dropTimer);
-    dropTimer = setInterval(() => {
-      if(!paused) stepDown();
-    }, speed);
-  }
-
-  function togglePause(){
-    paused = !paused;
-    document.getElementById("btnPause").textContent = paused ? "Продолжить" : "Пауза";
-  }
-
-  function restart(){
-    running = false;
-    if(dropTimer) clearInterval(dropTimer);
-    grid = createEmpty();
-    next = null;
-    current = null;
-    score = 0; level = 1; linesCleared = 0;
-    start();
-  }
-
-  function endGame(){
-    running = false;
-    if(dropTimer) clearInterval(dropTimer);
-    finalScoreEl.textContent = score;
-    showGameOver();
-    beep(140,0.25,'sine',0.15);
-  }
-
-  function showGameOver(){
-    gameOverOverlay.classList.remove("hidden");
-  }
-  function hideGameOver(){ gameOverOverlay.classList.add("hidden"); }
-
-  function saveScore(){
-    const name = localStorage.getItem(USER_KEY) || "Игрок";
-    const raw = localStorage.getItem(HS_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    arr.push({ name, score, date: (new Date()).toLocaleString() });
-    arr.sort((a,b)=>b.score - a.score);
-    const top = arr.slice(0,10);
-    localStorage.setItem(HS_KEY, JSON.stringify(top));
-    alert("Сохранено!");
-  }
-
-  document.addEventListener("keydown", (e) => {
-    if(!running) start();
-    if(e.key === "ArrowLeft") { move(-1); e.preventDefault(); }
-    else if(e.key === "ArrowRight") { move(1); e.preventDefault(); }
-    else if(e.key === "ArrowDown") { // soft drop
-      stepDown(); e.preventDefault(); score += 0; updateUI(); beep(600,0.02,'sine',0.01);
+    movePiece(dx, dy) {
+        if (!this.collision(this.pieceX + dx, this.pieceY + dy, this.currentPiece.shape)) {
+            this.pieceX += dx;
+            this.pieceY += dy;
+            return true;
+        }
+        return false;
     }
-    else if(e.key === "ArrowUp") { rotatePiece(); e.preventDefault(); }
-    else if(e.code === "Space") { hardDrop(); e.preventDefault(); }
-  });
 
-  start();
+    rotatePiece() {
+        const rotated = this.currentPiece.shape[0].map((_, i) =>
+            this.currentPiece.shape.map(row => row[i]).reverse()
+        );
+        
+        if (!this.collision(this.pieceX, this.pieceY, rotated)) {
+            this.currentPiece.shape = rotated;
+        }
+    }
 
-  function resizeCanvasForHiDPI() {
-    const dpr = window.devicePixelRatio || 1;
-    if(dpr === 1) return;
-    const w = canvas.width, h = canvas.height;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    canvas.style.width = w + "px";
-    canvas.style.height = h + "px";
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
+    collision(x, y, shape) {
+        for (let dy = 0; dy < shape.length; dy++) {
+            for (let dx = 0; dx < shape[dy].length; dx++) {
+                if (shape[dy][dx] &&
+                    (x + dx < 0 || x + dx >= 10 || 
+                     y + dy >= 20 || 
+                     (y + dy >= 0 && this.board[y + dy][x + dx]))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
-})();
+    lockPiece() {
+        this.currentPiece.shape.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value && this.pieceY + y >= 0) {
+                    this.board[this.pieceY + y][this.pieceX + x] = this.currentPiece.color;
+                }
+            });
+        });
 
+        this.clearLines();
+        this.currentPiece = this.nextPiece;
+        this.nextPiece = this.randomPiece();
+        this.pieceX = 3;
+        this.pieceY = 0;
+
+        if (this.collision(this.pieceX, this.pieceY, this.currentPiece.shape)) {
+            this.gameOver = true;
+            this.showHighscores();
+        }
+    }
+
+    clearLines() {
+        let linesCleared = 0;
+        
+        for (let y = 19; y >= 0; y--) {
+            if (this.board[y].every(cell => cell !== 0)) {
+                this.board.splice(y, 1);
+                this.board.unshift(Array(10).fill(0));
+                linesCleared++;
+                y++;
+            }
+        }
+
+        if (linesCleared > 0) {
+            this.score += linesCleared * 100 * this.level;
+            this.level = Math.floor(this.score / 1000) + 1;
+        }
+    }
+
+    drop() {
+        while (this.movePiece(0, 1)) {}
+        this.lockPiece();
+    }
+
+    updateInfo() {
+        document.getElementById('score').textContent = this.score;
+        document.getElementById('level').textContent = this.level;
+        document.getElementById('usernameDisplay').textContent = 
+            localStorage.getItem('tetris.username');
+    }
+
+    setupEventListeners() {
+        document.addEventListener('keydown', (event) => {
+            if (this.gameOver) return;
+
+            switch(event.key) {
+                case 'ArrowLeft':
+                    this.movePiece(-1, 0);
+                    break;
+                case 'ArrowRight':
+                    this.movePiece(1, 0);
+                    break;
+                case 'ArrowDown':
+                    this.movePiece(0, 1);
+                    break;
+                case 'ArrowUp':
+                    this.rotatePiece();
+                    break;
+                case ' ':
+                    this.drop();
+                    break;
+            }
+            this.draw();
+        });
+    }
+
+    gameLoop() {
+        if (!this.gameOver) {
+            if (!this.movePiece(0, 1)) {
+                this.lockPiece();
+            }
+            this.draw();
+            setTimeout(() => this.gameLoop(), 1000 / this.level);
+        }
+    }
+
+    showHighscores() {
+        const highscores = JSON.parse(localStorage.getItem('tetris.highscores') || '[]');
+        const username = localStorage.getItem('tetris.username');
+        
+        highscores.push({
+            name: username,
+            score: this.score,
+            date: new Date().toLocaleDateString()
+        });
+
+        highscores.sort((a, b) => b.score - a.score);
+        
+        localStorage.setItem('tetris.highscores', JSON.stringify(highscores.slice(0, 10)));
+
+        this.displayHighscores(highscores);
+    }
+
+    displayHighscores(highscores) {
+    const overlay = document.createElement('div');
+    overlay.className = 'highscores-overlay';
+    
+    overlay.innerHTML = `
+        <div class="highscores-container">
+            <h2>Игра Окончена!</h2>
+            <h3>Ваш счет: ${this.score}</h3>
+            
+            <h3>Таблица рекордов:</h3>
+            <ol class="highscores-list">
+                ${highscores.slice(0, 10).map((score, index) => `
+                    <li class="highscore-item">
+                        <span class="highscore-rank">${index + 1}.</span>
+                        <span class="highscore-name">${score.name}</span>
+                        <span class="highscore-score">${score.score}</span>
+                        <span class="highscore-date">${score.date}</span>
+                    </li>
+                `).join('')}
+            </ol>
+            
+            <div class="button-group">
+                <button class="menu-button primary-button" onclick="location.reload()">
+                    Играть снова
+                </button>
+                <button class="menu-button secondary-button" onclick="window.location='index.html'">
+                    Новый игрок
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+}
+}
+
+window.addEventListener('load', () => {
+    new Tetris();
+});

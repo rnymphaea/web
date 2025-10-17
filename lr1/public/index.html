@@ -1,46 +1,95 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Вход — Tetris</title>
-<link rel="stylesheet" href="styles.css">
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тетрис - Вход</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="centered">
-  <main class="centered">
-    <div class="card">
-    <h1>Добро пожаловать в Tetris</h1>
-    <form id="loginForm" onsubmit="onSubmit(event)">
-      <label>
-        Введите имя:
-        <input id="username" name="username" placeholder="Имя пользователя" required>
-      </label>
-      <div class="row">
-        <button type="submit">Ввести и начать</button>
-        <button type="button" onclick="goToScores()">Таблица рекордов</button>
-      </div>
-    </form>
-    <p class="muted">Имя сохраняется локально и подставляется при следующем посещении.</p>
+<body class="login-page">
+    <div class="login-container">
+        <div class="logo">
+            <span class="tetris-block" style="background: #667eea;"></span>
+            <span class="tetris-block" style="background: #764ba2;"></span>
+            <span class="tetris-block" style="background: #f093fb;"></span>
+            <span class="tetris-block" style="background: #f5576c;"></span>
+        </div>
+        
+        <h1 class="game-title">ТЕТРИС</h1>
+        <p class="subtitle">Классическая игра в современном стиле</p>
+
+        <form id="loginForm" class="login-form">
+            <div class="form-group">
+                <label for="username">ВВЕДИТЕ ВАШЕ ИМЯ:</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    class="username-input" 
+                    placeholder="Введите ваше имя здесь..."
+                    required
+                >
+            </div>
+            
+            <button type="submit" class="start-button">
+                НАЧАТЬ ИГРУ
+            </button>
+        </form>
+
+        <div class="instructions">
+            <h3>Управление в игре:</h3>
+            <ul>
+                <li><span class="key">←</span> <span class="key">→</span> : Движение влево/вправо</li>
+                <li><span class="key">↑</span> : Поворот фигуры</li>
+                <li><span class="key">↓</span> : Ускорение падения</li>
+                <li><span class="key">Пробел</span> : Мгновенное падение</li>
+            </ul>
+        </div>
     </div>
-  </main>
 
-<script>
-  const key = "tetris.username";
-  const nameInput = document.getElementById("username");
-  nameInput.value = localStorage.getItem(key) || "";
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const usernameInput = document.getElementById('username');
+            const savedUsername = localStorage.getItem('tetris.username');
+            
+            if (savedUsername) {
+                usernameInput.value = savedUsername;
+            }
+            
+            usernameInput.focus();
+            usernameInput.addEventListener('focus', function() {
+                this.select();
+            });
+        });
 
-  function onSubmit(e) {
-    e.preventDefault();
-    const v = nameInput.value.trim();
-    if (!v) return alert("Введите имя пользователя");
-    localStorage.setItem(key, v);
-    window.location.href = "main.html";
-  }
-
-  function goToScores() {
-    window.location.href = "scores.html";
-  }
-</script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const usernameInput = document.getElementById('username');
+            const username = usernameInput.value.trim();
+            
+            if (username) {
+                localStorage.setItem('tetris.username', username);
+                
+                const button = document.querySelector('.start-button');
+                button.textContent = 'ЗАГРУЗКА...';
+                button.style.opacity = '0.7';
+                button.disabled = true;
+                
+                setTimeout(() => {
+                    window.location.href = 'main.html';
+                }, 500);
+            } else {
+                usernameInput.style.borderColor = '#f5576c';
+                usernameInput.style.animation = 'shake 0.5s';
+                
+                setTimeout(() => {
+                    usernameInput.style.animation = '';
+                }, 500);
+                
+                usernameInput.focus();
+            }
+        });
+    </script>
 </body>
 </html>
-
