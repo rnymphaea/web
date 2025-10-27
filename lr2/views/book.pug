@@ -1,0 +1,162 @@
+extends layout
+
+block content
+  .container
+    .book-card
+      h2 Карточка книги
+      .book-info
+        .info-row
+          strong Название:
+          span= book.title
+        .info-row
+          strong Автор:
+          span= book.author
+        .info-row
+          strong Год издания:
+          span= book.year
+        .info-row
+          strong Статус:
+          span(class=book.available ? 'status-available' : 'status-borrowed')
+            = book.available ? 'В наличии' : 'Выдана'
+        
+        if !book.available
+          .info-row
+            strong Читатель:
+            span= book.borrowedBy
+          .info-row
+            strong Вернуть до:
+            - const isOverdue = book.dueDate && new Date(book.dueDate) < new Date()
+            span(class=isOverdue ? 'overdue' : '')= book.dueDate + (isOverdue ? ' (ПРОСРОЧЕНО)' : '')
+
+      .book-actions
+        if book.available
+          button(type="button", onclick=`borrowBook(${book.id})`)
+            i.fas.fa-hand-holding
+            | Выдать книгу
+        else
+          button(type="button", onclick=`returnBook(${book.id})`)
+            i.fas.fa-undo
+            | Вернуть книгу
+        
+        button(type="button", onclick="showEditForm()")
+          i.fas.fa-edit
+          | Редактировать
+        
+        button(type="button", onclick=`deleteBook(${book.id})`).danger
+          i.fas.fa-trash
+          | Удалить
+
+      .edit-form#editForm(style="display: none;")
+        h3 Редактировать книгу
+        form(id="editBookForm")
+          input(type="text", name="title", value=book.title, required)
+          input(type="text", name="author", value=book.author, required)
+          input(type="number", name="year", value=book.year, required)
+          .form-buttons
+            button(type="submit") Сохранить
+            button(type="button", onclick="hideEditForm()") Отмена
+
+    a.back-link(href="/") 
+      i.fas.fa-arrow-left
+      | Назад к списку
+
+  script.
+    // Functions for book page
+    function showEditForm() {
+      document.getElementById('editForm').style.display = 'block';
+    }
+
+    function hideEditForm() {
+      document.getElementById('editForm').style.display = 'none';
+    }
+
+    // Edit book form submission
+    document.getElementById('editBookForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const bookData = {
+        title: formData.get('title'),
+        author: formData.get('author'),
+        year: parseInt(formData.get('year'))
+      };
+      
+      const bookId = window.location.pathname.split('/').pop();
+      
+      try {
+        const response = await fetch(`/api/books/${bookId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(bookData)
+        });
+        
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Ошибка обновления книги');
+        }
+      } catch (error) {
+        console.error('Error updating book:', error);
+        alert('Ошибка обновления книги');
+      }
+    });
+
+    // Delete book function for book page
+    async function deleteBook(bookId) {
+      if (!confirm('Вы уверены, что хотите удалить эту книгу?')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/books/${bookId}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          window.location.href = '/';
+        } else {
+          alert('Ошибка удаления книги');
+        }
+      } catch (error) {
+        console.error('Error deleting book:', error);
+        alert('Ошибка удаления книги');
+      }
+    }
+
+    // Borrow book function for book page
+    function borrowBook(bookId) {
+      currentBookId = bookId;
+      document.getElementById('readerDialog').showModal();
+    }
+
+    // Return book function for book page
+    async function returnBook(bookId) {
+      if (!confirm('Подтвердить возврат книги?')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/books/${bookId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            available: true,
+            borrowedBy: '',
+            dueDate: ''
+          })
+        });
+        
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Ошибка возврата книги');
+        }
+      } catch (error) {
+        console.error('Error returning book:', error);
+        alert('Ошибка возврата книги');
+      }
+    }

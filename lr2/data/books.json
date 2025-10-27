@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "title": "Война и мир",
+    "author": "Лев Толстой",
+    "year": 1869,
+    "available": true,
+    "borrowedBy": "",
+    "dueDate": ""
+  },
+  {
+    "id": 2,
+    "title": "Преступление и наказание",
+    "author": "Фёдор Достоевский",
+    "year": 1866,
+    "available": false,
+    "borrowedBy": "Иван Иванов",
+    "dueDate": "2024-02-15"
+  },
+  {
+    "id": 3,
+    "title": "Мастер и Маргарита",
+    "author": "Михаил Булгаков",
+    "year": 1967,
+    "available": true,
+    "borrowedBy": "",
+    "dueDate": ""
+  }
+]

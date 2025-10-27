@@ -1,0 +1,30 @@
+doctype html
+html(lang="ru")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Домашняя библиотека
+    link(rel="stylesheet", href="/css/style.css")
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css")
+  body
+    header
+      h1 
+        i.fas.fa-book
+        | Домашняя библиотека
+    main
+      block content
+
+    dialog#readerDialog
+      h2 Выдать книгу читателю
+      form(id="readerForm")
+        label
+          | Имя читателя:
+          input(type="text", id="readerName", required)
+        label
+          | Дата возврата:
+          input(type="date", id="dueDate", required)
+        .dialog-buttons
+          button(type="submit") Выдать
+          button(type="button", onclick="closeReaderDialog()") Отмена
+
+    script(src="/js/app.js")

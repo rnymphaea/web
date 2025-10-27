@@ -1,0 +1,41 @@
+extends layout
+
+block content
+  .container
+    .filters
+      h2 Фильтры
+      .filter-group
+        label
+          input(type="checkbox", id="availableFilter")
+          | В наличии
+        label
+          input(type="checkbox", id="overdueFilter")
+          | Просроченные
+      button(type="button", onclick="applyFilters()") Применить фильтры
+    
+    .book-list
+      .list-header
+        h2 Список книг
+        button(type="button", onclick="showAddBookForm()")
+          i.fas.fa-plus
+          | Добавить книгу
+      
+      table
+        thead
+          tr
+            th Название
+            th Автор
+            th Год
+            th Статус
+            th Действия
+        tbody#booksTable
+
+    .add-book-form#addBookForm(style="display: none;")
+      h3 Добавить новую книгу
+      form(id="newBookForm")
+        input(type="text", name="title", placeholder="Название", required)
+        input(type="text", name="author", placeholder="Автор", required)
+        input(type="number", name="year", placeholder="Год издания", required)
+        .form-buttons
+          button(type="submit") Добавить
+          button(type="button", onclick="hideAddBookForm()") Отмена
