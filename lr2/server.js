@@ -6,13 +6,11 @@ const app = express();
 const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'books.json');
 
-// Middleware
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Helper functions
 async function readBooks() {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8');
@@ -26,7 +24,6 @@ async function writeBooks(books) {
   await fs.writeFile(DATA_FILE, JSON.stringify(books, null, 2));
 }
 
-// Routes
 app.get('/', async (req, res) => {
   try {
     const books = await readBooks();
@@ -54,12 +51,10 @@ app.get('/book/:id', async (req, res) => {
   }
 });
 
-// REST API
 app.get('/api/books', async (req, res) => {
   try {
     let books = await readBooks();
     
-    // Filtering
     if (req.query.available === 'true') {
       books = books.filter(book => book.available);
     }
