@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "content": "Hello everyone!",
+    "date": "2023-10-01T10:00:00Z",
+    "status": "active"
+  },
+  {
+    "id": 2,
+    "userId": 2,
+    "content": "Great to be here!",
+    "date": "2023-10-01T11:00:00Z",
+    "status": "active"
+  }
+]

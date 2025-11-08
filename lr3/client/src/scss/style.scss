@@ -1,0 +1,55 @@
+$primary-color: #007bff;
+$danger-color: #dc3545;
+$success-color: #28a745;
+
+@mixin button-style($bg-color) {
+  background-color: $bg-color;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.user-list {
+  width: 100%;
+  
+  .user-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      
+      img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin-right: 15px;
+      }
+      
+      .user-details {
+        flex: 1;
+      }
+    }
+    
+    .user-actions {
+      margin-top: 10px;
+      
+      .btn-primary {
+        @include button-style($primary-color);
+      }
+      
+      .btn-danger {
+        @include button-style($danger-color);
+      }
+    }
+  }
+}
