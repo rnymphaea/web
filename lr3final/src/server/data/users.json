@@ -3,8 +3,8 @@
     "id": 1,
     "firstName": "Александр",
     "lastName": "Смирнов",
-    "role": "admin",
-    "status": "unconfirmed",
+    "role": "user",
+    "status": "active",
     "friends": [
       2,
       3,
