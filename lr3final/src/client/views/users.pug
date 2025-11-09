@@ -31,14 +31,18 @@ block content
                 option(value="active") Активный
                 option(value="blocked") Заблокирован
                 option(value="unconfirmed") Не подтверждён
-        .modal-footer
-          button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Закрыть
-          button#saveUserChanges.btn.btn-primary(type="button") Сохранить изменения
 
 block templates
   template#userCardTemplate
     .card.mb-3.p-3
-      h5.user-name.mb-2
+      img.user-avatar.mb-2(src="" alt="Avatar" width="60" height="60")
+      h5.user-name.mb-1
+      p.mb-1
+        strong email: 
+        span.user-email
+      p.mb-1
+        strong Дата рождения: 
+        span.user-birthdate
       p.mb-1
         strong Роль: 
         span.user-role

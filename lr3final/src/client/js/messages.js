@@ -1,14 +1,8 @@
-class MessagesManager {
+class MessagesHandler {
     constructor() {
         this.userId = new URLSearchParams(window.location.search).get('userId');
-        this.messages = [];
-        this.messageCardTemplate = document.getElementById('messageCardTemplate');
-
-        if (!this.messageCardTemplate) {
-            console.error('Template #messageCardTemplate not found!');
-            return;
-        }
-
+        this.messagesList = [];
+        this.template = document.getElementById('messageCardTemplate');
         this.init();
     }
 
@@ -17,16 +11,15 @@ class MessagesManager {
             window.location.href = '/users.html';
             return;
         }
-
-        this.setupEventListeners();
-        await this.loadMessages();
+        this.bindEvents();
+        await this.fetchMessages();
         this.renderMessages();
     }
 
-    async loadMessages() {
+    async fetchMessages() {
         try {
             const response = await fetch(`/api/messages/${this.userId}`);
-            this.messages = await response.json();
+            this.messagesList = await response.json();
         } catch (error) {
             console.error('Failed to load messages:', error);
         }
@@ -34,42 +27,33 @@ class MessagesManager {
 
     renderMessages() {
         const container = document.getElementById('messagesContainer');
-        if (!container) {
-            console.error('Container #messagesContainer not found!');
-            return;
-        }
-
+        if (!container) return;
         container.innerHTML = '';
-
-        if (this.messages.length === 0) {
+        if (this.messagesList.length === 0) {
             const emptyMessage = document.createElement('div');
             emptyMessage.className = 'col-12';
             emptyMessage.innerHTML = '<p class="text-center">Нет сообщений</p>';
             container.appendChild(emptyMessage);
             return;
         }
-
-        this.messages.forEach(item => {
-            const messageCard = this.createMessageCard(item);
-            container.appendChild(messageCard);
+        this.messagesList.forEach(item => {
+            const card = this.createCard(item);
+            container.appendChild(card);
         });
     }
 
-    createMessageCard(messageItem) {
-        const template = this.messageCardTemplate.content.cloneNode(true);
-        const messageCard = template.firstElementChild;
-
-        const senderEl = messageCard.querySelector('.message-user-name');
-        const receiverEl = messageCard.querySelector('.message-receiver-name');
-        const contentEl = messageCard.querySelector('.message-content');
-        const dateEl = messageCard.querySelector('.message-date');
-
-        if (senderEl) senderEl.textContent = messageItem.senderName;
-        if (receiverEl) receiverEl.textContent = messageItem.receiverName;
-        if (contentEl) contentEl.textContent = messageItem.content;
-        if (dateEl) dateEl.textContent = this.formatDate(messageItem.date);
-
-        return messageCard;
+    createCard(message) {
+        const template = this.template.content.cloneNode(true);
+        const card = template.firstElementChild;
+        const senderElement = card.querySelector('.message-user-name');
+        const receiverElement = card.querySelector('.message-receiver-name');
+        const contentElement = card.querySelector('.message-content');
+        const dateElement = card.querySelector('.message-date');
+        if (senderElement) senderElement.textContent = message.senderName;
+        if (receiverElement) receiverElement.textContent = message.receiverName;
+        if (contentElement) contentElement.textContent = message.content;
+        if (dateElement) dateElement.textContent = this.formatDate(message.date);
+        return card;
     }
 
     formatDate(dateString) {
@@ -83,18 +67,14 @@ class MessagesManager {
         });
     }
 
-    setupEventListeners() {
-        const backBtn = document.getElementById('backBtn');
-        if (backBtn) {
-            backBtn.addEventListener('click', () => {
-                window.location.href = '/users.html';
-            });
-        }
+    bindEvents() {
+        const backButton = document.getElementById('backBtn');
+        if (backButton) backButton.addEventListener('click', () => {
+            window.location.href = '/users.html';
+        });
     }
 }
 
-// Инициализация после полной загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
-    new MessagesManager();
+    new MessagesHandler();
 });
-

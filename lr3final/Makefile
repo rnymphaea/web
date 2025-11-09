@@ -1,4 +1,4 @@
-run:
+all:
 	@npm install && npm run build:gulp && npm run build:webpack && npm start
 
 clean:

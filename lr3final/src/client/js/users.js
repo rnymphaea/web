@@ -51,10 +51,18 @@ class UserManager {
         userCard.querySelector('.user-name').textContent = `${user.firstName} ${user.lastName}`;
         userCard.querySelector('.user-role').textContent = user.role === 'admin' ? 'Администратор' : 'Пользователь';
         userCard.querySelector('.user-status').textContent = this.getStatusText(user.status);
+        userCard.querySelector('.user-email').textContent = user.email || '';
+        userCard.querySelector('.user-birthdate').textContent = user.birthDate || '';
 
         const editBtn = userCard.querySelector('.user-edit-btn');
         const friendsBtn = userCard.querySelector('.user-friends-btn');
         const messagesBtn = userCard.querySelector('.user-messages-btn');
+
+        const avatar = userCard.querySelector('.user-avatar');
+        if (avatar) {
+            avatar.src = `/images/users/${user.avatar || 'default.jpg'}`; // если avatar не задан, показываем default.jpg
+            avatar.alt = `${user.firstName} ${user.lastName}`;
+        }
 
         if (editBtn) editBtn.addEventListener('click', () => this.openEditModal(user));
         if (friendsBtn) friendsBtn.addEventListener('click', () => this.viewFriends(user.id));

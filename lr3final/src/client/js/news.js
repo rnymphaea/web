@@ -1,8 +1,8 @@
-class NewsManager {
+class NewsHandler {
     constructor() {
         this.userId = new URLSearchParams(window.location.search).get('userId');
-        this.news = [];
-        this.newsCardTemplate = document.getElementById('newsCardTemplate');
+        this.newsList = [];
+        this.template = document.getElementById('newsCardTemplate');
         this.init();
     }
 
@@ -11,16 +11,15 @@ class NewsManager {
             window.location.href = '/users.html';
             return;
         }
-
-        await this.loadNews();
+        await this.fetchNews();
         this.renderNews();
-        this.setupEventListeners();
+        this.bindEvents();
     }
 
-    async loadNews() {
+    async fetchNews() {
         try {
             const response = await fetch(`/api/news/${this.userId}`);
-            this.news = await response.json();
+            this.newsList = await response.json();
         } catch (error) {
             console.error('Failed to load news:', error);
         }
@@ -28,40 +27,34 @@ class NewsManager {
 
     renderNews() {
         const container = document.getElementById('newsContainer');
-        container.innerHTML = ''; // Очищаем контейнер
-
-        if (this.news.length === 0) {
+        container.innerHTML = '';
+        if (this.newsList.length === 0) {
             const emptyMessage = document.createElement('div');
             emptyMessage.className = 'col-12';
             emptyMessage.innerHTML = '<p class="text-center">Нет новостей</p>';
             container.appendChild(emptyMessage);
             return;
         }
-
-        this.news.forEach(item => {
-            const newsCard = this.createNewsCard(item);
-            container.appendChild(newsCard);
+        this.newsList.forEach(item => {
+            const card = this.createCard(item);
+            container.appendChild(card);
         });
     }
 
-    createNewsCard(newsItem) {
-        // Клонируем шаблон
-        const template = this.newsCardTemplate.content.cloneNode(true);
-        const newsCard = template.querySelector('.col-12');
-
-        // Заполняем основные данные
-        newsCard.querySelector('.news-author-name').textContent = newsItem.authorName;
-        newsCard.querySelector('.news-date').textContent = newsItem.date;
-        newsCard.querySelector('.news-content').textContent = newsItem.content;
-
-        return newsCard;
+    createCard(item) {
+        const template = this.template.content.cloneNode(true);
+        const card = template.querySelector('.col-12');
+        card.querySelector('.news-author-name').textContent = item.authorName;
+        card.querySelector('.news-date').textContent = item.date;
+        card.querySelector('.news-content').textContent = item.content;
+        return card;
     }
 
-    setupEventListeners() {
+    bindEvents() {
         document.getElementById('backBtn').addEventListener('click', () => {
             window.location.href = `friends.html?userId=${this.userId}`;
         });
     }
 }
 
-const newsManager = new NewsManager();
+new NewsHandler();
