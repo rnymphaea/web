@@ -1,0 +1,165 @@
+[
+  {
+    "id": 1,
+    "firstName": "Александр",
+    "lastName": "Смирнов",
+    "role": "admin",
+    "status": "blocked",
+    "friends": [
+      2,
+      3,
+      4
+    ]
+  },
+  {
+    "id": 2,
+    "firstName": "Елена",
+    "lastName": "Иванова",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      1,
+      5,
+      6
+    ]
+  },
+  {
+    "id": 3,
+    "firstName": "Дмитрий",
+    "lastName": "Петров",
+    "role": "user",
+    "status": "blocked",
+    "friends": [
+      1,
+      7,
+      8
+    ]
+  },
+  {
+    "id": 4,
+    "firstName": "Мария",
+    "lastName": "Сидорова",
+    "role": "admin",
+    "status": "active",
+    "friends": [
+      1,
+      9,
+      10
+    ]
+  },
+  {
+    "id": 5,
+    "firstName": "Сергей",
+    "lastName": "Васильев",
+    "role": "user",
+    "status": "unconfirmed",
+    "friends": [
+      2,
+      11
+    ]
+  },
+  {
+    "id": 6,
+    "firstName": "Ольга",
+    "lastName": "Кузнецова",
+    "role": "admin",
+    "status": "active",
+    "friends": [
+      2,
+      12
+    ]
+  },
+  {
+    "id": 7,
+    "firstName": "Ирина",
+    "lastName": "Лебедева",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      3,
+      13
+    ]
+  },
+  {
+    "id": 8,
+    "firstName": "Николай",
+    "lastName": "Морозов",
+    "role": "user",
+    "status": "blocked",
+    "friends": [
+      3,
+      14
+    ]
+  },
+  {
+    "id": 9,
+    "firstName": "Виктория",
+    "lastName": "Федорова",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      4,
+      15
+    ]
+  },
+  {
+    "id": 10,
+    "firstName": "Андрей",
+    "lastName": "Соколов",
+    "role": "admin",
+    "status": "active",
+    "friends": [
+      4
+    ]
+  },
+  {
+    "id": 11,
+    "firstName": "Татьяна",
+    "lastName": "Михайлова",
+    "role": "user",
+    "status": "unconfirmed",
+    "friends": [
+      5
+    ]
+  },
+  {
+    "id": 12,
+    "firstName": "Павел",
+    "lastName": "Волков",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      6
+    ]
+  },
+  {
+    "id": 13,
+    "firstName": "Анастасия",
+    "lastName": "Соколова",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      7
+    ]
+  },
+  {
+    "id": 14,
+    "firstName": "Владимир",
+    "lastName": "Петров",
+    "role": "user",
+    "status": "unconfirmed",
+    "friends": [
+      8
+    ]
+  },
+  {
+    "id": 15,
+    "firstName": "Юлия",
+    "lastName": "Попова",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      9
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+extends layout
+
+block title
+  title Сообщения пользователя
+
+block content
+  h1.mb-4 Сообщения пользователя
+  button#backBtn.btn.btn-secondary.mb-3 Назад
+  #messagesContainer.row
+
+block templates
+  template#messageCardTemplate
+    .col-12.mb-2
+      .card.p-3
+        h6.message-user-name.mb-1
+        small.text-muted Кому: 
+          span.message-receiver-name
+        small.text-muted.d-block.message-date
+        p.message-content
+
+block scripts
+  script(src="js/messages.js")
+

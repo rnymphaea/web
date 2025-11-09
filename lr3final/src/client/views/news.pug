@@ -1,0 +1,22 @@
+extends layout
+
+block title
+  title Новости друзей
+
+block content
+  h1.mb-4 Новости друзей
+  button#backBtn.btn.btn-secondary.mb-3 Назад
+  #newsContainer.row
+
+block templates
+  template#newsCardTemplate
+    .col-12.mb-2
+      .card.p-3
+        h6.news-author-name.mb-1
+        small.text-muted.news-date
+        p.news-content
+        .news-photos
+
+block scripts
+  script(src="js/news.js")
+
