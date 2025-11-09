@@ -1,11 +1,12 @@
 class UsersHandler {
     constructor() {
-        this.usersList = [];
-        this.template = null;
+        this.usersData = [];
+        this.cardTemplate = null;
         this.modal = null;
-        this.editingUser = null;
+        this.currentEditingUser = null;
+        
         document.addEventListener('DOMContentLoaded', () => {
-            this.template = document.getElementById('userCardTemplate');
+            this.cardTemplate = document.getElementById('userCardTemplate');
             const modalElement = document.getElementById('editUserModal');
             if (modalElement) this.modal = new bootstrap.Modal(modalElement);
             this.init();
@@ -13,33 +14,35 @@ class UsersHandler {
     }
 
     async init() {
-        await this.fetchUsers();
-        this.renderUsers();
-        this.bindEvents();
+        await this.loadUsers();
+        this.displayUsers();
+        this.setupEvents();
     }
 
-    async fetchUsers() {
+    async loadUsers() {
         try {
             const response = await fetch('/api/users');
-            this.usersList = await response.json();
+            this.usersData = await response.json();
         } catch (error) {
-            console.error('Failed to load users:', error);
+            console.error('Ошибка загрузки пользователей:', error);
         }
     }
 
-    renderUsers() {
-        if (!this.template) return;
+    displayUsers() {
+        if (!this.cardTemplate) return;
         const container = document.getElementById('usersContainer');
         if (!container) return;
+        
         container.innerHTML = '';
-        this.usersList.forEach(user => {
-            const card = this.createCard(user);
+        
+        this.usersData.forEach(user => {
+            const card = this.createUserCard(user);
             container.appendChild(card);
         });
     }
 
-    createCard(user) {
-        const template = this.template.content.cloneNode(true);
+    createUserCard(user) {
+        const template = this.cardTemplate.content.cloneNode(true);
         const userCard = template.querySelector('.card');
 
         userCard.querySelector('.user-name').textContent = `${user.firstName} ${user.lastName}`;
@@ -54,20 +57,20 @@ class UsersHandler {
 
         const avatar = userCard.querySelector('.user-avatar');
         if (avatar) {
-            avatar.src = `/images/users/${user.avatar || 'default.jpg'}`; // если avatar не задан, показываем default.jpg
+            avatar.src = `/images/users/${user.avatar || 'default.jpg'}`;
             avatar.alt = `${user.firstName} ${user.lastName}`;
         }
 
-        if (editBtn) editBtn.addEventListener('click', () => this.openModal(user));
+        if (editBtn) editBtn.addEventListener('click', () => this.openEditModal(user));
         if (friendsBtn) friendsBtn.addEventListener('click', () => this.showFriends(user.id));
         if (messagesBtn) messagesBtn.addEventListener('click', () => this.showMessages(user.id));
 
         return userCard;
     }
 
-    openModal(user) {
+    openEditModal(user) {
         if (!this.modal) return;
-        this.editingUser = user;
+        this.currentEditingUser = user;
         document.getElementById('editUserId').value = user.id;
         document.getElementById('editUserName').value = `${user.firstName} ${user.lastName}`;
         document.getElementById('editUserRole').value = user.role;
@@ -84,14 +87,15 @@ class UsersHandler {
         return statusMap[status] || status;
     }
 
-    async saveChanges() {
-        if (!this.editingUser) return;
-        const userId = this.editingUser.id;
+    async saveUserChanges() {
+        if (!this.currentEditingUser) return;
+        const userId = this.currentEditingUser.id;
         const nameParts = document.getElementById('editUserName').value.split(' ');
         const newFirstName = nameParts[0] || '';
         const newLastName = nameParts[1] || '';
         const newRole = document.getElementById('editUserRole').value;
         const newStatus = document.getElementById('editUserStatus').value;
+        
         try {
             const response = await fetch(`/api/users/${userId}`, {
                 method: 'PUT',
@@ -103,14 +107,20 @@ class UsersHandler {
                     status: newStatus
                 })
             });
+            
             if (response.ok) {
                 this.modal.hide();
-                Object.assign(this.editingUser, { firstName: newFirstName, lastName: newLastName, role: newRole, status: newStatus });
-                this.renderUsers();
-                this.editingUser = null;
+                Object.assign(this.currentEditingUser, { 
+                    firstName: newFirstName, 
+                    lastName: newLastName, 
+                    role: newRole, 
+                    status: newStatus 
+                });
+                this.displayUsers();
+                this.currentEditingUser = null;
             }
         } catch (error) {
-            console.error('Failed to update user:', error);
+            console.error('Ошибка обновления пользователя:', error);
         }
     }
 
@@ -122,9 +132,9 @@ class UsersHandler {
         window.location.href = `/messages.html?userId=${userId}`;
     }
 
-    bindEvents() {
-        const saveButton = document.getElementById('saveUserChanges');
-        if (saveButton) saveButton.addEventListener('click', () => this.saveChanges());
+    setupEvents() {
+        const saveBtn = document.getElementById('saveUserChanges');
+        if (saveBtn) saveBtn.addEventListener('click', () => this.saveUserChanges());
     }
 }
 

@@ -1,58 +1,64 @@
 class MessagesHandler {
     constructor() {
-        this.userId = new URLSearchParams(window.location.search).get('userId');
-        this.messagesList = [];
-        this.template = document.getElementById('messageCardTemplate');
+        this.currentUserId = new URLSearchParams(window.location.search).get('userId');
+        this.messagesData = [];
+        this.cardTemplate = document.getElementById('messageCardTemplate');
         this.init();
     }
 
     async init() {
-        if (!this.userId) {
+        if (!this.currentUserId) {
             window.location.href = '/users.html';
             return;
         }
-        this.bindEvents();
-        await this.fetchMessages();
-        this.renderMessages();
+        this.setupEvents();
+        await this.loadMessages();
+        this.displayMessages();
     }
 
-    async fetchMessages() {
+    async loadMessages() {
         try {
-            const response = await fetch(`/api/messages/${this.userId}`);
-            this.messagesList = await response.json();
+            const response = await fetch(`/api/messages/${this.currentUserId}`);
+            this.messagesData = await response.json();
         } catch (error) {
-            console.error('Failed to load messages:', error);
+            console.error('Ошибка загрузки сообщений:', error);
         }
     }
 
-    renderMessages() {
+    displayMessages() {
         const container = document.getElementById('messagesContainer');
         if (!container) return;
+        
         container.innerHTML = '';
-        if (this.messagesList.length === 0) {
+        
+        if (this.messagesData.length === 0) {
             const emptyMessage = document.createElement('div');
             emptyMessage.className = 'col-12';
             emptyMessage.innerHTML = '<p class="text-center">Нет сообщений</p>';
             container.appendChild(emptyMessage);
             return;
         }
-        this.messagesList.forEach(item => {
-            const card = this.createCard(item);
+
+        this.messagesData.forEach(item => {
+            const card = this.createMessageCard(item);
             container.appendChild(card);
         });
     }
 
-    createCard(message) {
-        const template = this.template.content.cloneNode(true);
+    createMessageCard(message) {
+        const template = this.cardTemplate.content.cloneNode(true);
         const card = template.firstElementChild;
+        
         const senderElement = card.querySelector('.message-user-name');
         const receiverElement = card.querySelector('.message-receiver-name');
         const contentElement = card.querySelector('.message-content');
         const dateElement = card.querySelector('.message-date');
+        
         if (senderElement) senderElement.textContent = message.senderName;
         if (receiverElement) receiverElement.textContent = message.receiverName;
         if (contentElement) contentElement.textContent = message.content;
         if (dateElement) dateElement.textContent = this.formatDate(message.date);
+        
         return card;
     }
 
@@ -67,11 +73,13 @@ class MessagesHandler {
         });
     }
 
-    bindEvents() {
-        const backButton = document.getElementById('backBtn');
-        if (backButton) backButton.addEventListener('click', () => {
-            window.location.href = '/users.html';
-        });
+    setupEvents() {
+        const backBtn = document.getElementById('backBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                window.location.href = '/users.html';
+            });
+        }
     }
 }
 

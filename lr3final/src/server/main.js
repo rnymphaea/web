@@ -13,7 +13,7 @@ const currentDir = path.dirname(currentFile);
 
 const server = express();
 const port = 3000;
-const buildPath = '../../dist-webpack';
+const buildPath = '../../dist-gulp';
 
 server.set('view engine', 'pug');
 server.set('views', path.join(currentDir, buildPath, 'html'));

@@ -4,7 +4,7 @@
     "firstName": "Александр",
     "lastName": "Смирнов",
     "role": "admin",
-    "status": "active",
+    "status": "unconfirmed",
     "friends": [
       2,
       3,
