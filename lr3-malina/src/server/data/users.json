@@ -1,0 +1,207 @@
+[
+  {
+    "id": 1,
+    "firstName": "Иван",
+    "lastName": "Петров",
+    "birthDate": "1990-05-20",
+    "email": "ivan.petrov@mail",
+    "role": "admin",
+    "status": "active",
+    "friends": [
+      2,
+      3,
+      4,
+      7
+    ]
+  },
+  {
+    "id": 2,
+    "firstName": "Мария",
+    "lastName": "Сидорова1",
+    "birthDate": "1985-08-08",
+    "email": "maria.sidorova@mail.com2",
+    "role": "user",
+    "status": "blocked",
+    "friends": [
+      1,
+      5,
+      8
+    ]
+  },
+  {
+    "id": 3,
+    "firstName": "Алексей",
+    "lastName": "Иванов",
+    "birthDate": "1992-11-30",
+    "email": "alex.ivanov@mail.com",
+    "role": "admin",
+    "status": "active",
+    "friends": [
+      1,
+      6,
+      9
+    ]
+  },
+  {
+    "id": 4,
+    "firstName": "Екатерина",
+    "lastName": "Смирнова",
+    "birthDate": "1988-03-14",
+    "email": "ekaterina.smirnova@mail.com",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      1,
+      10,
+      12
+    ]
+  },
+  {
+    "id": 5,
+    "firstName": "Дмитрий",
+    "lastName": "Кузнецов",
+    "birthDate": "1995-07-22",
+    "email": "dmitry.kuznetsov@mail.com",
+    "role": "user",
+    "status": "blocked",
+    "friends": [
+      2,
+      11
+    ]
+  },
+  {
+    "id": 6,
+    "firstName": "Ольга",
+    "lastName": "Попова",
+    "birthDate": "1991-12-05",
+    "email": "olga.popova@mail.com",
+    "role": "admin",
+    "status": "active",
+    "friends": [
+      3,
+      7,
+      13
+    ]
+  },
+  {
+    "id": 7,
+    "firstName": "Сергей",
+    "lastName": "Васильев",
+    "birthDate": "1987-09-18",
+    "email": "sergey.vasilev@mail.com",
+    "role": "admin",
+    "status": "blocked",
+    "friends": [
+      1,
+      6,
+      14
+    ]
+  },
+  {
+    "id": 8,
+    "firstName": "Анна",
+    "lastName": "Петрова",
+    "birthDate": "1993-04-25",
+    "email": "anna.petrova@mail.com",
+    "role": "user",
+    "status": "unconfirmed",
+    "friends": [
+      2,
+      15
+    ]
+  },
+  {
+    "id": 9,
+    "firstName": "Михаил",
+    "lastName": "Соколов",
+    "birthDate": "1989-06-11",
+    "email": "mikhail.sokolov@mail.com",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      3
+    ]
+  },
+  {
+    "id": 10,
+    "firstName": "Наталья",
+    "lastName": "Михайлова",
+    "birthDate": "1994-01-30",
+    "email": "natalia.mikhailova@mail.com",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      4
+    ]
+  },
+  {
+    "id": 11,
+    "firstName": "Андрей",
+    "lastName": "Фёдоров",
+    "birthDate": "1996-08-07",
+    "email": "andrey.fedorov@mail.com",
+    "role": "user",
+    "status": "blocked",
+    "friends": [
+      5
+    ]
+  },
+  {
+    "id": 12,
+    "firstName": "Елена",
+    "lastName": "Морозова",
+    "birthDate": "1990-02-19",
+    "email": "elena.morozova@mail.com",
+    "role": "admin",
+    "status": "unconfirmed",
+    "friends": [
+      4
+    ]
+  },
+  {
+    "id": 13,
+    "firstName": "Павел",
+    "lastName": "Волков",
+    "birthDate": "1986-10-12",
+    "email": "pavel.volkov@mail.com",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      6
+    ]
+  },
+  {
+    "id": 14,
+    "firstName": "Ирина",
+    "lastName": "Алексеева",
+    "birthDate": "1992-05-28",
+    "email": "irina.alekseeva@mail.com",
+    "role": "user",
+    "status": "unconfirmed",
+    "friends": [
+      7
+    ]
+  },
+  {
+    "id": 15,
+    "firstName": "Владимир",
+    "lastName": "Лебедев",
+    "birthDate": "1984-11-03",
+    "email": "vladimir.lebedev@mail.com",
+    "role": "user",
+    "status": "active",
+    "friends": [
+      8
+    ]
+  },
+  {
+    "id": 16,
+    "firstName": "2",
+    "lastName": "3",
+    "birthDate": "2025-10-25",
+    "email": "3",
+    "role": "user",
+    "status": "unconfirmed",
+    "friends": []
+  }
+]
