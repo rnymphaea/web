@@ -6,59 +6,66 @@ import { fileURLToPath } from 'url';
 import userRoutes from './routes/users.js';
 import friendRoutes from './routes/friends.js';
 import newsRoutes from './routes/news.js';
-import messagesRoutes from './routes/messages.js';
+import messageRoutes from './routes/messages.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const currentFile = fileURLToPath(import.meta.url);
+const currentDir = path.dirname(currentFile);
 
-const app = express();
-const PORT = 3000;
-const PATH = '../../dist-gulp';
+const server = express();
+const port = 3000;
+const buildPath = '../../dist-webpack';
 
-app.set('view engine', 'pug');
-app.set('views', path.join(__dirname, PATH, 'html'));
+server.set('view engine', 'pug');
+server.set('views', path.join(currentDir, buildPath, 'html'));
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, PATH)));
-app.use('/images', express.static(path.join(__dirname, PATH, 'images')));
-app.use('/css', express.static(path.join(__dirname, PATH, 'css')));
-app.use('/js', express.static(path.join(__dirname, PATH, 'js')));
-app.use('/html', express.static(path.join(__dirname, PATH, 'html')));
+server.use(express.json());
+server.use(express.static(path.join(currentDir, buildPath)));
 
-app.use('/api/users', userRoutes);
-app.use('/api/friends', friendRoutes);
-app.use('/api/news', newsRoutes);
-app.use('/api/messages', messagesRoutes);
+const staticRoutes = [
+    { path: '/images', folder: 'images' },
+    { path: '/css', folder: 'css' },
+    { path: '/js', folder: 'js' },
+    { path: '/html', folder: 'html' }
+];
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, PATH, 'html/users.html'));
+staticRoutes.forEach(route => {
+    server.use(route.path, express.static(path.join(currentDir, buildPath, route.folder)));
 });
 
-app.get('/users.html', (req, res) => {
-    res.sendFile(path.join(__dirname, PATH, 'html/users.html'));
+const apiRoutes = [
+    { path: '/api/users', handler: userRoutes },
+    { path: '/api/friends', handler: friendRoutes },
+    { path: '/api/news', handler: newsRoutes },
+    { path: '/api/messages', handler: messageRoutes }
+];
+
+apiRoutes.forEach(route => {
+    server.use(route.path, route.handler);
 });
 
-app.get('/friends.html', (req, res) => {
-    res.sendFile(path.join(__dirname, PATH, 'html/friends.html'));
+const pageRoutes = [
+    { path: '/', file: 'users.html' },
+    { path: '/users.html', file: 'users.html' },
+    { path: '/friends.html', file: 'friends.html' },
+    { path: '/news.html', file: 'news.html' },
+    { path: '/messages.html', file: 'messages.html' }
+];
+
+pageRoutes.forEach(route => {
+    server.get(route.path, (request, response) => {
+        response.sendFile(path.join(currentDir, buildPath, 'html', route.file));
+    });
 });
 
-app.get('/news.html', (req, res) => {
-    res.sendFile(path.join(__dirname, PATH, 'html/news.html'));
+server.get('*', (request, response) => {
+    response.status(404).send('Страница не найдена');
 });
 
-app.get('/messages.html', (req, res) => {
-    res.sendFile(path.join(__dirname, PATH, 'html/messages.html'));
-});
-
-app.get('*', (req, res) => {
-    res.status(404).send('Page not found');
-});
-
-const sslOptions = {
-    key: fs.readFileSync(path.join(__dirname, 'ssl/key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, 'ssl/cert.pem'))
+const sslConfig = {
+    key: fs.readFileSync(path.join(currentDir, 'ssl/key.pem')),
+    cert: fs.readFileSync(path.join(currentDir, 'ssl/cert.pem'))
 };
 
-https.createServer(sslOptions, app).listen(PORT, () => {
-    console.log(`HTTPS Server running on https://localhost:${PORT}`);
+https.createServer(sslConfig, server).listen(port, () => {
+    console.log(`HTTPS сервер запущен на https://localhost:${port}`);
 });

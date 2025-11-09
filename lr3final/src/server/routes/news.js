@@ -3,34 +3,40 @@ import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const currentFile = fileURLToPath(import.meta.url);
+const currentDir = path.dirname(currentFile);
 const router = express.Router();
 
-const newsPath = path.join(__dirname, '../data/news.json');
-const usersPath = path.join(__dirname, '../data/users.json');
+const newsDataPath = path.join(currentDir, '../data/news.json');
+const userDataPath = path.join(currentDir, '../data/users.json');
 
-router.get('/:userId', async (req, res) => {
+router.get('/:id', async (request, response) => {
     try {
-        const userId = parseInt(req.params.userId);
-        const news = await fs.readJson(newsPath);
-        const users = await fs.readJson(usersPath);
-        const user = users.find(u => u.id === userId);
-        if (!user) return res.status(404).json({ error: 'User not found' });
-        const friendIds = user.friends || [];
-        const friendsNews = news.filter(item =>
-            friendIds.includes(item.authorId)
+        const targetUserId = parseInt(request.params.id);
+        const allNews = await fs.readJson(newsDataPath);
+        const allUsers = await fs.readJson(userDataPath);
+        
+        const targetUser = allUsers.find(user => user.id === targetUserId);
+        if (!targetUser) {
+            return response.status(404).json({ error: 'Пользователь не найден' });
+        }
+        
+        const friendIds = targetUser.friends || [];
+        const friendNews = allNews.filter(newsItem =>
+            friendIds.includes(newsItem.authorId)
         );
-        const newsWithAuthors = friendsNews.map(item => {
-            const author = users.find(u => u.id === item.authorId);
+        
+        const newsWithAuthorInfo = friendNews.map(newsItem => {
+            const author = allUsers.find(user => user.id === newsItem.authorId);
             return {
-                ...item,
+                ...newsItem,
                 authorName: author ? `${author.firstName} ${author.lastName}` : 'Неизвестный'
             };
         });
-        res.json(newsWithAuthors);
+        
+        response.json(newsWithAuthorInfo);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to load news' });
+        response.status(500).json({ error: 'Не удалось загрузить новости' });
     }
 });
 

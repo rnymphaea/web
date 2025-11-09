@@ -3,35 +3,39 @@ import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const currentFile = fileURLToPath(import.meta.url);
+const currentDir = path.dirname(currentFile);
 const router = express.Router();
 
-const messagesPath = path.join(__dirname, '../data/messages.json');
-const usersPath = path.join(__dirname, '../data/users.json');
+const messageDataPath = path.join(currentDir, '../data/messages.json');
+const userDataPath = path.join(currentDir, '../data/users.json');
 
-router.get('/:userId', async (req, res) => {
+router.get('/:id', async (request, response) => {
     try {
-        const userId = parseInt(req.params.userId);
-        const messages = await fs.readJson(messagesPath);
-        const users = await fs.readJson(usersPath);
-        const userMessages = messages.filter(item =>
-            item.user_id === userId || item.recipient_id === userId
+        const targetUserId = parseInt(request.params.id);
+        const allMessages = await fs.readJson(messageDataPath);
+        const allUsers = await fs.readJson(userDataPath);
+        
+        const userMessages = allMessages.filter(message =>
+            message.user_id === targetUserId || message.recipient_id === targetUserId
         );
-        const messagesWithUsers = userMessages.map(item => {
-            const sender = users.find(u => u.id === item.user_id);
-            const receiver = users.find(u => u.id === item.recipient_id);
+        
+        const messagesWithDetails = userMessages.map(message => {
+            const sender = allUsers.find(user => user.id === message.user_id);
+            const recipient = allUsers.find(user => user.id === message.recipient_id);
+            
             return {
-                content: item.content,
-                date: item.date,
-                senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Неизвестнo',
-                receiverName: receiver ? `${receiver.firstName} ${receiver.lastName}` : 'Неизвестнo'
+                content: message.content,
+                date: message.date,
+                senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Неизвестно',
+                receiverName: recipient ? `${recipient.firstName} ${recipient.lastName}` : 'Неизвестно'
             };
         });
-        res.json(messagesWithUsers);
+        
+        response.json(messagesWithDetails);
     } catch (error) {
-        console.error('Failed to load messages:', error);
-        res.status(500).json({ error: 'Failed to load messages' });
+        console.error('Ошибка загрузки сообщений:', error);
+        response.status(500).json({ error: 'Не удалось загрузить сообщения' });
     }
 });
 

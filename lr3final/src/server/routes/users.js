@@ -3,37 +3,38 @@ import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const currentFile = fileURLToPath(import.meta.url);
+const currentDir = path.dirname(currentFile);
 const router = express.Router();
 
-const usersPath = path.join(__dirname, '../data/users.json');
+const userDataPath = path.join(currentDir, '../data/users.json');
 
-router.get('/', async (req, res) => {
+router.get('/', async (request, response) => {
     try {
-        const users = await fs.readJson(usersPath);
-        res.json(users);
+        const allUsers = await fs.readJson(userDataPath);
+        response.json(allUsers);
     } catch (error) {
-        console.error('Error reading users:', error);
-        res.status(500).json({ error: 'Failed to read users' });
+        console.error('Ошибка чтения пользователей:', error);
+        response.status(500).json({ error: 'Не удалось прочитать пользователей' });
     }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (request, response) => {
     try {
-        const users = await fs.readJson(usersPath);
-        const userId = parseInt(req.params.id);
-        const userIndex = users.findIndex(user => user.id === userId);
+        const allUsers = await fs.readJson(userDataPath);
+        const targetUserId = parseInt(request.params.id);
+        const userIndex = allUsers.findIndex(user => user.id === targetUserId);
+        
         if (userIndex !== -1) {
-            users[userIndex] = { ...users[userIndex], ...req.body };
-            await fs.writeJson(usersPath, users, { spaces: 2 });
-            res.json(users[userIndex]);
+            allUsers[userIndex] = { ...allUsers[userIndex], ...request.body };
+            await fs.writeJson(userDataPath, allUsers, { spaces: 2 });
+            response.json(allUsers[userIndex]);
         } else {
-            res.status(404).json({ error: 'User not found' });
+            response.status(404).json({ error: 'Пользователь не найден' });
         }
     } catch (error) {
-        console.error('Error updating user:', error);
-        res.status(500).json({ error: 'Failed to update user' });
+        console.error('Ошибка обновления пользователя:', error);
+        response.status(500).json({ error: 'Не удалось обновить пользователя' });
     }
 });
 
