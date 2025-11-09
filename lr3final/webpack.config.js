@@ -4,12 +4,16 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import CopyPlugin from 'copy-webpack-plugin';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Массив страниц для генерации HTML
+const pages = ['users', 'friends', 'news', 'messages'];
+
 export default {
-    mode: 'production', // Включает все оптимизации
+    mode: 'production',
 
     entry: {
         main: './src/client/less/main.less',
@@ -21,8 +25,8 @@ export default {
 
     output: {
         path: path.resolve(__dirname, 'dist-webpack'),
-        filename: 'js/[name].[contenthash].js', // [name] = users, friends и т.д.
-        clean: true // Очищает папку перед каждой сборкой
+        filename: 'js/[name].js',
+        clean: true
     },
 
     module: {
@@ -33,103 +37,65 @@ export default {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env'], // Поддержка старых браузеров
-                        plugins: ['@babel/plugin-syntax-dynamic-import'] // Динамические импорты
+                        presets: ['@babel/preset-env'],
+                        plugins: ['@babel/plugin-syntax-dynamic-import']
                     }
                 }
             },
             {
                 test: /\.less$/,
-                use: [
-                    MiniCssExtractPlugin.loader, // Извлекает CSS в отдельный файл
-                    'css-loader',  // Обрабатывает @import, url()
-                    'less-loader' // Компилирует LESS в CSS
-                ]
+                use: [MiniCssExtractPlugin.loader, 'css-loader', 'less-loader']
             },
             {
                 test: /\.css$/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    'css-loader'
-                ]
+                use: [MiniCssExtractPlugin.loader, 'css-loader']
             },
             {
                 test: /\.pug$/,
-                use: [
-                    {
-                        loader: 'pug-loader',
-                        options: {
-                            pretty: false
-                        }
-                    }
-                ]
+                use: [{ loader: 'pug-loader', options: { pretty: false } }]
             },
             {
-                test: /\.(png|jpg|jpeg|gif|svg)$/,
+                test: /\.(woff2?|eot|ttf|otf)$/,
                 type: 'asset/resource',
-                generator: {
-                    filename: 'images/[name].[hash][ext]'
-                }
-            },
-            {
-                test: /\.(woff|woff2|eot|ttf|otf)$/,
-                type: 'asset/resource',
-                generator: {
-                    filename: 'fonts/[name].[hash][ext]'
-                }
+                generator: { filename: 'fonts/[name].[ext]' }
             }
         ]
     },
 
     plugins: [
-        new MiniCssExtractPlugin({ //Без плагина: CSS был бы встроен в JS файлы
-            filename: 'css/[name].[contenthash].css' // c плагином: Отдельные оптимизированные CSS файлы
+        new MiniCssExtractPlugin({
+            filename: 'css/[name].css',
+            ignoreOrder: true
         }),
 
-        new HtmlWebpackPlugin({
-            template: './src/client/views/users.pug',
-            filename: 'html/users.html',
-            chunks: ['users', 'main'] // Подключает users.js + main.css
-        }),
-
-        new HtmlWebpackPlugin({
-            template: './src/client/views/friends.pug',
-            filename: 'html/friends.html',
-            chunks: ['friends', 'main']
-        }),
-
-        new HtmlWebpackPlugin({
-            template: './src/client/views/news.pug',
-            filename: 'html/news.html',
-            chunks: ['news', 'main']
-        }),
-
-        new HtmlWebpackPlugin({
-            template: './src/client/views/messages.pug',
-            filename: 'html/messages.html',
-            chunks: ['messages', 'main']
-        }),
+        ...pages.map(page => new HtmlWebpackPlugin({
+            template: `./src/client/views/${page}.pug`,
+            filename: `html/${page}.html`,
+            chunks: [page, 'main']
+        })),
 
         new HtmlWebpackPlugin({
             template: './src/client/views/users.pug',
             filename: 'html/index.html',
             chunks: ['users', 'main']
+        }),
+
+        new CopyPlugin({
+            patterns: [
+                { from: 'src/client/images', to: 'images' }
+            ]
         })
     ],
 
     optimization: {
         minimize: true,
-        minimizer: [
-            new TerserPlugin(),  // Минификация JavaScript
-            new CssMinimizerPlugin() // Минификация CSS
-        ],
-        //Разделение кода:
+        minimizer: [new TerserPlugin(), new CssMinimizerPlugin()],
         splitChunks: {
             chunks: 'all',
             cacheGroups: {
                 vendor: {
-                    test: /[\\/]node_modules[\\/]/, // Все node_modules
-                    name: 'vendors',                   // В отдельный файл Создает vendors.[hash].js
+                    test: /[\\/]node_modules[\\/]/,
+                    name: 'vendors',
                     chunks: 'all'
                 }
             }

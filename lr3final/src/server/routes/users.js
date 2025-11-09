@@ -24,7 +24,6 @@ router.put('/:id', async (req, res) => {
         const users = await fs.readJson(usersPath);
         const userId = parseInt(req.params.id);
         const userIndex = users.findIndex(user => user.id === userId);
-
         if (userIndex !== -1) {
             users[userIndex] = { ...users[userIndex], ...req.body };
             await fs.writeJson(usersPath, users, { spaces: 2 });

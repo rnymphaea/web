@@ -1,4 +1,4 @@
-// ========== Переменные ==========
+// переменные
 @primary-color: #3498db;
 @secondary-color: #2ecc71;
 @border-color: #ccc;
@@ -6,7 +6,7 @@
 @text-color: #333;
 @border-radius: 4px;
 
-// ========== Миксины ==========
+// миксины
 .card() {
   border: 1px solid @border-color;
   border-radius: @border-radius;
@@ -28,7 +28,7 @@
   color: @bg-color;
 }
 
-// ========== Глобальные стили ==========
+// глобальные стили
 body {
   font-family: Arial, sans-serif;
   font-size: 14px;
@@ -43,7 +43,7 @@ h1, h2, h3, h4, h5, h6 {
   color: @text-color;
 }
 
-// ========== Карточки ==========
+// карточки
 .user-card, .news-card, .friend-card, .message-card {
   .card();
   margin-bottom: 1rem;
@@ -70,7 +70,7 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-// ========== Простые кнопки вне карточек ==========
+// простые кнопки
 button {
   .btn();
   margin: 0.25rem 0;

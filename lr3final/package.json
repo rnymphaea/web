@@ -2,13 +2,13 @@
   "name": "social-network-admin_immortal1864",
   "version": "1.0.0",
   "description": "Social network administration panel with user management, friends, and news",
-  "main": "src/server/app.js",
+  "main": "src/server/main.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server/app.js",
+    "start": "node src/server/main.js",
     "build:gulp": "gulp build",
     "build:webpack": "webpack --mode=production",
-    "dev": "nodemon src/server/app.js"
+    "dev": "nodemon src/server/main.js"
   },
   "keywords": [
     "social",
@@ -31,6 +31,7 @@
     "babel-core": "^6.26.3",
     "babel-loader": "^10.0.0",
     "babel-preset-env": "^1.7.0",
+    "copy-webpack-plugin": "^13.0.1",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.2",
     "gulp": "^4.0.2",

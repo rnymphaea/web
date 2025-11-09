@@ -15,24 +15,19 @@ router.get('/:userId', async (req, res) => {
         const userId = parseInt(req.params.userId);
         const messages = await fs.readJson(messagesPath);
         const users = await fs.readJson(usersPath);
-
         const userMessages = messages.filter(item =>
             item.user_id === userId || item.recipient_id === userId
         );
-
-        // Добавляем информацию об отправителях и получателях
         const messagesWithUsers = userMessages.map(item => {
             const sender = users.find(u => u.id === item.user_id);
             const receiver = users.find(u => u.id === item.recipient_id);
-
             return {
-                content:item.content,
+                content: item.content,
                 date: item.date,
-                senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Неизвестный',
-                receiverName: receiver ? `${receiver.firstName} ${receiver.lastName}` : 'Неизвестный'
+                senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Неизвестнo',
+                receiverName: receiver ? `${receiver.firstName} ${receiver.lastName}` : 'Неизвестнo'
             };
         });
-
         res.json(messagesWithUsers);
     } catch (error) {
         console.error('Failed to load messages:', error);

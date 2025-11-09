@@ -5,71 +5,58 @@ import terser from 'gulp-terser';
 import pug from 'gulp-pug';
 import babel from 'gulp-babel';
 
-export const compileStyles = () => {
-    return gulp.src('src/client/less/main.less')
+const paths = {
+    styles: 'src/client/less/**/*.less',
+    mainStyle: 'src/client/less/main.less',
+    scripts: 'src/client/js/**/*.js',
+    templates: 'src/client/views/**/*.pug',
+    images: 'src/client/images/**/*'
+};
+
+// Компиляция стилей
+export const compileStyles = () =>
+    gulp.src(paths.mainStyle)
         .pipe(less())
         .pipe(cleanCSS())
         .pipe(gulp.dest('dist-gulp/css'));
-};
 
-export const compileScripts = () => {
-    return gulp.src('src/client/js/**/*.js')
-        .pipe(babel({
-            presets: [
-                ['@babel/preset-env', {
-                    targets: {
-                        browsers: ['last 2 versions', 'ie >= 11']
-                    },
-                    modules: false
-                }]
-            ],
-            plugins: [
-                '@babel/plugin-syntax-dynamic-import'
-            ]
-        }))
+// Компиляция скриптов
+export const compileScripts = () =>
+    gulp.src(paths.scripts)
+        .pipe(babel()) // Использует .babelrc
         .pipe(terser())
         .pipe(gulp.dest('dist-gulp/js'));
-};
 
-export const compileTemplates = () => {
-    return gulp.src('src/client/views/**/*.pug')
-        .pipe(pug({
-            pretty: true
-        }))
+// Компиляция Pug-шаблонов
+export const compileTemplates = () =>
+    gulp.src(paths.templates)
+        .pipe(pug({ pretty: true }))
         .pipe(gulp.dest('dist-gulp/html'));
-};
 
-export const copyAssets = () => {
-    return gulp.src('src/client/images/**/*')
+// Копирование изображений
+export const copyAssets = () =>
+    gulp.src(paths.images)
         .pipe(gulp.dest('dist-gulp/images'));
+
+// Параллельная сборка всех ресурсов
+export const build = gulp.parallel(
+    compileStyles,
+    compileScripts,
+    compileTemplates,
+    copyAssets
+);
+
+// Watcher для dev
+export const watch = () => {
+    gulp.watch(paths.styles, compileStyles);
+    gulp.watch(paths.scripts, compileScripts);
+    gulp.watch(paths.templates, compileTemplates);
+    gulp.watch(paths.images, copyAssets);
 };
 
-export const watchStyles = () => {
-    return gulp.watch('src/client/less/**/*.less', compileStyles);
-};
+// Dev: сборка + watch
+export const dev = gulp.series(build, watch);
 
-export const watchScripts = () => {
-    return gulp.watch('src/client/js/**/*.js', compileScripts);
-};
-
-export const watchTemplates = () => {
-    return gulp.watch('src/client/views/**/*.pug', compileTemplates);
-};
-
-export const watchAssets = () => {
-    return gulp.watch('src/client/images/**/*', copyAssets);
-};
-
-export const build = gulp.parallel(compileStyles, compileScripts, compileTemplates, copyAssets);
-
-export const dev = () => {
-    build();
-    gulp.watch('src/client/less/**/*.less', compileStyles);
-    gulp.watch('src/client/js/**/*.js', compileScripts);
-    gulp.watch('src/client/views/**/*.pug', compileTemplates);
-    gulp.watch('src/client/images/**/*', copyAssets);
-};
-
-export const watch = gulp.parallel(watchStyles, watchScripts, watchTemplates, watchAssets);
-
+// По умолчанию: просто сборка
 export default build;
+

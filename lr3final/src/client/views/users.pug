@@ -7,7 +7,6 @@ block content
   h1.mb-4 Пользователи
   #usersContainer
 
-  //- Модальное окно редактирования пользователя
   div#editUserModal.modal.fade(tabindex="-1" aria-hidden="true")
     .modal-dialog
       .modal-content
@@ -31,6 +30,9 @@ block content
                 option(value="active") Активный
                 option(value="blocked") Заблокирован
                 option(value="unconfirmed") Не подтверждён
+        .modal-footer
+            button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Закрыть
+            button.btn.btn-primary#saveUserChanges(type="button") Сохранить
 
 block templates
   template#userCardTemplate

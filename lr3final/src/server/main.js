@@ -13,14 +13,12 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
-const PATH = '../../dist-gulp/';
+const PATH = '../../dist-gulp';
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, PATH, 'html'));
 
 app.use(express.json());
-
-// Статические файлы из dist-gulp
 app.use(express.static(path.join(__dirname, PATH)));
 app.use('/images', express.static(path.join(__dirname, PATH, 'images')));
 app.use('/css', express.static(path.join(__dirname, PATH, 'css')));
@@ -32,7 +30,6 @@ app.use('/api/friends', friendRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/messages', messagesRoutes);
 
-// Маршруты для HTML страниц
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, PATH, 'html/users.html'));
 });
@@ -53,7 +50,6 @@ app.get('/messages.html', (req, res) => {
     res.sendFile(path.join(__dirname, PATH, 'html/messages.html'));
 });
 
-// Обработка 404
 app.get('*', (req, res) => {
     res.status(404).send('Page not found');
 });
