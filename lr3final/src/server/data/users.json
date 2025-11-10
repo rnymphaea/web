@@ -1,8 +1,8 @@
 [
   {
     "id": 1,
-    "firstName": "Александр",
-    "lastName": "Смирнов",
+    "firstName": "Артем",
+    "lastName": "Дзюба",
     "role": "user",
     "status": "active",
     "friends": [
@@ -11,13 +11,13 @@
       4
     ],
     "avatar": "user1.jpg",
-    "birthDate": "1985-04-12",
-    "email": "alex.smirnov@example.com"
+    "birthDate": "1988-08-22",
+    "email": "artem.dzyuba@mail.ru"
   },
   {
     "id": 2,
-    "firstName": "Елена",
-    "lastName": "Иванова",
+    "firstName": "Александр",
+    "lastName": "Головин",
     "role": "user",
     "status": "active",
     "friends": [
@@ -26,13 +26,13 @@
       6
     ],
     "avatar": "user2.jpg",
-    "birthDate": "1990-07-21",
-    "email": "elena.ivanova@example.com"
+    "birthDate": "1996-05-30",
+    "email": "a.golovin@gmail.com"
   },
   {
     "id": 3,
-    "firstName": "Дмитрий",
-    "lastName": "Петров",
+    "firstName": "Игорь",
+    "lastName": "Акинфеев",
     "role": "user",
     "status": "blocked",
     "friends": [
@@ -41,13 +41,13 @@
       8
     ],
     "avatar": "user3.jpg",
-    "birthDate": "1988-02-10",
-    "email": "dmitry.petrov@example.com"
+    "birthDate": "1986-04-08",
+    "email": "i.akinfeev@yandex.ru"
   },
   {
     "id": 4,
-    "firstName": "Мария",
-    "lastName": "Сидорова",
+    "firstName": "Федор",
+    "lastName": "Смолов",
     "role": "admin",
     "status": "active",
     "friends": [
@@ -56,13 +56,13 @@
       10
     ],
     "avatar": "user4.jpg",
-    "birthDate": "1992-11-03",
-    "email": "maria.sidorova@example.com"
+    "birthDate": "1990-02-09",
+    "email": "f.smolov@mail.ru"
   },
   {
     "id": 5,
-    "firstName": "Сергей",
-    "lastName": "Васильев",
+    "firstName": "Марио",
+    "lastName": "Фернандес",
     "role": "user",
     "status": "unconfirmed",
     "friends": [
@@ -70,13 +70,13 @@
       11
     ],
     "avatar": "user5.jpg",
-    "birthDate": "1987-09-15",
-    "email": "sergey.vasiliev@example.com"
+    "birthDate": "1990-09-19",
+    "email": "m.fernandes@gmail.com"
   },
   {
     "id": 6,
-    "firstName": "Ольга",
-    "lastName": "Кузнецова",
+    "firstName": "Алексей",
+    "lastName": "Миранчук",
     "role": "admin",
     "status": "active",
     "friends": [
@@ -84,13 +84,13 @@
       12
     ],
     "avatar": "user6.jpg",
-    "birthDate": "1991-12-30",
-    "email": "olga.kuznetsova@example.com"
+    "birthDate": "1995-10-17",
+    "email": "a.miranchuk@yandex.ru"
   },
   {
     "id": 7,
-    "firstName": "Ирина",
-    "lastName": "Лебедева",
+    "firstName": "Денис",
+    "lastName": "Черышев",
     "role": "user",
     "status": "active",
     "friends": [
@@ -98,13 +98,13 @@
       13
     ],
     "avatar": "user7.jpg",
-    "birthDate": "1993-05-19",
-    "email": "irina.lebedeva@example.com"
+    "birthDate": "1990-12-26",
+    "email": "d.cheryshev@mail.ru"
   },
   {
     "id": 8,
-    "firstName": "Николай",
-    "lastName": "Морозов",
+    "firstName": "Юрий",
+    "lastName": "Жирков",
     "role": "user",
     "status": "blocked",
     "friends": [
@@ -112,13 +112,13 @@
       14
     ],
     "avatar": "user8.jpg",
-    "birthDate": "1986-08-08",
-    "email": "nikolay.morozov@example.com"
+    "birthDate": "1983-08-20",
+    "email": "y.zhirkov@gmail.com"
   },
   {
     "id": 9,
-    "firstName": "Виктория",
-    "lastName": "Федорова",
+    "firstName": "Александр",
+    "lastName": "Кокорин",
     "role": "user",
     "status": "active",
     "friends": [
@@ -126,85 +126,85 @@
       15
     ],
     "avatar": "user9.jpg",
-    "birthDate": "1994-03-22",
-    "email": "victoria.fedorova@example.com"
+    "birthDate": "1991-03-19",
+    "email": "a.kokorin@yandex.ru"
   },
   {
     "id": 10,
-    "firstName": "Андрей",
-    "lastName": "Соколов",
+    "firstName": "Георгий",
+    "lastName": "Джикия",
     "role": "admin",
     "status": "active",
     "friends": [
       4
     ],
     "avatar": "user10.jpg",
-    "birthDate": "1989-06-11",
-    "email": "andrey.sokolov@example.com"
+    "birthDate": "1993-11-21",
+    "email": "g.dzhikiya@mail.ru"
   },
   {
     "id": 11,
-    "firstName": "Татьяна",
-    "lastName": "Михайлова",
+    "firstName": "Антон",
+    "lastName": "Шунин",
     "role": "user",
     "status": "unconfirmed",
     "friends": [
       5
     ],
     "avatar": "user11.jpg",
-    "birthDate": "1995-01-17",
-    "email": "tatiana.mikhailova@example.com"
+    "birthDate": "1987-01-27",
+    "email": "a.shunin@gmail.com"
   },
   {
     "id": 12,
-    "firstName": "Павел",
-    "lastName": "Волков",
+    "firstName": "Далер",
+    "lastName": "Кузяев",
     "role": "user",
     "status": "active",
     "friends": [
       6
     ],
     "avatar": "user12.jpg",
-    "birthDate": "1988-10-02",
-    "email": "pavel.volkov@example.com"
+    "birthDate": "1993-01-15",
+    "email": "d.kuziaev@yandex.ru"
   },
   {
     "id": 13,
-    "firstName": "Анастасия",
-    "lastName": "Соколова",
+    "firstName": "Андрей",
+    "lastName": "Лунёв",
     "role": "user",
     "status": "active",
     "friends": [
       7
     ],
     "avatar": "user13.jpg",
-    "birthDate": "1992-04-25",
-    "email": "anastasia.sokolova@example.com"
+    "birthDate": "1991-11-13",
+    "email": "a.lunev@mail.ru"
   },
   {
     "id": 14,
-    "firstName": "Владимир",
-    "lastName": "Петров",
+    "firstName": "Роман",
+    "lastName": "Зобнин",
     "role": "user",
     "status": "unconfirmed",
     "friends": [
       8
     ],
     "avatar": "user14.jpg",
-    "birthDate": "1985-09-30",
-    "email": "vladimir.petrov@example.com"
+    "birthDate": "1994-02-11",
+    "email": "r.zobnin@gmail.com"
   },
   {
     "id": 15,
-    "firstName": "Юлия",
-    "lastName": "Попова",
+    "firstName": "Александр",
+    "lastName": "Соболев",
     "role": "user",
     "status": "active",
     "friends": [
       9
     ],
     "avatar": "user15.jpg",
-    "birthDate": "1996-07-14",
-    "email": "yulia.popova@example.com"
+    "birthDate": "1997-03-07",
+    "email": "a.sobolev@yandex.ru"
   }
 ]
