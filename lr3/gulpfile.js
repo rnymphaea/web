@@ -1,36 +1,62 @@
 import gulp from 'gulp';
+import less from 'gulp-less';
+import cleanCSS from 'gulp-clean-css';
+import terser from 'gulp-terser';
 import pug from 'gulp-pug';
-import dartSass from 'sass';
-import gulpSass from 'gulp-sass';
 import babel from 'gulp-babel';
 
-const sass = gulpSass(dartSass);
-
 const paths = {
-    pug: 'client/src/views/**/*.pug',
-    scss: 'client/src/scss/**/*.scss',
-    js: 'client/src/js/**/*.js'
+    styles: 'src/client/less/**/*.less',
+    mainStyle: 'src/client/less/main.less',
+    scripts: 'src/client/js/**/*.js',
+    templates: 'src/client/views/**/*.pug',
+    images: 'src/client/images/**/*'
 };
 
-function buildPug() {
-    return gulp.src(paths.pug)
-        .pipe(pug())
-        .pipe(gulp.dest('client/dist'));
-}
+// Компиляция стилей
+export const compileStyles = () =>
+    gulp.src(paths.mainStyle)
+        .pipe(less())
+        .pipe(cleanCSS())
+        .pipe(gulp.dest('dist-gulp/css'));
 
-function buildSass() {
-    return gulp.src(paths.scss)
-        .pipe(sass().on('error', sass.logError))
-        .pipe(gulp.dest('client/dist/css'));
-}
+// Компиляция скриптов
+export const compileScripts = () =>
+    gulp.src(paths.scripts)
+        .pipe(babel()) // Использует .babelrc
+        .pipe(terser())
+        .pipe(gulp.dest('dist-gulp/js'));
 
-function buildJs() {
-    return gulp.src(paths.js)
-        .pipe(babel({ 
-            presets: ['@babel/preset-env']
-        }))
-        .pipe(gulp.dest('client/dist/js'));
-}
+// Компиляция Pug-шаблонов
+export const compileTemplates = () =>
+    gulp.src(paths.templates)
+        .pipe(pug({ pretty: true }))
+        .pipe(gulp.dest('dist-gulp/html'));
 
-export const build = gulp.parallel(buildPug, buildSass, buildJs);
+// Копирование изображений
+export const copyAssets = () =>
+    gulp.src(paths.images)
+        .pipe(gulp.dest('dist-gulp/images'));
+
+// Параллельная сборка всех ресурсов
+export const build = gulp.parallel(
+    compileStyles,
+    compileScripts,
+    compileTemplates,
+    copyAssets
+);
+
+// Watcher для dev
+export const watch = () => {
+    gulp.watch(paths.styles, compileStyles);
+    gulp.watch(paths.scripts, compileScripts);
+    gulp.watch(paths.templates, compileTemplates);
+    gulp.watch(paths.images, copyAssets);
+};
+
+// Dev: сборка + watch
+export const dev = gulp.series(build, watch);
+
+// По умолчанию: просто сборка
 export default build;
+

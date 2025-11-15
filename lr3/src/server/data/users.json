@@ -3,7 +3,7 @@
     "id": 1,
     "firstName": "Артем",
     "lastName": "Дзюба",
-    "role": "user",
+    "role": "admin",
     "status": "active",
     "friends": [
       2,
