@@ -9,11 +9,13 @@ import { NavigationComponent } from './components/navigation/navigation.componen
 import { RegistrationComponent } from './components/registration/registration.component';
 import { NewsFeedComponent } from './components/news-feed/news-feed.component';
 import { AddNewsComponent } from './components/add-news/add-news.component';
+import { LoginComponent } from './components/login/login.component';
 import { GlobalErrorHandler } from './services/global-error-handler';
 
 // ✅ Правильное определение routes с типом Routes
 const routes: Routes = [
   { path: 'register', component: RegistrationComponent },
+  { path: 'login', component: LoginComponent },
   { path: 'news', component: NewsFeedComponent },
   { path: 'add-news', component: AddNewsComponent },
   { path: '', redirectTo: '/news', pathMatch: 'full' as const }
@@ -25,7 +27,8 @@ const routes: Routes = [
     NavigationComponent,
     RegistrationComponent,
     NewsFeedComponent,
-    AddNewsComponent
+    AddNewsComponent,
+    LoginComponent
   ],
   imports: [
     BrowserModule,

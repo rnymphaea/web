@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-registration',
@@ -11,21 +11,33 @@ export class RegistrationComponent {
     firstName: '',
     lastName: '',
     email: '',
-    password: ''
+    password: '',
+    birthDate: ''
   };
 
-  constructor(private http: HttpClient, private router: Router) {}
+  errorMessage: string = '';
+  isLoading: boolean = false;
+
+  constructor(
+    private userService: UserService,
+    private router: Router
+  ) {}
 
   onSubmit() {
-    this.http.post('/api/users/register', this.user).subscribe(
-      () => {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.userService.register(this.user).subscribe({
+      next: () => {
+        this.isLoading = false;
         alert('Регистрация успешна!');
         this.router.navigate(['/news']);
       },
-      error => {
+      error: (error: any) => {
+        this.isLoading = false;
+        this.errorMessage = error.error?.error || 'Ошибка регистрации';
         console.error('Registration failed', error);
-        alert('Ошибка регистрации');
       }
-    );
+    });
   }
 }

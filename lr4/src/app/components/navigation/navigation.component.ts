@@ -1,44 +1,27 @@
-import { Component } from '@angular/core';
-import { UserService } from '../../services/user.service';
-import { User } from '../../models/user.model';
+import { Component, OnInit } from '@angular/core';
+import { UserService, User } from '../../services/user.service';
 
 @Component({
   selector: 'app-navigation',
-  template: `
-    <nav class="navbar">
-      <div class="nav-brand">Социальная сеть</div>
-      <div class="nav-links">
-        <a routerLink="/news">Лента новостей</a>
-        <a routerLink="/add-news">Добавить новость</a>
-        
-        <!-- ✅ ССЫЛКА НА АДМИН-МОДУЛЬ ДЛЯ АДМИНИСТРАТОРОВ -->
-        <a 
-          *ngIf="isAdmin()" 
-          href="/admin/users.html" 
-          target="_blank" 
-          class="admin-link"
-        >
-          Админ-панель
-        </a>
-        
-        <button *ngIf="!currentUser" routerLink="/register">Регистрация</button>
-        <span *ngIf="currentUser">
-          Привет, {{currentUser.firstName}}!
-        </span>
-      </div>
-    </nav>
-  `
+  templateUrl: './navigation.component.html'
 })
-export class NavigationComponent {
+export class NavigationComponent implements OnInit {
   currentUser: User | null = null;
 
-  constructor(private userService: UserService) {
-    this.userService.getCurrentUser().subscribe(user => {
+  constructor(private userService: UserService) {}
+
+  ngOnInit() {
+    this.userService.getCurrentUser().subscribe((user: User | null) => {
       this.currentUser = user;
     });
   }
 
   isAdmin(): boolean {
-    return this.currentUser?.role === 'admin';
+    return this.userService.canAccessAdmin();
+  }
+
+  logout() {
+    this.userService.logout();
+    window.location.reload();
   }
 }
