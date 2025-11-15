@@ -17,7 +17,12 @@ app.use(express.static(path.join(__dirname, '../dist/social-network-app')));
 
 // ✅ СТАТИКА ДЛЯ АДМИН-МОДУЛЯ ИЗ NPM
 const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea/dist-gulp');
-app.use('/admin', express.static(adminModulePath));
+try {
+  app.use('/admin', express.static(adminModulePath));
+  console.log(`✅ Admin module mounted at /admin from: ${adminModulePath}`);
+} catch (error) {
+  console.log('❌ Admin module not found, running without admin panel');
+}
 
 // ✅ СОЗДАЕМ РЕАЛЬНЫЕ ДАННЫЕ (если нет админ-модуля)
 const dataPath = path.join(__dirname, 'data');

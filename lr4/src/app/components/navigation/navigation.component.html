@@ -16,8 +16,11 @@
       Админ-панель
     </a>
     
+    <!-- ПОКАЗЫВАЕМ ВХОД И РЕГИСТРАЦИЮ ЕСЛИ ПОЛЬЗОВАТЕЛЬ НЕ АВТОРИЗОВАН -->
+    <a *ngIf="!currentUser" routerLink="/login">Войти</a>
     <a *ngIf="!currentUser" routerLink="/register">Регистрация</a>
     
+    <!-- ПОКАЗЫВАЕМ ИНФОРМАЦИЮ О ПОЛЬЗОВАТЕЛЕ ЕСЛИ АВТОРИЗОВАН -->
     <span *ngIf="currentUser" class="user-greeting">
       Привет, {{currentUser.firstName}}!
       <button (click)="logout()" class="logout-btn">Выйти</button>

@@ -10,15 +10,16 @@ import { RegistrationComponent } from './components/registration/registration.co
 import { NewsFeedComponent } from './components/news-feed/news-feed.component';
 import { AddNewsComponent } from './components/add-news/add-news.component';
 import { LoginComponent } from './components/login/login.component';
+import { HomeComponent } from './components/home/home.component';
 import { GlobalErrorHandler } from './services/global-error-handler';
 
-// ✅ Правильное определение routes с типом Routes
 const routes: Routes = [
+  { path: 'home', component: HomeComponent },
   { path: 'register', component: RegistrationComponent },
   { path: 'login', component: LoginComponent },
   { path: 'news', component: NewsFeedComponent },
   { path: 'add-news', component: AddNewsComponent },
-  { path: '', redirectTo: '/news', pathMatch: 'full' as const }
+  { path: '', redirectTo: '/home', pathMatch: 'full' }
 ];
 
 @NgModule({
@@ -28,7 +29,8 @@ const routes: Routes = [
     RegistrationComponent,
     NewsFeedComponent,
     AddNewsComponent,
-    LoginComponent
+    LoginComponent,
+    HomeComponent
   ],
   imports: [
     BrowserModule,
