@@ -1,0 +1,11 @@
+<div class="add-news">
+  <h3>Добавить новость</h3>
+  <textarea 
+    [(ngModel)]="newPostContent" 
+    placeholder="Что у вас нового?"
+    rows="4"
+  ></textarea>
+  <button (click)="addPost()" [disabled]="!newPostContent.trim()">
+    Опубликовать
+  </button>
+</div>

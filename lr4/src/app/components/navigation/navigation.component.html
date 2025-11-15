@@ -1,0 +1,24 @@
+<nav class="navbar">
+  <div class="nav-brand">
+    <h2>Социальная сеть</h2>
+  </div>
+  <div class="nav-links">
+    <a routerLink="/news">Лента новостей</a>
+    <a routerLink="/add-news">Добавить новость</a>
+    
+    <!-- ССЫЛКА НА АДМИН-МОДУЛЬ -->
+    <a 
+      *ngIf="isAdmin()" 
+      href="/admin/users.html" 
+      target="_blank" 
+      class="admin-link"
+    >
+      Админ-панель
+    </a>
+    
+    <a *ngIf="!currentUser" routerLink="/register">Регистрация</a>
+    <span *ngIf="currentUser" class="user-greeting">
+      Привет, {{currentUser.firstName}}!
+    </span>
+  </div>
+</nav>

@@ -1,0 +1,11 @@
+<div class="news-feed">
+  <h2>Лента новостей друзей</h2>
+  <div *ngFor="let post of news" class="news-card">
+    <h4>{{ post.authorName }}</h4>
+    <p>{{ post.content }}</p>
+    <small>{{ post.date | date:'medium' }}</small>
+  </div>
+  <div *ngIf="news.length === 0" class="no-news">
+    <p>Пока нет новостей. Будьте первым, кто добавит запись!</p>
+  </div>
+</div>

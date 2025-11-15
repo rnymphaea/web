@@ -1,0 +1,24 @@
+<div class="registration-container">
+  <h2>Регистрация в социальной сети</h2>
+  <form (ngSubmit)="onSubmit()" #registrationForm="ngForm">
+    <div>
+      <input type="text" [(ngModel)]="user.firstName" name="firstName" 
+             placeholder="Имя" required>
+    </div>
+    <div>
+      <input type="text" [(ngModel)]="user.lastName" name="lastName" 
+             placeholder="Фамилия" required>
+    </div>
+    <div>
+      <input type="email" [(ngModel)]="user.email" name="email" 
+             placeholder="Email" required>
+    </div>
+    <div>
+      <input type="password" [(ngModel)]="user.password" name="password" 
+             placeholder="Пароль" required>
+    </div>
+    <button type="submit" [disabled]="!registrationForm.form.valid">
+      Зарегистрироваться
+    </button>
+  </form>
+</div>
