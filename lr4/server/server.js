@@ -4,122 +4,159 @@ const http = require('http');
 const WebSocket = require('ws');
 const fs = require('fs').promises;
 const path = require('path');
+const { spawn } = require('child_process');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
 
-app.use(cors());
+// ✅ ПРАВИЛЬНАЯ НАСТРОЙКА CORS ДЛЯ ANGULAR DEV СЕРВЕРА
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Разрешаем запросы без origin (например, из Postman) и с любых localhost портов
+    if (!origin || origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// ✅ WebSocket С ПРАВИЛЬНЫМИ НАСТРОЙКАМИ CORS
+const wss = new WebSocket.Server({ 
+  server,
+  verifyClient: (info, done) => {
+    // Разрешаем все localhost соединения
+    if (!info.origin || info.origin.includes('localhost')) {
+      done(true);
+    } else {
+      console.log('WebSocket connection rejected from origin:', info.origin);
+      done(false, 403, 'Forbidden');
+    }
+  }
+});
 
 // ✅ СТАТИКА ДЛЯ ANGULAR ПРИЛОЖЕНИЯ
 app.use(express.static(path.join(__dirname, '../dist/social-network-app')));
 
-// ✅ СТАТИКА ДЛЯ АДМИН-МОДУЛЯ ИЗ NPM
-const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea/dist-gulp');
-try {
-  app.use('/admin', express.static(adminModulePath));
-  console.log(`✅ Admin module mounted at /admin from: ${adminModulePath}`);
-} catch (error) {
-  console.log('❌ Admin module not found, running without admin panel');
-}
+// ✅ Middleware для логирования запросов
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
 
-// ✅ СОЗДАЕМ РЕАЛЬНЫЕ ДАННЫЕ (если нет админ-модуля)
-const dataPath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea/src/server/data/');
-const ensureDataExists = async () => {
+// ✅ ЗАПУСК HTTPS СЕРВЕРА АДМИН-ПАНЕЛИ
+let adminServerProcess = null;
+
+const startAdminServer = () => {
+  return new Promise((resolve) => {
+    try {
+      const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
+      
+      if (!require('fs').existsSync(adminModulePath)) {
+        console.log('❌ Admin module not found');
+        resolve(false);
+        return;
+      }
+
+      console.log('🚀 Starting admin HTTPS server...');
+      adminServerProcess = spawn('sudo node', ['src/server/main.js'], {
+        cwd: adminModulePath,
+        stdio: 'inherit',
+        shell: true
+      });
+
+      // Даем время на запуск
+      setTimeout(() => {
+        console.log('✅ Admin HTTPS server started on port 3001');
+        resolve(true);
+      }, 5000);
+
+    } catch (error) {
+      console.log('❌ Failed to start admin server:', error.message);
+      resolve(false);
+    }
+  });
+};
+
+// ✅ ПРОСТАЯ ИНТЕГРАЦИЯ АДМИН-ПАНЕЛИ
+const setupAdminPanel = () => {
   try {
-    await fs.access(dataPath);
-  } catch (error) {
-    await fs.mkdir(dataPath, { recursive: true });
+    const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
     
-    // Создаем базовые данные
-    const initialData = {
-      users: [
-        {
-          id: 1,
-          firstName: 'Иван',
-          lastName: 'Иванов',
-          email: 'ivan@mail.ru',
-          role: 'admin',
-          status: 'active',
-          friends: [2, 3],
-          avatar: 'user1.jpg',
-          birthDate: '1990-01-01'
-        },
-        {
-          id: 2,
-          firstName: 'Петр',
-          lastName: 'Петров',
-          email: 'petr@mail.ru',
-          role: 'user',
-          status: 'active',
-          friends: [1],
-          avatar: 'user2.jpg',
-          birthDate: '1991-02-02'
-        },
-        {
-          id: 3,
-          firstName: 'Мария',
-          lastName: 'Сидорова',
-          email: 'maria@mail.ru',
-          role: 'user',
-          status: 'active',
-          friends: [1],
-          avatar: 'user3.jpg',
-          birthDate: '1992-03-03'
-        }
-      ],
-      friends: [
-        { userId: 1, friendId: 2 },
-        { userId: 1, friendId: 3 },
-        { userId: 2, friendId: 1 },
-        { userId: 3, friendId: 1 }
-      ],
-      news: [
-        {
-          id: 1,
-          authorId: 2,
-          content: 'Привет всем! Это моя первая новость.',
-          date: '2024-01-15'
-        },
-        {
-          id: 2,
-          authorId: 3,
-          content: 'Сегодня отличный день для программирования!',
-          date: '2024-01-16'
-        }
-      ],
-      messages: [
-        {
-          id: 1,
-          user_id: 1,
-          recipient_id: 2,
-          content: 'Привет! Как дела?',
-          date: '2024-01-15T10:00:00Z'
-        },
-        {
-          id: 2,
-          user_id: 2,
-          recipient_id: 1,
-          content: 'Привет! Все отлично, спасибо!',
-          date: '2024-01-15T10:05:00Z'
-        }
-      ]
-    };
+    if (!require('fs').existsSync(adminModulePath)) {
+      console.log('❌ Admin module not found');
+      return;
+    }
 
-    await fs.writeFile(path.join(dataPath, 'users.json'), JSON.stringify(initialData.users, null, 2));
-    await fs.writeFile(path.join(dataPath, 'friends.json'), JSON.stringify(initialData.friends, null, 2));
-    await fs.writeFile(path.join(dataPath, 'news.json'), JSON.stringify(initialData.news, null, 2));
-    await fs.writeFile(path.join(dataPath, 'messages.json'), JSON.stringify(initialData.messages, null, 2));
+    const adminGulpPath = path.join(adminModulePath, 'dist-gulp');
+    
+    if (require('fs').existsSync(adminGulpPath)) {
+      // Статика админ-панели
+      app.use('/admin-static', express.static(adminGulpPath));
+      console.log('✅ Admin static files mounted at /admin-static');
+    }
+    
+    // Простая HTML страница для админ-панели
+    app.get('/admin-panel', (req, res) => {
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Админ-панель</title>
+            <style>
+                body { font-family: Arial; padding: 20px; }
+                .link { display: block; margin: 10px 0; padding: 10px; background: #007bff; color: white; text-decoration: none; }
+            </style>
+        </head>
+        <body>
+            <h2>Админ-панель социальной сети</h2>
+            <a href="https://localhost:3001" target="_blank" class="link">🔐 HTTPS Админ-панель (порт 3001)</a>
+            <a href="/admin-static/html/users.html" target="_blank" class="link">📊 Статическая версия</a>
+            <a href="/" class="link">← Назад к приложению</a>
+        </body>
+        </html>
+      `);
+    });
+    
+  } catch (error) {
+    console.log('❌ Admin panel setup failed:', error.message);
   }
+};
+
+// ✅ ПУТЬ К ДАННЫМ (из npm модуля)
+const getDataPath = () => {
+  try {
+    const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
+    const dataPath = path.join(adminModulePath, 'src/server/data');
+    
+    if (require('fs').existsSync(dataPath)) {
+      return dataPath;
+    }
+  } catch (error) {
+    // Если модуля нет, используем локальную папку
+  }
+  
+  // Локальная папка для данных
+  const localDataPath = path.join(__dirname, 'data');
+  if (!require('fs').existsSync(localDataPath)) {
+    require('fs').mkdirSync(localDataPath, { recursive: true });
+  }
+  return localDataPath;
 };
 
 // ✅ API ENDPOINTS
 app.get('/api/users', async (req, res) => {
   try {
-    await ensureDataExists();
+    const dataPath = getDataPath();
     const data = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
-    res.json(JSON.parse(data));
+    const users = JSON.parse(data);
+    const safeUsers = users.map(({ password, ...user }) => user);
+    res.json(safeUsers);
   } catch (error) {
     console.error('Error loading users:', error);
     res.status(500).json({ error: 'Failed to load users' });
@@ -128,11 +165,17 @@ app.get('/api/users', async (req, res) => {
 
 app.get('/api/users/:id', async (req, res) => {
   try {
-    await ensureDataExists();
+    const dataPath = getDataPath();
     const data = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
     const users = JSON.parse(data);
     const user = users.find(u => u.id == req.params.id);
-    user ? res.json(user) : res.status(404).json({ error: 'User not found' });
+    
+    if (user) {
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
   } catch (error) {
     res.status(500).json({ error: 'Failed to load user' });
   }
@@ -140,7 +183,7 @@ app.get('/api/users/:id', async (req, res) => {
 
 app.put('/api/users/:id', async (req, res) => {
   try {
-    await ensureDataExists();
+    const dataPath = getDataPath();
     const data = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
     const users = JSON.parse(data);
     const userIndex = users.findIndex(u => u.id == req.params.id);
@@ -148,7 +191,8 @@ app.put('/api/users/:id', async (req, res) => {
     if (userIndex !== -1) {
       users[userIndex] = { ...users[userIndex], ...req.body };
       await fs.writeFile(path.join(dataPath, 'users.json'), JSON.stringify(users, null, 2));
-      res.json(users[userIndex]);
+      const { password, ...safeUser } = users[userIndex];
+      res.json(safeUser);
     } else {
       res.status(404).json({ error: 'User not found' });
     }
@@ -157,9 +201,58 @@ app.put('/api/users/:id', async (req, res) => {
   }
 });
 
-app.get('/api/friends/:id', async (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
-    await ensureDataExists();
+    const dataPath = getDataPath();
+    const data = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
+    const users = JSON.parse(data);
+    
+    const user = users.find(u => u.email === req.body.email);
+    if (!user) {
+      return res.status(401).json({ error: 'Неверный email или пароль' });
+    }
+    
+    const { password, ...safeUser } = user;
+    res.json(safeUser);
+  } catch (error) {
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+app.post('/api/users/register', async (req, res) => {
+  try {
+    const dataPath = getDataPath();
+    const data = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
+    const users = JSON.parse(data);
+    
+    const existingUser = users.find(u => u.email === req.body.email);
+    if (existingUser) {
+      return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
+    }
+    
+    const newUser = { 
+      id: Math.max(0, ...users.map(u => u.id)) + 1,
+      ...req.body,
+      friends: [],
+      status: 'active',
+      role: 'user',
+      avatar: 'default.jpg'
+    };
+    
+    users.push(newUser);
+    await fs.writeFile(path.join(dataPath, 'users.json'), JSON.stringify(users, null, 2));
+    
+    const { password, ...safeUser } = newUser;
+    res.json(safeUser);
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+app.get('/api/friends/:userId', async (req, res) => {
+  try {
+    const dataPath = getDataPath();
     const [usersData, friendsData] = await Promise.all([
       fs.readFile(path.join(dataPath, 'users.json'), 'utf8'),
       fs.readFile(path.join(dataPath, 'friends.json'), 'utf8')
@@ -167,7 +260,7 @@ app.get('/api/friends/:id', async (req, res) => {
     
     const users = JSON.parse(usersData);
     const friends = JSON.parse(friendsData);
-    const userId = parseInt(req.params.id);
+    const userId = parseInt(req.params.userId);
     
     const userFriends = friends
       .filter(f => f.userId === userId || f.friendId === userId)
@@ -190,9 +283,9 @@ app.get('/api/friends/:id', async (req, res) => {
   }
 });
 
-app.get('/api/news/:id', async (req, res) => {
+app.get('/api/news/:userId', async (req, res) => {
   try {
-    await ensureDataExists();
+    const dataPath = getDataPath();
     const [newsData, usersData] = await Promise.all([
       fs.readFile(path.join(dataPath, 'news.json'), 'utf8'),
       fs.readFile(path.join(dataPath, 'users.json'), 'utf8')
@@ -200,149 +293,52 @@ app.get('/api/news/:id', async (req, res) => {
     
     const news = JSON.parse(newsData);
     const users = JSON.parse(usersData);
-    const userId = parseInt(req.params.id);
+    const userId = parseInt(req.params.userId);
     
     const user = users.find(u => u.id === userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
     
-    const friendNews = news
-      .filter(n => user.friends.includes(n.authorId))
+    // Добавляем информацию об авторе к каждой новости
+    const userNews = news
+      .filter(n => user.friends.includes(n.authorId) || n.authorId === userId)
       .map(n => {
         const author = users.find(u => u.id === n.authorId);
         return {
           ...n,
-          authorName: author ? `${author.firstName} ${author.lastName}` : 'Неизвестный'
+          authorName: author ? `${author.firstName} ${author.lastName}` : 'Неизвестный автор',
+          authorAvatar: author ? author.avatar : 'default.jpg'
         };
       })
-      .sort((a, b) => new Date(b.date) - new Date(a.date)); // Сортируем по дате (новые сначала)
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
     
-    res.json(friendNews);
+    res.json(userNews);
   } catch (error) {
     console.error('Error loading news:', error);
     res.status(500).json({ error: 'Failed to load news' });
   }
 });
 
-app.get('/api/messages/:id', async (req, res) => {
-  try {
-    await ensureDataExists();
-    const [messagesData, usersData] = await Promise.all([
-      fs.readFile(path.join(dataPath, 'messages.json'), 'utf8'),
-      fs.readFile(path.join(dataPath, 'users.json'), 'utf8')
-    ]);
-    
-    const messages = JSON.parse(messagesData);
-    const users = JSON.parse(usersData);
-    const userId = parseInt(req.params.id);
-    
-    const userMessages = messages
-      .filter(m => m.user_id === userId || m.recipient_id === userId)
-      .map(m => {
-        const sender = users.find(u => u.id === m.user_id);
-        const receiver = users.find(u => u.id === m.recipient_id);
-        return {
-          content: m.content,
-          date: m.date,
-          senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Неизвестно',
-          receiverName: receiver ? `${receiver.firstName} ${receiver.lastName}` : 'Неизвестно'
-        };
-      })
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    res.json(userMessages);
-  } catch (error) {
-    console.error('Error loading messages:', error);
-    res.status(500).json({ error: 'Failed to load messages' });
-  }
-});
-
-// ✅ АУТЕНТИФИКАЦИЯ И РЕГИСТРАЦИЯ
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    await ensureDataExists();
-    const { email, password } = req.body;
-    const data = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
-    const users = JSON.parse(data);
-    
-    const user = users.find(u => u.email === email);
-    if (!user) {
-      return res.status(401).json({ error: 'Пользователь не найден' });
-    }
-    
-    // В реальном приложении здесь должна быть проверка пароля
-    res.json({
-      id: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Login failed' });
-  }
-});
-
-app.post('/api/users/register', async (req, res) => {
-  try {
-    await ensureDataExists();
-    const data = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
-    const users = JSON.parse(data);
-    
-    const existingUser = users.find(u => u.email === req.body.email);
-    if (existingUser) {
-      return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
-    }
-    
-    const newUser = { 
-      id: Math.max(...users.map(u => u.id)) + 1,
-      ...req.body, 
-      friends: [], 
-      status: 'active',
-      role: 'user',
-      avatar: 'default.jpg',
-      birthDate: req.body.birthDate || null
-    };
-    
-    users.push(newUser);
-    await fs.writeFile(path.join(dataPath, 'users.json'), JSON.stringify(users, null, 2));
-    
-    res.json({
-      id: newUser.id,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
-      email: newUser.email,
-      role: newUser.role
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
-  }
-});
-
 app.post('/api/news', async (req, res) => {
   try {
-    await ensureDataExists();
+    const dataPath = getDataPath();
     const data = await fs.readFile(path.join(dataPath, 'news.json'), 'utf8');
     const news = JSON.parse(data);
     
     const newPost = { 
-      id: Math.max(...news.map(n => n.id)) + 1,
-      ...req.body, 
-      date: new Date().toISOString().split('T')[0] 
+      id: Math.max(0, ...news.map(n => n.id)) + 1,
+      ...req.body,
+      date: new Date().toISOString()
     };
     
     news.push(newPost);
     await fs.writeFile(path.join(dataPath, 'news.json'), JSON.stringify(news, null, 2));
     
-    // ✅ WEBSOCKET УВЕДОМЛЕНИЕ ДЛЯ РЕАЛЬНОГО ВРЕМЕНИ
+    // WebSocket уведомление
     wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify({ 
           type: 'NEW_POST', 
-          data: {
-            ...newPost,
-            authorName: req.body.authorName || 'Новый пользователь'
-          }
+          data: newPost
         }));
       }
     });
@@ -356,10 +352,14 @@ app.post('/api/news', async (req, res) => {
 
 // ✅ WEBSOCKET ДЛЯ РЕАЛЬНОГО ВРЕМЕНИ
 wss.on('connection', (ws) => {
-  console.log('Client connected to WebSocket');
+  console.log('✅ WebSocket client connected');
+  
   ws.on('message', (message) => {
     try {
       const parsedMessage = JSON.parse(message);
+      console.log('WebSocket message received:', parsedMessage);
+      
+      // Рассылаем всем подключенным клиентам
       wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(parsedMessage));
@@ -369,6 +369,14 @@ wss.on('connection', (ws) => {
       console.error('Error parsing WebSocket message:', error);
     }
   });
+  
+  ws.on('close', () => {
+    console.log('WebSocket client disconnected');
+  });
+  
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
 });
 
 // ✅ ОБРАБОТКА MARKUP ДЛЯ ANGULAR
@@ -377,8 +385,41 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📱 Angular app: http://localhost:${PORT}`);
-  console.log(`⚙️  Admin module: http://localhost:${PORT}/admin/users.html`);
+
+// ✅ ЗАПУСК СЕРВЕРОВ
+const startServers = async () => {
+  try {
+    // Настраиваем админ-панель
+    setupAdminPanel();
+    
+    // Запускаем основной сервер
+    server.listen(PORT, () => {
+      console.log(`🚀 Main server running on http://localhost:${PORT}`);
+      console.log(`📱 Angular app: http://localhost:${PORT}`);
+      console.log(`🛠️  Admin panel: http://localhost:${PORT}/admin-panel`);
+    });
+
+    // Пытаемся запустить HTTPS сервер админ-панели
+    try {
+      await startAdminServer();
+    } catch (error) {
+      console.log('⚠️  Admin HTTPS server not available');
+    }
+
+  } catch (error) {
+    console.error('Failed to start main server:', error);
+    process.exit(1);
+  }
+};
+
+// Обработка завершения
+process.on('SIGINT', () => {
+  console.log('Shutting down servers...');
+  if (adminServerProcess) {
+    adminServerProcess.kill();
+  }
+  process.exit(0);
 });
+
+// Запускаем серверы
+startServers();

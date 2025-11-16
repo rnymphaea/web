@@ -6,12 +6,12 @@
     <a routerLink="/news">Лента новостей</a>
     <a routerLink="/add-news">Добавить новость</a>
     
-    <!-- ССЫЛКА НА АДМИН-МОДУЛЬ -->
+    <!-- ССЫЛКА НА АДМИН-ПАНЕЛЬ -->
     <a 
       *ngIf="isAdmin()" 
-      href="/admin/users.html" 
-      target="_blank" 
+      (click)="openAdminPanel()" 
       class="admin-link"
+      style="cursor: pointer;"
     >
       Админ-панель
     </a>

@@ -21,9 +21,11 @@ export interface User {
 export class UserService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  
+  // Базовый URL для API
+  private apiUrl = 'http://localhost:3000/api';
 
   constructor(private http: HttpClient) {
-    // Проверяем есть ли сохраненный пользователь
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
       this.currentUserSubject.next(JSON.parse(savedUser));
@@ -31,7 +33,7 @@ export class UserService {
   }
 
   login(email: string, password: string): Observable<any> {
-    return this.http.post('/api/auth/login', { email, password }).pipe(
+    return this.http.post(`${this.apiUrl}/auth/login`, { email, password }).pipe(
       tap((user: any) => {
         this.currentUserSubject.next(user);
         localStorage.setItem('currentUser', JSON.stringify(user));
@@ -45,7 +47,7 @@ export class UserService {
   }
 
   register(user: any): Observable<any> {
-    return this.http.post('/api/users/register', user).pipe(
+    return this.http.post(`${this.apiUrl}/users/register`, user).pipe(
       tap((newUser: any) => {
         this.currentUserSubject.next(newUser);
         localStorage.setItem('currentUser', JSON.stringify(newUser));
@@ -62,13 +64,11 @@ export class UserService {
     return user?.role === 'admin';
   }
 
-  // Получить друзей пользователя
   getFriends(userId: number): Observable<any[]> {
-    return this.http.get<any[]>(`/api/friends/${userId}`);
+    return this.http.get<any[]>(`${this.apiUrl}/friends/${userId}`);
   }
 
-  // Получить сообщения пользователя
   getMessages(userId: number): Observable<any[]> {
-    return this.http.get<any[]>(`/api/messages/${userId}`);
+    return this.http.get<any[]>(`${this.apiUrl}/messages/${userId}`);
   }
 }
