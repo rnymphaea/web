@@ -1,0 +1,162 @@
+.registration-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 2rem auto;
+  max-width: 500px;
+}
+
+.registration-container h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+}
+
+.registration-container div {
+  margin-bottom: 1rem;
+}
+
+.registration-container label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+  font-weight: bold;
+}
+
+.registration-container input[type="text"],
+.registration-container input[type="email"],
+.registration-container input[type="password"],
+.registration-container input[type="date"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.registration-container input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+/* Стили для загрузки аватарки */
+.avatar-upload {
+  border: 2px dashed #ddd;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.avatar-preview {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.preview-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #3498db;
+}
+
+.remove-avatar {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-avatar:hover {
+  background: #c0392b;
+}
+
+.file-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-input {
+  display: none;
+}
+
+.browse-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.browse-btn:hover {
+  background: #2980b9;
+}
+
+.file-info {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  margin-top: 0.5rem;
+}
+
+/* Кнопка отправки */
+.registration-container button[type="submit"] {
+  width: 100%;
+  background: #2ecc71;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+.registration-container button[type="submit"]:hover:not(:disabled) {
+  background: #27ae60;
+}
+
+.registration-container button[type="submit"]:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Сообщения об ошибках */
+.error-message {
+  color: #e74c3c;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: #fdf2f2;
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+  .registration-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .preview-image {
+    width: 100px;
+    height: 100px;
+  }
+}

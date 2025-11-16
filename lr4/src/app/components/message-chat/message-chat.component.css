@@ -31,12 +31,17 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  overflow: hidden;
   background: #3498db;
-  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+}
+
+.friend-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .friend-info h3 {
@@ -72,10 +77,30 @@
 .message {
   margin: 10px 0;
   display: flex;
+  align-items: flex-end;
+  gap: 10px;
 }
 
 .message.my-message {
   justify-content: flex-end;
+}
+
+.message-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #3498db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.message-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .message-content {

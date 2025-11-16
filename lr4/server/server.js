@@ -236,7 +236,8 @@ app.post('/api/users/register', async (req, res) => {
       friends: [],
       status: 'active',
       role: 'user',
-      avatar: 'default.jpg'
+      avatar: 'default.jpg',
+      birthDate: req.body.birthDate || null
     };
     
     users.push(newUser);
@@ -249,7 +250,6 @@ app.post('/api/users/register', async (req, res) => {
     res.status(500).json({ error: 'Registration failed' });
   }
 });
-
 
 // ✅ GET ДРУЗЬЯ ПОЛЬЗОВАТЕЛЯ (исправленная версия без дублирования)
 app.get('/api/friends/:userId', async (req, res) => {
@@ -536,6 +536,67 @@ app.post('/api/friends', async (req, res) => {
   } catch (error) {
     console.error('Error adding friend:', error);
     res.status(500).json({ error: 'Failed to add friend' });
+  }
+});
+
+app.post('/api/avatar/upload', async (req, res) => {
+  try {
+    const { userId, imageData } = req.body;
+    
+    if (!userId || !imageData) {
+      return res.status(400).json({ error: 'Missing userId or imageData' });
+    }
+
+    // Конвертируем base64 в buffer
+    const base64Data = imageData.replace(/^data:image\/jpeg;base64,/, '');
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+
+    // Сохраняем в папку с аватарками
+    const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
+    const avatarsDir = path.join(adminModulePath, 'dist-gulp/images/users');
+    
+    // Создаем папку если не существует
+    if (!require('fs').existsSync(avatarsDir)) {
+      require('fs').mkdirSync(avatarsDir, { recursive: true });
+    }
+
+    const avatarPath = path.join(avatarsDir, `user${userId}.jpg`);
+    
+    // Сохраняем изображение
+    await fs.writeFile(avatarPath, imageBuffer);
+    
+    res.json({ success: true, message: 'Avatar uploaded successfully' });
+  } catch (error) {
+    console.error('Error uploading avatar:', error);
+    res.status(500).json({ error: 'Failed to upload avatar' });
+  }
+});
+
+
+// ✅ GET АВАТАРКА ПОЛЬЗОВАТЕЛЯ
+app.get('/api/avatar/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Пробуем найти аватарку в npm модуле
+    const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
+    const avatarPath = path.join(adminModulePath, 'dist-gulp/images/users', `user${userId}.jpg`);
+    
+    if (require('fs').existsSync(avatarPath)) {
+      res.sendFile(avatarPath);
+    } else {
+      // Если аватарки нет, возвращаем дефолтную
+      const defaultAvatarPath = path.join(__dirname, 'assets/default-avatar.jpg');
+      if (require('fs').existsSync(defaultAvatarPath)) {
+        res.sendFile(defaultAvatarPath);
+      } else {
+        // Если дефолтной тоже нет, возвращаем 404
+        res.status(404).json({ error: 'Avatar not found' });
+      }
+    }
+  } catch (error) {
+    console.error('Error loading avatar:', error);
+    res.status(500).json({ error: 'Failed to load avatar' });
   }
 });
 

@@ -34,7 +34,6 @@ export class MessageChatComponent implements OnInit, OnDestroy {
       }
     });
 
-    // ПОДПИСКА НА ОБНОВЛЕНИЯ СООБЩЕНИЙ ЧЕРЕЗ WEBSOCKET
     this.messagesSubscription = this.messageService.messages$.subscribe(messages => {
       if (this.currentUser && this.friend) {
         this.messages = this.messageService.getConversation(this.currentUser.id, this.friend.id);
@@ -47,12 +46,10 @@ export class MessageChatComponent implements OnInit, OnDestroy {
     this.routeSubscription = this.route.params.subscribe(params => {
       const friendId = +params['friendId'];
       
-      // Загружаем информацию о друге
       this.userService.getFriends(this.currentUser!.id).subscribe(friends => {
         this.friend = friends.find(f => f.id === friendId);
         
         if (this.friend) {
-          // Загружаем сообщения
           this.messageService.getMessages(this.currentUser!.id).subscribe({
             next: () => {
               this.messages = this.messageService.getConversation(this.currentUser!.id, friendId);
@@ -95,6 +92,16 @@ export class MessageChatComponent implements OnInit, OnDestroy {
         messageContainer.scrollTop = messageContainer.scrollHeight;
       }
     }, 100);
+  }
+
+  // Новый метод для получения URL аватарки
+  getAvatarUrl(userId: number): string {
+    return this.userService.getAvatarUrl(userId);
+  }
+
+  // Обработчик ошибок загрузки изображений
+  handleImageError(event: any) {
+    event.target.style.display = 'none';
   }
 
   ngOnDestroy() {

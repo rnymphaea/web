@@ -28,7 +28,7 @@
       <div *ngFor="let user of searchResults" class="search-result-item">
         <div class="user-info">
           <div class="user-avatar">
-            {{ user.firstName[0] }}{{ user.lastName[0] }}
+            <img [src]="getAvatarUrl(user.id)" [alt]="user.firstName" (error)="handleImageError($event)">
           </div>
           <div class="user-details">
             <strong>{{ user.firstName }} {{ user.lastName }}</strong>
@@ -64,7 +64,7 @@
   <div *ngFor="let friend of friends" class="friend-card">
     <div class="friend-info">
       <div class="friend-avatar">
-        {{ friend.firstName[0] }}{{ friend.lastName[0] }}
+        <img [src]="getAvatarUrl(friend.id)" [alt]="friend.firstName" (error)="handleImageError($event)">
       </div>
       <div class="friend-details">
         <h4>{{ friend.firstName }} {{ friend.lastName }}</h4>

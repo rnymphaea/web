@@ -67,10 +67,10 @@ export class FriendListComponent implements OnInit {
     this.userService.addFriend(this.currentUser!.id, friendId).subscribe({
       next: (response: any) => {
         alert(response.message || 'Пользователь добавлен в друзья');
-        this.loadFriends(this.currentUser!.id); // Обновляем список друзей
-        this.searchQuery = ''; // Очищаем поиск
-        this.searchResults = []; // Очищаем результаты
-        this.showAddFriend = false; // Скрываем панель добавления
+        this.loadFriends(this.currentUser!.id);
+        this.searchQuery = '';
+        this.searchResults = [];
+        this.showAddFriend = false;
       },
       error: (error) => {
         alert(error.error?.error || 'Ошибка при добавлении в друзья');
@@ -90,5 +90,16 @@ export class FriendListComponent implements OnInit {
     this.showAddFriend = !this.showAddFriend;
     this.searchQuery = '';
     this.searchResults = [];
+  }
+
+  // Новый метод для получения URL аватарки
+  getAvatarUrl(userId: number): string {
+    return this.userService.getAvatarUrl(userId);
+  }
+
+  // Обработчик ошибок загрузки изображений
+  handleImageError(event: any) {
+    event.target.style.display = 'none';
+    event.target.nextElementSibling?.style.display?.('block');
   }
 }

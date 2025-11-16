@@ -1,6 +1,8 @@
 <div class="registration-container">
   <h2>Регистрация в социальной сети</h2>
-  <form (ngSubmit)="onSubmit()" #registrationForm="ngForm">
+  <form (ngSubmit)="onSubmit()" #registrationForm="ngForm" enctype="multipart/form-data">
+    
+    <!-- Поля основной информации -->
     <div>
       <input type="text" [(ngModel)]="user.firstName" name="firstName" 
              placeholder="Имя" required>
@@ -17,8 +19,44 @@
       <input type="password" [(ngModel)]="user.password" name="password" 
              placeholder="Пароль" required>
     </div>
-    <button type="submit" [disabled]="!registrationForm.form.valid">
-      Зарегистрироваться
+    
+    <!-- Дата рождения -->
+    <div>
+      <label for="birthDate">Дата рождения:</label>
+      <input type="date" [(ngModel)]="user.birthDate" name="birthDate" 
+             id="birthDate" [max]="maxBirthDate">
+    </div>
+    
+    <!-- Загрузка аватарки -->
+    <div class="avatar-upload">
+      <label>Аватарка:</label>
+      <div class="avatar-preview" *ngIf="avatarPreview">
+        <img [src]="avatarPreview" alt="Preview" class="preview-image">
+        <button type="button" (click)="removeAvatar()" class="remove-avatar">×</button>
+      </div>
+      <div class="file-upload">
+        <input type="file" #fileInput (change)="onFileSelected($event)" 
+               accept=".jpg,.jpeg" class="file-input">
+        <button type="button" (click)="fileInput.click()" class="browse-btn">
+          {{ avatarPreview ? 'Изменить фото' : 'Выбрать фото (JPG)' }}
+        </button>
+      </div>
+      <div *ngIf="selectedFile" class="file-info">
+        Выбран файл: {{ selectedFile.name }}
+      </div>
+    </div>
+
+    <!-- Сообщения об ошибках -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+    <div *ngIf="fileError" class="error-message">
+      {{ fileError }}
+    </div>
+
+    <!-- Кнопка отправки -->
+    <button type="submit" [disabled]="!registrationForm.form.valid || isLoading">
+      {{ isLoading ? 'Регистрация...' : 'Зарегистрироваться' }}
     </button>
   </form>
 </div>

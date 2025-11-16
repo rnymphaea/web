@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { Router } from '@angular/router'; // Добавляем Router
+import { Router } from '@angular/router';
 
 export interface User {
   id: number;
@@ -27,7 +27,7 @@ export class UserService {
 
   constructor(
     private http: HttpClient,
-    private router: Router // Добавляем Router в конструктор
+    private router: Router
   ) {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
@@ -47,7 +47,6 @@ export class UserService {
   logout(): void {
     this.currentUserSubject.next(null);
     localStorage.removeItem('currentUser');
-    // Перенаправляем на домашнюю страницу
     this.router.navigate(['/home']);
   }
 
@@ -58,6 +57,14 @@ export class UserService {
         localStorage.setItem('currentUser', JSON.stringify(newUser));
       })
     );
+  }
+
+  // Новый метод для загрузки аватарки
+  uploadAvatar(userId: number, imageData: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/avatar/upload`, {
+      userId,
+      imageData
+    });
   }
 
   getCurrentUser(): Observable<User | null> {
@@ -83,5 +90,9 @@ export class UserService {
 
   getMessages(userId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/messages/${userId}`);
+  }
+
+  getAvatarUrl(userId: number): string {
+    return `${this.apiUrl}/avatar/${userId}`;
   }
 }
