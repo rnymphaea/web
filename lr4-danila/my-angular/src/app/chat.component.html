@@ -1,0 +1,7 @@
+<div *ngFor="let message of messages">
+  <p>{{ message.user }}: {{ message.textMessage }} : {{ message.date }}</p>
+</div>
+<input #titleInput type="text" placeholder="Введите сообщение">
+<button id="send" (click)="sendMessage(titleInput.value)">Отправить</button><br>
+<hr>
+<button id="goHome" (click)="goHome()">Вернуться домой</button>

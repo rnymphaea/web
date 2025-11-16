@@ -1,0 +1,8 @@
+<h2>Список друзей</h2>
+<div *ngFor="let friend of friends">
+  <p>{{ friend.firstName }} {{ friend.lastName }}</p>
+  <button (click)="toChat(friend.id)" value=`${friend.id}`>Перейти к переписке</button>
+  <button (click)="deleteFriend(friend.id)" value=`${friend.id}`>Удалить из друзей</button>
+</div><br>
+<hr>
+<button id="goHome" (click)="goHome()">Вернуться домой</button>

@@ -1,0 +1,9 @@
+<h2>Пользователи</h2>
+<div *ngFor="let user of users">
+  <h3>{{ user.lastName }}</h3>
+  <p>{{ user.firstName }}</p>
+  <button id="add" (click)="addToFriends(user.id)" value=`${user.id}`>Добавить в друзья</button>
+  <br>
+</div><br>
+<hr>
+<button id="goHome" (click)="goHome()">Вернуться домой</button>
