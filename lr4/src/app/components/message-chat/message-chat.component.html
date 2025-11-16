@@ -1,0 +1,48 @@
+<div class="message-chat">
+  <div class="chat-header" *ngIf="friend">
+    <a routerLink="/friends" class="back-btn">← Назад к друзьям</a>
+    <div class="friend-info">
+      <div class="friend-avatar">
+        {{ friend.firstName[0] }}{{ friend.lastName[0] }}
+      </div>
+      <div>
+        <h3>{{ friend.firstName }} {{ friend.lastName }}</h3>
+        <span class="friend-email">{{ friend.email }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    Загрузка сообщений...
+  </div>
+
+  <div *ngIf="!isLoading" class="messages-container">
+    <div *ngIf="messages.length === 0" class="no-messages">
+      <p>Нет сообщений</p>
+      <p>Начните общение первым!</p>
+    </div>
+    
+    <div *ngFor="let message of messages" 
+         [class.my-message]="message.user_id === currentUser?.id"
+         class="message">
+      <div class="message-content">
+        <p>{{ message.content }}</p>
+        <span class="message-time">
+          {{ message.date | date:'HH:mm dd.MM.yyyy' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="friend && !isLoading" class="message-input">
+    <textarea 
+      [(ngModel)]="newMessage" 
+      placeholder="Введите сообщение..."
+      (keydown.enter)="$event.preventDefault(); sendMessage()"
+      rows="2"
+    ></textarea>
+    <button (click)="sendMessage()" [disabled]="!newMessage.trim()">
+      Отправить
+    </button>
+  </div>
+</div>

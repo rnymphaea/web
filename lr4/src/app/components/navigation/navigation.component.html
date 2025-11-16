@@ -3,12 +3,14 @@
     <h2>Социальная сеть</h2>
   </div>
   <div class="nav-links">
-    <a routerLink="/news">Лента новостей</a>
-    <a routerLink="/add-news">Добавить новость</a>
+    <!-- Основные ссылки для всех авторизованных пользователей -->
+    <a *ngIf="currentUser" routerLink="/news">Лента новостей</a>
+    <a *ngIf="currentUser" routerLink="/add-news">Добавить новость</a>
+    <a *ngIf="currentUser" routerLink="/friends">Мои друзья</a>
     
-    <!-- ССЫЛКА НА АДМИН-ПАНЕЛЬ -->
+    <!-- Ссылка на админ-панель для администраторов -->
     <a 
-      *ngIf="isAdmin()" 
+      *ngIf="currentUser && isAdmin()" 
       (click)="openAdminPanel()" 
       class="admin-link"
       style="cursor: pointer;"
@@ -16,14 +18,13 @@
       Админ-панель
     </a>
     
-    <!-- ПОКАЗЫВАЕМ ВХОД И РЕГИСТРАЦИЮ ЕСЛИ ПОЛЬЗОВАТЕЛЬ НЕ АВТОРИЗОВАН -->
+    <!-- Кнопки для неавторизованных пользователей -->
     <a *ngIf="!currentUser" routerLink="/login">Войти</a>
     <a *ngIf="!currentUser" routerLink="/register">Регистрация</a>
     
-    <!-- ПОКАЗЫВАЕМ ИНФОРМАЦИЮ О ПОЛЬЗОВАТЕЛЕ ЕСЛИ АВТОРИЗОВАН -->
-    <span *ngIf="currentUser" class="user-greeting">
-      Привет, {{currentUser.firstName}}!
-      <button (click)="logout()" class="logout-btn">Выйти</button>
-    </span>
+    <!-- Кнопка выхода для авторизованных пользователей -->
+    <button *ngIf="currentUser" (click)="logout()" class="logout-btn">
+      Выйти
+    </button>
   </div>
 </nav>

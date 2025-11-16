@@ -250,6 +250,8 @@ app.post('/api/users/register', async (req, res) => {
   }
 });
 
+
+// ✅ GET ДРУЗЬЯ ПОЛЬЗОВАТЕЛЯ (исправленная версия без дублирования)
 app.get('/api/friends/:userId', async (req, res) => {
   try {
     const dataPath = getDataPath();
@@ -262,19 +264,29 @@ app.get('/api/friends/:userId', async (req, res) => {
     const friends = JSON.parse(friendsData);
     const userId = parseInt(req.params.userId);
     
-    const userFriends = friends
-      .filter(f => f.userId === userId || f.friendId === userId)
-      .map(f => {
-        const friendId = f.userId === userId ? f.friendId : f.userId;
-        const friend = users.find(u => u.id === friendId);
-        return friend ? {
-          id: friend.id,
-          firstName: friend.firstName,
-          lastName: friend.lastName,
-          avatar: friend.avatar
-        } : null;
-      })
-      .filter(Boolean);
+    // Используем Set для уникальных ID друзей
+    const friendIds = new Set();
+    
+    friends.forEach(f => {
+      if (f.userId === userId) {
+        friendIds.add(f.friendId);
+      } else if (f.friendId === userId) {
+        friendIds.add(f.userId);
+      }
+    });
+    
+    // Получаем уникальных друзей
+    const userFriends = Array.from(friendIds).map(friendId => {
+      const friend = users.find(u => u.id === friendId);
+      return friend ? {
+        id: friend.id,
+        firstName: friend.firstName,
+        lastName: friend.lastName,
+        avatar: friend.avatar,
+        email: friend.email,
+        status: friend.status
+      } : null;
+    }).filter(Boolean);
     
     res.json(userFriends);
   } catch (error) {
@@ -347,6 +359,183 @@ app.post('/api/news', async (req, res) => {
   } catch (error) {
     console.error('Error creating post:', error);
     res.status(500).json({ error: 'Failed to create post' });
+  }
+});
+
+// Добавим эти endpoints в server.js после существующих API endpoints
+
+// ✅ GET СООБЩЕНИЯ ПОЛЬЗОВАТЕЛЯ
+app.get('/api/messages/:userId', async (req, res) => {
+  try {
+    const dataPath = getDataPath();
+    const data = await fs.readFile(path.join(dataPath, 'messages.json'), 'utf8');
+    const messages = JSON.parse(data);
+    const userId = parseInt(req.params.userId);
+    
+    // Получаем сообщения где пользователь отправитель или получатель
+    const userMessages = messages.filter(m => 
+      m.user_id === userId || m.recipient_id === userId
+    );
+    
+    res.json(userMessages);
+  } catch (error) {
+    console.error('Error loading messages:', error);
+    res.status(500).json({ error: 'Failed to load messages' });
+  }
+});
+
+// ✅ POST ОТПРАВКА СООБЩЕНИЯ
+app.post('/api/messages', async (req, res) => {
+  try {
+    const dataPath = getDataPath();
+    const data = await fs.readFile(path.join(dataPath, 'messages.json'), 'utf8');
+    const messages = JSON.parse(data);
+    
+    const newMessage = {
+      id: Math.max(0, ...messages.map(m => m.id)) + 1,
+      user_id: req.body.senderId,
+      recipient_id: req.body.recipientId,
+      content: req.body.content,
+      date: new Date().toISOString(),
+      read: false
+    };
+    
+    messages.push(newMessage);
+    await fs.writeFile(path.join(dataPath, 'messages.json'), JSON.stringify(messages, null, 2));
+    
+    // WebSocket уведомление
+    wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ 
+          type: 'NEW_MESSAGE', 
+          data: newMessage
+        }));
+      }
+    });
+    
+    res.json(newMessage);
+  } catch (error) {
+    console.error('Error sending message:', error);
+    res.status(500).json({ error: 'Failed to send message' });
+  }
+});
+
+// ✅ GET ДРУЗЬЯ ПОЛЬЗОВАТЕЛЯ (улучшенная версия)
+app.get('/api/friends/:userId', async (req, res) => {
+  try {
+    const dataPath = getDataPath();
+    const [usersData, friendsData] = await Promise.all([
+      fs.readFile(path.join(dataPath, 'users.json'), 'utf8'),
+      fs.readFile(path.join(dataPath, 'friends.json'), 'utf8')
+    ]);
+    
+    const users = JSON.parse(usersData);
+    const friends = JSON.parse(friendsData);
+    const userId = parseInt(req.params.userId);
+    
+    const userFriends = friends
+      .filter(f => f.userId === userId || f.friendId === userId)
+      .map(f => {
+        const friendId = f.userId === userId ? f.friendId : f.userId;
+        const friend = users.find(u => u.id === friendId);
+        return friend ? {
+          id: friend.id,
+          firstName: friend.firstName,
+          lastName: friend.lastName,
+          avatar: friend.avatar,
+          email: friend.email,
+          status: friend.status
+        } : null;
+      })
+      .filter(Boolean);
+    
+    res.json(userFriends);
+  } catch (error) {
+    console.error('Error loading friends:', error);
+    res.status(500).json({ error: 'Failed to load friends' });
+  }
+});
+
+
+// ✅ ПОИСК ПОЛЬЗОВАТЕЛЕЙ ПО ИМЕНИ И ФАМИЛИИ
+app.get('/api/users/search/:query', async (req, res) => {
+  try {
+    const dataPath = getDataPath();
+    const data = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
+    const users = JSON.parse(data);
+    
+    const query = req.params.query.toLowerCase();
+    const currentUserId = parseInt(req.query.currentUserId);
+    
+    const filteredUsers = users
+      .filter(user => {
+        if (user.id === currentUserId) return false; // Исключаем текущего пользователя
+        
+        const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+        const firstName = user.firstName.toLowerCase();
+        const lastName = user.lastName.toLowerCase();
+        
+        return fullName.includes(query) || 
+               firstName.includes(query) || 
+               lastName.includes(query);
+      })
+      .map(({ password, ...user }) => user) // Убираем пароль
+      .slice(0, 10); // Ограничиваем результаты
+    
+    res.json(filteredUsers);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+});
+
+// ✅ ДОБАВЛЕНИЕ В ДРУЗЬЯ
+app.post('/api/friends', async (req, res) => {
+  try {
+    const dataPath = getDataPath();
+    const data = await fs.readFile(path.join(dataPath, 'friends.json'), 'utf8');
+    const friends = JSON.parse(data);
+    
+    const { userId, friendId } = req.body;
+    
+    // Проверяем, не являются ли уже друзьями
+    const existingFriendship = friends.find(f => 
+      (f.userId === userId && f.friendId === friendId) ||
+      (f.userId === friendId && f.friendId === userId)
+    );
+    
+    if (existingFriendship) {
+      return res.status(400).json({ error: 'Пользователь уже у вас в друзьях' });
+    }
+    
+    // Проверяем существование пользователей
+    const usersData = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
+    const users = JSON.parse(usersData);
+    
+    const userExists = users.some(u => u.id === userId);
+    const friendExists = users.some(u => u.id === friendId);
+    
+    if (!userExists || !friendExists) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+    
+    // Добавляем дружбу (только в одну сторону, как в вашей структуре)
+    const newFriendship = {
+      userId: userId,
+      friendId: friendId
+    };
+    
+    friends.push(newFriendship);
+    await fs.writeFile(path.join(dataPath, 'friends.json'), JSON.stringify(friends, null, 2));
+    
+    res.json({ 
+      success: true, 
+      message: 'Пользователь добавлен в друзья',
+      friendship: newFriendship
+    });
+  } catch (error) {
+    console.error('Error adding friend:', error);
+    res.status(500).json({ error: 'Failed to add friend' });
   }
 });
 
