@@ -25,7 +25,7 @@ try {
 }
 
 // ✅ СОЗДАЕМ РЕАЛЬНЫЕ ДАННЫЕ (если нет админ-модуля)
-const dataPath = path.join(__dirname, 'data');
+const dataPath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea/src/server/data/');
 const ensureDataExists = async () => {
   try {
     await fs.access(dataPath);
