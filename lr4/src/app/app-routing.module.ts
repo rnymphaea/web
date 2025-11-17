@@ -5,6 +5,7 @@ import { NewsFeedComponent } from './components/news-feed/news-feed.component';
 import { AddNewsComponent } from './components/add-news/add-news.component';
 import { FriendListComponent } from './components/friend-list/friend-list.component';
 import { MessageChatComponent } from './components/message-chat/message-chat.component';
+import { EditProfileComponent } from './components/edit-profile/edit-profile.component';
 
 const routes: Routes = [
   { path: 'register', component: RegistrationComponent },
@@ -12,6 +13,7 @@ const routes: Routes = [
   { path: 'add-news', component: AddNewsComponent },
   { path: 'friends', component: FriendListComponent },
   { path: 'messages/:friendId', component: MessageChatComponent },
+  { path: 'edit-profile', component: EditProfileComponent },
   { path: '', redirectTo: '/news', pathMatch: 'full' }
 ];
 

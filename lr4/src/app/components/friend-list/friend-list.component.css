@@ -189,6 +189,11 @@
   font-size: 14px;
 }
 
+.friend-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .chat-btn {
   background: #3498db;
   color: white;
@@ -201,4 +206,18 @@
 
 .chat-btn:hover {
   background: #2980b9;
+}
+
+.remove-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.remove-btn:hover {
+  background: #c0392b;
 }

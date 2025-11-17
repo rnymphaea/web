@@ -78,6 +78,21 @@ export class FriendListComponent implements OnInit {
     });
   }
 
+  removeFriend(friendId: number) {
+    const friend = this.friends.find(f => f.id === friendId);
+    if (confirm(`Вы уверены, что хотите удалить ${friend?.firstName} ${friend?.lastName} из друзей?`)) {
+      this.userService.removeFriend(this.currentUser!.id, friendId).subscribe({
+        next: (response: any) => {
+          alert(response.message || 'Друг удален');
+          this.loadFriends(this.currentUser!.id);
+        },
+        error: (error) => {
+          alert(error.error?.error || 'Ошибка при удалении друга');
+        }
+      });
+    }
+  }
+
   isAlreadyFriend(userId: number): boolean {
     return this.friends.some(friend => friend.id === userId);
   }
@@ -92,14 +107,11 @@ export class FriendListComponent implements OnInit {
     this.searchResults = [];
   }
 
-  // Новый метод для получения URL аватарки
   getAvatarUrl(userId: number): string {
     return this.userService.getAvatarUrl(userId);
   }
 
-  // Обработчик ошибок загрузки изображений
   handleImageError(event: any) {
     event.target.style.display = 'none';
-    event.target.nextElementSibling?.style.display?.('block');
   }
 }

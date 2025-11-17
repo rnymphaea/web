@@ -9,10 +9,8 @@ const { spawn } = require('child_process');
 const app = express();
 const server = http.createServer(app);
 
-// ✅ ПРАВИЛЬНАЯ НАСТРОЙКА CORS ДЛЯ ANGULAR DEV СЕРВЕРА
 const corsOptions = {
   origin: function (origin, callback) {
-    // Разрешаем запросы без origin (например, из Postman) и с любых localhost портов
     if (!origin || origin.includes('localhost')) {
       return callback(null, true);
     }
@@ -26,11 +24,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// ✅ WebSocket С ПРАВИЛЬНЫМИ НАСТРОЙКАМИ CORS
 const wss = new WebSocket.Server({ 
   server,
   verifyClient: (info, done) => {
-    // Разрешаем все localhost соединения
     if (!info.origin || info.origin.includes('localhost')) {
       done(true);
     } else {
@@ -40,16 +36,13 @@ const wss = new WebSocket.Server({
   }
 });
 
-// ✅ СТАТИКА ДЛЯ ANGULAR ПРИЛОЖЕНИЯ
 app.use(express.static(path.join(__dirname, '../dist/social-network-app')));
 
-// ✅ Middleware для логирования запросов
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
   next();
 });
 
-// ✅ ЗАПУСК HTTPS СЕРВЕРА АДМИН-ПАНЕЛИ
 let adminServerProcess = null;
 
 const startAdminServer = () => {
@@ -58,50 +51,46 @@ const startAdminServer = () => {
       const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
       
       if (!require('fs').existsSync(adminModulePath)) {
-        console.log('❌ Admin module not found');
+        console.log('Admin module not found');
         resolve(false);
         return;
       }
 
-      console.log('🚀 Starting admin HTTPS server...');
+      console.log('Starting admin HTTPS server...');
       adminServerProcess = spawn('sudo node', ['src/server/main.js'], {
         cwd: adminModulePath,
         stdio: 'inherit',
         shell: true
       });
 
-      // Даем время на запуск
       setTimeout(() => {
-        console.log('✅ Admin HTTPS server started on port 3001');
+        console.log('Admin HTTPS server started on port 3001');
         resolve(true);
       }, 5000);
 
     } catch (error) {
-      console.log('❌ Failed to start admin server:', error.message);
+      console.log('Failed to start admin server:', error.message);
       resolve(false);
     }
   });
 };
 
-// ✅ ПРОСТАЯ ИНТЕГРАЦИЯ АДМИН-ПАНЕЛИ
 const setupAdminPanel = () => {
   try {
     const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
     
     if (!require('fs').existsSync(adminModulePath)) {
-      console.log('❌ Admin module not found');
+      console.log('Admin module not found');
       return;
     }
 
     const adminGulpPath = path.join(adminModulePath, 'dist-gulp');
     
     if (require('fs').existsSync(adminGulpPath)) {
-      // Статика админ-панели
       app.use('/admin-static', express.static(adminGulpPath));
-      console.log('✅ Admin static files mounted at /admin-static');
+      console.log('Admin static files mounted at /admin-static');
     }
     
-    // Простая HTML страница для админ-панели
     app.get('/admin-panel', (req, res) => {
       res.send(`
         <!DOCTYPE html>
@@ -124,11 +113,10 @@ const setupAdminPanel = () => {
     });
     
   } catch (error) {
-    console.log('❌ Admin panel setup failed:', error.message);
+    console.log('Admin panel setup failed:', error.message);
   }
 };
 
-// ✅ ПУТЬ К ДАННЫМ (из npm модуля)
 const getDataPath = () => {
   try {
     const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
@@ -138,10 +126,8 @@ const getDataPath = () => {
       return dataPath;
     }
   } catch (error) {
-    // Если модуля нет, используем локальную папку
   }
   
-  // Локальная папка для данных
   const localDataPath = path.join(__dirname, 'data');
   if (!require('fs').existsSync(localDataPath)) {
     require('fs').mkdirSync(localDataPath, { recursive: true });
@@ -149,7 +135,6 @@ const getDataPath = () => {
   return localDataPath;
 };
 
-// ✅ API ENDPOINTS
 app.get('/api/users', async (req, res) => {
   try {
     const dataPath = getDataPath();
@@ -251,7 +236,6 @@ app.post('/api/users/register', async (req, res) => {
   }
 });
 
-// ✅ GET ДРУЗЬЯ ПОЛЬЗОВАТЕЛЯ (исправленная версия без дублирования)
 app.get('/api/friends/:userId', async (req, res) => {
   try {
     const dataPath = getDataPath();
@@ -264,7 +248,6 @@ app.get('/api/friends/:userId', async (req, res) => {
     const friends = JSON.parse(friendsData);
     const userId = parseInt(req.params.userId);
     
-    // Используем Set для уникальных ID друзей
     const friendIds = new Set();
     
     friends.forEach(f => {
@@ -275,7 +258,6 @@ app.get('/api/friends/:userId', async (req, res) => {
       }
     });
     
-    // Получаем уникальных друзей
     const userFriends = Array.from(friendIds).map(friendId => {
       const friend = users.find(u => u.id === friendId);
       return friend ? {
@@ -310,7 +292,6 @@ app.get('/api/news/:userId', async (req, res) => {
     const user = users.find(u => u.id === userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
     
-    // Добавляем информацию об авторе к каждой новости
     const userNews = news
       .filter(n => user.friends.includes(n.authorId) || n.authorId === userId)
       .map(n => {
@@ -345,7 +326,6 @@ app.post('/api/news', async (req, res) => {
     news.push(newPost);
     await fs.writeFile(path.join(dataPath, 'news.json'), JSON.stringify(news, null, 2));
     
-    // WebSocket уведомление
     wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify({ 
@@ -362,9 +342,6 @@ app.post('/api/news', async (req, res) => {
   }
 });
 
-// Добавим эти endpoints в server.js после существующих API endpoints
-
-// ✅ GET СООБЩЕНИЯ ПОЛЬЗОВАТЕЛЯ
 app.get('/api/messages/:userId', async (req, res) => {
   try {
     const dataPath = getDataPath();
@@ -372,7 +349,6 @@ app.get('/api/messages/:userId', async (req, res) => {
     const messages = JSON.parse(data);
     const userId = parseInt(req.params.userId);
     
-    // Получаем сообщения где пользователь отправитель или получатель
     const userMessages = messages.filter(m => 
       m.user_id === userId || m.recipient_id === userId
     );
@@ -384,7 +360,6 @@ app.get('/api/messages/:userId', async (req, res) => {
   }
 });
 
-// ✅ POST ОТПРАВКА СООБЩЕНИЯ
 app.post('/api/messages', async (req, res) => {
   try {
     const dataPath = getDataPath();
@@ -403,7 +378,6 @@ app.post('/api/messages', async (req, res) => {
     messages.push(newMessage);
     await fs.writeFile(path.join(dataPath, 'messages.json'), JSON.stringify(messages, null, 2));
     
-    // WebSocket уведомление
     wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify({ 
@@ -420,44 +394,6 @@ app.post('/api/messages', async (req, res) => {
   }
 });
 
-// ✅ GET ДРУЗЬЯ ПОЛЬЗОВАТЕЛЯ (улучшенная версия)
-app.get('/api/friends/:userId', async (req, res) => {
-  try {
-    const dataPath = getDataPath();
-    const [usersData, friendsData] = await Promise.all([
-      fs.readFile(path.join(dataPath, 'users.json'), 'utf8'),
-      fs.readFile(path.join(dataPath, 'friends.json'), 'utf8')
-    ]);
-    
-    const users = JSON.parse(usersData);
-    const friends = JSON.parse(friendsData);
-    const userId = parseInt(req.params.userId);
-    
-    const userFriends = friends
-      .filter(f => f.userId === userId || f.friendId === userId)
-      .map(f => {
-        const friendId = f.userId === userId ? f.friendId : f.userId;
-        const friend = users.find(u => u.id === friendId);
-        return friend ? {
-          id: friend.id,
-          firstName: friend.firstName,
-          lastName: friend.lastName,
-          avatar: friend.avatar,
-          email: friend.email,
-          status: friend.status
-        } : null;
-      })
-      .filter(Boolean);
-    
-    res.json(userFriends);
-  } catch (error) {
-    console.error('Error loading friends:', error);
-    res.status(500).json({ error: 'Failed to load friends' });
-  }
-});
-
-
-// ✅ ПОИСК ПОЛЬЗОВАТЕЛЕЙ ПО ИМЕНИ И ФАМИЛИИ
 app.get('/api/users/search/:query', async (req, res) => {
   try {
     const dataPath = getDataPath();
@@ -469,7 +405,7 @@ app.get('/api/users/search/:query', async (req, res) => {
     
     const filteredUsers = users
       .filter(user => {
-        if (user.id === currentUserId) return false; // Исключаем текущего пользователя
+        if (user.id === currentUserId) return false;
         
         const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
         const firstName = user.firstName.toLowerCase();
@@ -479,8 +415,8 @@ app.get('/api/users/search/:query', async (req, res) => {
                firstName.includes(query) || 
                lastName.includes(query);
       })
-      .map(({ password, ...user }) => user) // Убираем пароль
-      .slice(0, 10); // Ограничиваем результаты
+      .map(({ password, ...user }) => user)
+      .slice(0, 10);
     
     res.json(filteredUsers);
   } catch (error) {
@@ -489,7 +425,6 @@ app.get('/api/users/search/:query', async (req, res) => {
   }
 });
 
-// ✅ ДОБАВЛЕНИЕ В ДРУЗЬЯ
 app.post('/api/friends', async (req, res) => {
   try {
     const dataPath = getDataPath();
@@ -498,7 +433,6 @@ app.post('/api/friends', async (req, res) => {
     
     const { userId, friendId } = req.body;
     
-    // Проверяем, не являются ли уже друзьями
     const existingFriendship = friends.find(f => 
       (f.userId === userId && f.friendId === friendId) ||
       (f.userId === friendId && f.friendId === userId)
@@ -508,7 +442,6 @@ app.post('/api/friends', async (req, res) => {
       return res.status(400).json({ error: 'Пользователь уже у вас в друзьях' });
     }
     
-    // Проверяем существование пользователей
     const usersData = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
     const users = JSON.parse(usersData);
     
@@ -519,7 +452,6 @@ app.post('/api/friends', async (req, res) => {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
     
-    // Добавляем дружбу (только в одну сторону, как в вашей структуре)
     const newFriendship = {
       userId: userId,
       friendId: friendId
@@ -547,22 +479,18 @@ app.post('/api/avatar/upload', async (req, res) => {
       return res.status(400).json({ error: 'Missing userId or imageData' });
     }
 
-    // Конвертируем base64 в buffer
     const base64Data = imageData.replace(/^data:image\/jpeg;base64,/, '');
     const imageBuffer = Buffer.from(base64Data, 'base64');
 
-    // Сохраняем в папку с аватарками
     const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
     const avatarsDir = path.join(adminModulePath, 'dist-gulp/images/users');
     
-    // Создаем папку если не существует
     if (!require('fs').existsSync(avatarsDir)) {
       require('fs').mkdirSync(avatarsDir, { recursive: true });
     }
 
     const avatarPath = path.join(avatarsDir, `user${userId}.jpg`);
     
-    // Сохраняем изображение
     await fs.writeFile(avatarPath, imageBuffer);
     
     res.json({ success: true, message: 'Avatar uploaded successfully' });
@@ -572,25 +500,20 @@ app.post('/api/avatar/upload', async (req, res) => {
   }
 });
 
-
-// ✅ GET АВАТАРКА ПОЛЬЗОВАТЕЛЯ
 app.get('/api/avatar/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     
-    // Пробуем найти аватарку в npm модуле
     const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
     const avatarPath = path.join(adminModulePath, 'dist-gulp/images/users', `user${userId}.jpg`);
     
     if (require('fs').existsSync(avatarPath)) {
       res.sendFile(avatarPath);
     } else {
-      // Если аватарки нет, возвращаем дефолтную
       const defaultAvatarPath = path.join(__dirname, 'assets/default-avatar.jpg');
       if (require('fs').existsSync(defaultAvatarPath)) {
         res.sendFile(defaultAvatarPath);
       } else {
-        // Если дефолтной тоже нет, возвращаем 404
         res.status(404).json({ error: 'Avatar not found' });
       }
     }
@@ -600,16 +523,104 @@ app.get('/api/avatar/:userId', async (req, res) => {
   }
 });
 
-// ✅ WEBSOCKET ДЛЯ РЕАЛЬНОГО ВРЕМЕНИ
+app.delete('/api/friends/:userId/:friendId', async (req, res) => {
+  try {
+    const dataPath = getDataPath();
+    const data = await fs.readFile(path.join(dataPath, 'friends.json'), 'utf8');
+    let friends = JSON.parse(data);
+    
+    const userId = parseInt(req.params.userId);
+    const friendId = parseInt(req.params.friendId);
+    
+    const initialLength = friends.length;
+    
+    friends = friends.filter(f => 
+      !(f.userId === userId && f.friendId === friendId) &&
+      !(f.userId === friendId && f.friendId === userId)
+    );
+    
+    if (friends.length === initialLength) {
+      return res.status(404).json({ error: 'Дружба не найдена' });
+    }
+    
+    await fs.writeFile(path.join(dataPath, 'friends.json'), JSON.stringify(friends, null, 2));
+    
+    res.json({ 
+      success: true, 
+      message: 'Друг удален'
+    });
+  } catch (error) {
+    console.error('Error removing friend:', error);
+    res.status(500).json({ error: 'Failed to remove friend' });
+  }
+});
+
+app.put('/api/users/:id/profile', async (req, res) => {
+  try {
+    const dataPath = getDataPath();
+    const data = await fs.readFile(path.join(dataPath, 'users.json'), 'utf8');
+    const users = JSON.parse(data);
+    const userId = parseInt(req.params.id);
+    
+    const userIndex = users.findIndex(u => u.id === userId);
+    
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const { firstName, lastName, email, birthDate } = req.body;
+    
+    if (email && email !== users[userIndex].email) {
+      const existingUser = users.find(u => u.email === email && u.id !== userId);
+      if (existingUser) {
+        return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
+      }
+    }
+    
+    users[userIndex] = {
+      ...users[userIndex],
+      firstName: firstName || users[userIndex].firstName,
+      lastName: lastName || users[userIndex].lastName,
+      email: email || users[userIndex].email,
+      birthDate: birthDate || users[userIndex].birthDate
+    };
+    
+    await fs.writeFile(path.join(dataPath, 'users.json'), JSON.stringify(users, null, 2));
+    
+    const { password, ...safeUser } = users[userIndex];
+    res.json(safeUser);
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+app.delete('/api/avatar/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    const adminModulePath = path.join(__dirname, '../node_modules/social-network-admin-rnymphaea');
+    const avatarPath = path.join(adminModulePath, 'dist-gulp/images/users', `user${userId}.jpg`);
+    
+    if (require('fs').existsSync(avatarPath)) {
+      await fs.unlink(avatarPath);
+      res.json({ success: true, message: 'Avatar deleted successfully' });
+    } else {
+      res.status(404).json({ error: 'Avatar not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting avatar:', error);
+    res.status(500).json({ error: 'Failed to delete avatar' });
+  }
+});
+
 wss.on('connection', (ws) => {
-  console.log('✅ WebSocket client connected');
+  console.log('WebSocket client connected');
   
   ws.on('message', (message) => {
     try {
       const parsedMessage = JSON.parse(message);
-      console.log('WebSocket message received:', parsedMessage);
       
-      // Рассылаем всем подключенным клиентам
       wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(parsedMessage));
@@ -629,31 +640,25 @@ wss.on('connection', (ws) => {
   });
 });
 
-// ✅ ОБРАБОТКА MARKUP ДЛЯ ANGULAR
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/social-network-app/index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
 
-// ✅ ЗАПУСК СЕРВЕРОВ
 const startServers = async () => {
   try {
-    // Настраиваем админ-панель
     setupAdminPanel();
     
-    // Запускаем основной сервер
     server.listen(PORT, () => {
-      console.log(`🚀 Main server running on http://localhost:${PORT}`);
-      console.log(`📱 Angular app: http://localhost:${PORT}`);
-      console.log(`🛠️  Admin panel: http://localhost:${PORT}/admin-panel`);
+      console.log(`Main server running on http://localhost:${PORT}`);
+      console.log(`Angular app: http://localhost:${PORT}`);
     });
 
-    // Пытаемся запустить HTTPS сервер админ-панели
     try {
       await startAdminServer();
     } catch (error) {
-      console.log('⚠️  Admin HTTPS server not available');
+      console.log('Admin HTTPS server not available');
     }
 
   } catch (error) {
@@ -662,7 +667,6 @@ const startServers = async () => {
   }
 };
 
-// Обработка завершения
 process.on('SIGINT', () => {
   console.log('Shutting down servers...');
   if (adminServerProcess) {
@@ -671,5 +675,4 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-// Запускаем серверы
 startServers();

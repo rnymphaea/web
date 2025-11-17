@@ -95,4 +95,16 @@ export class UserService {
   getAvatarUrl(userId: number): string {
     return `${this.apiUrl}/avatar/${userId}`;
   }
+
+  removeFriend(userId: number, friendId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/friends/${userId}/${friendId}`);
+  }
+
+  updateProfile(userId: number, profileData: any): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/users/${userId}/profile`, profileData);
+  }
+
+  deleteAvatar(userId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/avatar/${userId}`);
+  }
 }

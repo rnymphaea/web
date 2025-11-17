@@ -3,12 +3,11 @@
     <h2>Социальная сеть</h2>
   </div>
   <div class="nav-links">
-    <!-- Основные ссылки для всех авторизованных пользователей -->
     <a *ngIf="currentUser" routerLink="/news">Лента новостей</a>
     <a *ngIf="currentUser" routerLink="/add-news">Добавить новость</a>
     <a *ngIf="currentUser" routerLink="/friends">Мои друзья</a>
+    <a *ngIf="currentUser" routerLink="/edit-profile">Редактировать профиль</a>
     
-    <!-- Ссылка на админ-панель для администраторов -->
     <a 
       *ngIf="currentUser && isAdmin()" 
       (click)="openAdminPanel()" 
@@ -18,11 +17,9 @@
       Админ-панель
     </a>
     
-    <!-- Кнопки для неавторизованных пользователей -->
     <a *ngIf="!currentUser" routerLink="/login">Войти</a>
     <a *ngIf="!currentUser" routerLink="/register">Регистрация</a>
     
-    <!-- Кнопка выхода для авторизованных пользователей -->
     <button *ngIf="currentUser" (click)="logout()" class="logout-btn">
       Выйти
     </button>

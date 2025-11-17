@@ -6,7 +6,6 @@
     </button>
   </div>
 
-  <!-- Панель добавления друзей -->
   <div *ngIf="showAddFriend" class="add-friend-panel">
     <h3>Поиск друзей</h3>
     <div class="search-container">
@@ -22,7 +21,6 @@
       </div>
     </div>
 
-    <!-- Результаты поиска -->
     <div *ngIf="searchResults.length > 0" class="search-results">
       <h4>Найдено пользователей: {{ searchResults.length }}</h4>
       <div *ngFor="let user of searchResults" class="search-result-item">
@@ -51,7 +49,6 @@
     </div>
   </div>
 
-  <!-- Список друзей -->
   <div *ngIf="isLoading" class="loading">
     Загрузка списка друзей...
   </div>
@@ -71,8 +68,13 @@
         <p>{{ friend.email }}</p>
       </div>
     </div>
-    <button (click)="openChat(friend.id)" class="chat-btn">
-      Написать сообщение
-    </button>
+    <div class="friend-actions">
+      <button (click)="openChat(friend.id)" class="chat-btn">
+        Написать
+      </button>
+      <button (click)="removeFriend(friend.id)" class="remove-btn">
+        Удалить
+      </button>
+    </div>
   </div>
 </div>

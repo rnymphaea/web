@@ -13,6 +13,7 @@ import { LoginComponent } from './components/login/login.component';
 import { HomeComponent } from './components/home/home.component';
 import { FriendListComponent } from './components/friend-list/friend-list.component';
 import { MessageChatComponent } from './components/message-chat/message-chat.component';
+import { EditProfileComponent } from './components/edit-profile/edit-profile.component';
 import { GlobalErrorHandler } from './services/global-error-handler';
 
 const routes: Routes = [
@@ -23,6 +24,7 @@ const routes: Routes = [
   { path: 'add-news', component: AddNewsComponent },
   { path: 'friends', component: FriendListComponent },
   { path: 'messages/:friendId', component: MessageChatComponent },
+  { path: 'edit-profile', component: EditProfileComponent },
   { path: '', redirectTo: '/home', pathMatch: 'full' }
 ];
 
@@ -35,8 +37,9 @@ const routes: Routes = [
     AddNewsComponent,
     LoginComponent,
     HomeComponent,
-    FriendListComponent,      // ДОБАВИТЬ
-    MessageChatComponent      // ДОБАВИТЬ
+    FriendListComponent,
+    MessageChatComponent,
+    EditProfileComponent
   ],
   imports: [
     BrowserModule,

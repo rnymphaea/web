@@ -1,0 +1,53 @@
+<div class="edit-profile-container">
+  <h2>Редактирование профиля</h2>
+  <form (ngSubmit)="onSubmit()" #editProfileForm="ngForm" enctype="multipart/form-data">
+    
+    <div>
+      <input type="text" [(ngModel)]="profileData.firstName" name="firstName" 
+             placeholder="Имя" required>
+    </div>
+    <div>
+      <input type="text" [(ngModel)]="profileData.lastName" name="lastName" 
+             placeholder="Фамилия" required>
+    </div>
+    <div>
+      <input type="email" [(ngModel)]="profileData.email" name="email" 
+             placeholder="Email" required>
+    </div>
+    
+    <div>
+      <label for="birthDate">Дата рождения:</label>
+      <input type="date" [(ngModel)]="profileData.birthDate" name="birthDate" 
+             id="birthDate" [max]="maxBirthDate">
+    </div>
+    
+<div class="avatar-upload">
+<label>Аватарка:</label>
+  <div class="avatar-preview" *ngIf="avatarPreview">
+    <img [src]="avatarPreview" alt="Preview" class="preview-image">
+    <button type="button" (click)="removeAvatar()" class="remove-avatar" [disabled]="isLoading">×</button>
+  </div>
+  <div class="file-upload">
+    <input type="file" #fileInput (change)="onFileSelected($event)" 
+           accept=".jpg,.jpeg" class="file-input" [disabled]="isLoading">
+    <button type="button" (click)="fileInput.click()" class="browse-btn" [disabled]="isLoading">
+      {{ avatarPreview ? 'Изменить фото' : 'Выбрать фото (JPG)' }}
+    </button>
+  </div>
+  <div *ngIf="selectedFile" class="file-info">
+    Выбран файл: {{ selectedFile.name }}
+  </div>
+</div>
+
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+    <div *ngIf="fileError" class="error-message">
+      {{ fileError }}
+    </div>
+
+    <button type="submit" [disabled]="!editProfileForm.form.valid || isLoading">
+      {{ isLoading ? 'Сохранение...' : 'Сохранить изменения' }}
+    </button>
+  </form>
+</div>
