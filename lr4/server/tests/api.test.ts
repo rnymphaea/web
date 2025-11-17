@@ -2,10 +2,8 @@ const request = require('supertest');
 const fs = require('fs').promises;
 const path = require('path');
 
-// Базовый URL реального сервера
 const BASE_URL = 'http://localhost:3000';
 
-// Глобальные переменные для хранения тестовых данных
 let testUser: any = null;
 let testFriend: any = null;
 let testPost: any = null;
@@ -25,7 +23,6 @@ describe('Real Server API Integration Tests', () => {
 
       expect(Array.isArray(response.body)).toBe(true);
       
-      // Проверяем структуру пользователей
       if (response.body.length > 0) {
         const user = response.body[0];
         expect(user).toHaveProperty('id');
@@ -37,7 +34,6 @@ describe('Real Server API Integration Tests', () => {
     });
 
     test('GET /api/users/:id should return specific user', async () => {
-      // Сначала получаем список пользователей
       const usersResponse = await request(BASE_URL)
         .get('/api/users')
         .expect(200);
@@ -83,13 +79,11 @@ describe('Real Server API Integration Tests', () => {
       expect(response.body.lastName).toBe('User');
       expect(response.body).not.toHaveProperty('password');
 
-      // Сохраняем для последующих тестов
       testUser = response.body;
     });
 
     test('POST /api/auth/login should work with valid credentials', async () => {
       if (!testUser) {
-        // Если тестовый пользователь не создан, создаем его
         const uniqueEmail = `test${Date.now()}@example.com`;
         const newUser = {
           firstName: 'Login',
@@ -138,7 +132,6 @@ describe('Real Server API Integration Tests', () => {
 
   describe('Friends API - Real Endpoints', () => {
     beforeAll(async () => {
-      // Создаем второго пользователя для тестов друзей
       if (!testUser) {
         const uniqueEmail = `test${Date.now()}@example.com`;
         const newUser = {
@@ -157,7 +150,6 @@ describe('Real Server API Integration Tests', () => {
         testUser = response.body;
       }
 
-      // Создаем потенциального друга
       const friendEmail = `friend${Date.now()}@example.com`;
       const friendUser = {
         firstName: 'Friend',
@@ -205,7 +197,6 @@ describe('Real Server API Integration Tests', () => {
 
       expect(Array.isArray(response.body)).toBe(true);
       
-      // Должен найти нашего тестового друга
       if (response.body.length > 0) {
         const found = response.body.some((user: any) => user.id === testFriend.id);
         expect(found).toBe(true);
@@ -367,7 +358,6 @@ describe('Real Server API Integration Tests', () => {
 
   describe('Error Handling - Real Endpoints', () => {
     test('Should handle invalid JSON gracefully', async () => {
-      // Ваш сервер возвращает 400 для невалидного JSON, что корректно
       await request(BASE_URL)
         .post('/api/users/register')
         .set('Content-Type', 'application/json')

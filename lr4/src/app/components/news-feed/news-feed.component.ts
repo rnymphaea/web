@@ -27,7 +27,6 @@ export class NewsFeedComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Подписываемся на обновления через WebSocket
     this.newsSubscription = this.newsService.news$.subscribe((news: NewsPost[]) => {
       this.news = news;
     });

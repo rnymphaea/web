@@ -59,7 +59,6 @@ export class UserService {
     );
   }
 
-  // Новый метод для загрузки аватарки
   uploadAvatar(userId: number, imageData: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/avatar/upload`, {
       userId,

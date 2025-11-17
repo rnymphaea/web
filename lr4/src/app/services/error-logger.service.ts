@@ -20,7 +20,6 @@ export class ErrorLoggerService {
     this.errors.push(errorEntry);
     console.error('Application Error:', errorEntry);
     
-    // В реальном приложении здесь бы отправлялось на сервер
     localStorage.setItem('app_errors', JSON.stringify(this.errors));
   }
 

@@ -43,7 +43,6 @@ export class HomeComponent implements OnInit {
   constructor(private userService: UserService, private router: Router) {}
 
   ngOnInit() {
-    // Если пользователь уже авторизован, перенаправляем на новости
     this.userService.getCurrentUser().subscribe(user => {
       if (user) {
         this.router.navigate(['/news']);

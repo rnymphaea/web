@@ -29,7 +29,6 @@ export class RegistrationComponent {
     private userService: UserService,
     private router: Router
   ) {
-    // Устанавливаем максимальную дату (сегодня - 13 лет)
     const today = new Date();
     const minAgeDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
     this.maxBirthDate = minAgeDate.toISOString().split('T')[0];
@@ -39,7 +38,6 @@ export class RegistrationComponent {
     const file = event.target.files[0];
     
     if (file) {
-      // Проверяем тип файла
       if (!file.type.match('image/jpeg')) {
         this.fileError = 'Пожалуйста, выберите файл в формате JPG';
         this.selectedFile = null;
@@ -47,7 +45,6 @@ export class RegistrationComponent {
         return;
       }
 
-      // Проверяем размер файла (максимум 5MB)
       if (file.size > 5 * 1024 * 1024) {
         this.fileError = 'Размер файла не должен превышать 5MB';
         this.selectedFile = null;
@@ -58,7 +55,6 @@ export class RegistrationComponent {
       this.selectedFile = file;
       this.fileError = '';
 
-      // Создаем preview
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.avatarPreview = e.target.result;
@@ -79,10 +75,8 @@ export class RegistrationComponent {
     this.fileError = '';
 
     try {
-      // Сначала регистрируем пользователя
       const newUser = await this.userService.register(this.user).toPromise();
       
-      // Если есть выбранный файл, загружаем аватарку
       if (this.selectedFile && newUser) {
         const imageData = await this.convertFileToBase64(this.selectedFile);
         await this.userService.uploadAvatar(newUser.id, imageData).toPromise();

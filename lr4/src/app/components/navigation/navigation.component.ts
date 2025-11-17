@@ -38,7 +38,6 @@ export class NavigationComponent implements OnInit {
   }
 
   logout() {
-    // Просто вызываем logout из сервиса, он сам перенаправит
     this.userService.logout();
   }
 }

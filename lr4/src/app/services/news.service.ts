@@ -20,7 +20,6 @@ export class NewsService {
   private newsSubject = new BehaviorSubject<NewsPost[]>([]);
   public news$ = this.newsSubject.asObservable();
   
-  // Базовый URL для API на порту 3001
   private apiUrl = 'http://localhost:3000/api';
 
   constructor(
@@ -53,7 +52,6 @@ export class NewsService {
     this.getNews(userId).subscribe();
   }
 
-  // Метод для получения всех новостей (для админки)
   getAllNews(): Observable<NewsPost[]> {
     return this.http.get<NewsPost[]>(`${this.apiUrl}/news`, {
       withCredentials: true

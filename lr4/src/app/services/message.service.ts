@@ -25,7 +25,6 @@ export class MessageService {
     private http: HttpClient,
     private wsService: WebSocketService
   ) {
-    // Подписываемся на новые сообщения через WebSocket
     this.wsService.getMessages().subscribe((message: any) => {
       if (message.type === 'NEW_MESSAGE') {
         const currentMessages = this.messagesSubject.value;

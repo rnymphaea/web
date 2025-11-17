@@ -2,7 +2,6 @@
   <h2>Регистрация в социальной сети</h2>
   <form (ngSubmit)="onSubmit()" #registrationForm="ngForm" enctype="multipart/form-data">
     
-    <!-- Поля основной информации -->
     <div>
       <input type="text" [(ngModel)]="user.firstName" name="firstName" 
              placeholder="Имя" required>
@@ -20,14 +19,12 @@
              placeholder="Пароль" required>
     </div>
     
-    <!-- Дата рождения -->
     <div>
       <label for="birthDate">Дата рождения:</label>
       <input type="date" [(ngModel)]="user.birthDate" name="birthDate" 
              id="birthDate" [max]="maxBirthDate">
     </div>
     
-    <!-- Загрузка аватарки -->
     <div class="avatar-upload">
       <label>Аватарка:</label>
       <div class="avatar-preview" *ngIf="avatarPreview">
@@ -46,7 +43,6 @@
       </div>
     </div>
 
-    <!-- Сообщения об ошибках -->
     <div *ngIf="errorMessage" class="error-message">
       {{ errorMessage }}
     </div>
@@ -54,7 +50,6 @@
       {{ fileError }}
     </div>
 
-    <!-- Кнопка отправки -->
     <button type="submit" [disabled]="!registrationForm.form.valid || isLoading">
       {{ isLoading ? 'Регистрация...' : 'Зарегистрироваться' }}
     </button>

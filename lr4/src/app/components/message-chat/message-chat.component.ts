@@ -94,12 +94,10 @@ export class MessageChatComponent implements OnInit, OnDestroy {
     }, 100);
   }
 
-  // Новый метод для получения URL аватарки
   getAvatarUrl(userId: number): string {
     return this.userService.getAvatarUrl(userId);
   }
 
-  // Обработчик ошибок загрузки изображений
   handleImageError(event: any) {
     event.target.style.display = 'none';
   }
