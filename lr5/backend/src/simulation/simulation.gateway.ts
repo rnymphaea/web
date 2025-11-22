@@ -24,8 +24,25 @@ export class SimulationGateway implements OnGatewayInit, OnGatewayConnection, On
 
   startSimulation() {
     const settings = this.dataService.getSettings();
-    settings.currentDateIndex = 0;
+    const stocks = this.dataService.getStocks();
+
+    // Находим индекс для даты начала торгов
+    let startIndex = 0;
+    if (settings.startDate && stocks.length > 0 && stocks[0].historicalData) {
+      const startDateIndex = stocks[0].historicalData.findIndex(
+        data => data.date === settings.startDate
+      );
+      if (startDateIndex !== -1) {
+        startIndex = startDateIndex;
+      }
+    }
+
+    // Обновляем настройки с правильным индексом
+    settings.currentDateIndex = startIndex;
+    settings.isRunning = true;
     this.dataService.saveSettings(settings);
+
+    console.log(`Simulation started from date: ${settings.startDate}, index: ${startIndex}`);
 
     this.simulationInterval = setInterval(() => {
       this.nextDay();
@@ -36,11 +53,22 @@ export class SimulationGateway implements OnGatewayInit, OnGatewayConnection, On
     if (this.simulationInterval) {
       clearInterval(this.simulationInterval);
     }
+    
+    const settings = this.dataService.getSettings();
+    settings.isRunning = false;
+    this.dataService.saveSettings(settings);
   }
 
   private nextDay() {
     const settings = this.dataService.getSettings();
     const stocks = this.dataService.getStocks();
+
+    // Проверяем, не достигли ли конца данных
+    if (settings.currentDateIndex >= stocks[0].historicalData.length - 1) {
+      this.stopSimulation();
+      console.log('Simulation finished - reached end of historical data');
+      return;
+    }
 
     settings.currentDateIndex += 1;
     this.dataService.saveSettings(settings);
@@ -57,13 +85,7 @@ export class SimulationGateway implements OnGatewayInit, OnGatewayConnection, On
     });
 
     this.server.emit('stockUpdate', currentStocksData);
-
-    // Stop simulation if we've reached the end of historical data
-    if (settings.currentDateIndex >= stocks[0].historicalData.length - 1) {
-      this.stopSimulation();
-      settings.isRunning = false;
-      this.dataService.saveSettings(settings);
-    }
+    console.log(`Day ${settings.currentDateIndex}: ${currentStocksData[0]?.date}`);
   }
 
   private sendCurrentData() {
