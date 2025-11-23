@@ -1,19 +1,16 @@
 {
   "name": "broker-frontend",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build"
   },
   "dependencies": {
     "vue": "^3.3.0",
     "vue-router": "^4.2.0",
-    "axios": "^1.4.0",
-    "socket.io-client": "^4.6.0"
+    "socket.io-client": "^4.6.0",
+    "chart.js": "^4.2.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.2.0",
-    "vite": "^4.3.0"
+    "@vue/cli-service": "^5.0.0"
   }
 }
