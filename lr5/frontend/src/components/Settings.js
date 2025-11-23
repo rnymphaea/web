@@ -11,9 +11,16 @@ const Settings = () => {
   const { items: stocks } = useSelector(state => state.stocks);
   const [localSettings, setLocalSettings] = useState({});
   const [socket, setSocket] = useState(null);
+  const [simulationStatus, setSimulationStatus] = useState('loading'); // loading, running, stopped
 
   useEffect(() => {
-    dispatch(fetchSettings());
+    // Загружаем настройки сразу при монтировании компонента
+    dispatch(fetchSettings()).then((action) => {
+      if (action.payload) {
+        setLocalSettings(action.payload);
+        setSimulationStatus(action.payload.isRunning ? 'running' : 'stopped');
+      }
+    });
     
     const newSocket = io('http://localhost:3001');
     setSocket(newSocket);
@@ -25,12 +32,27 @@ const Settings = () => {
       });
     });
 
+    // Слушаем события от сервера для обновления статуса
+    newSocket.on('simulationStarted', () => {
+      setSimulationStatus('running');
+      // Обновляем настройки чтобы получить актуальные данные
+      dispatch(fetchSettings());
+    });
+
+    newSocket.on('simulationStopped', () => {
+      setSimulationStatus('stopped');
+      // Обновляем настройки чтобы получить актуальные данные
+      dispatch(fetchSettings());
+    });
+
     return () => newSocket.close();
   }, [dispatch]);
 
   useEffect(() => {
     if (settings) {
       setLocalSettings(settings);
+      // Обновляем статус симуляции из настроек
+      setSimulationStatus(settings.isRunning ? 'running' : 'stopped');
     }
   }, [settings]);
 
@@ -79,8 +101,9 @@ const Settings = () => {
       ...localSettings,
       startDate: convertToDisplayFormat(localSettings.startDate)
     };
-    dispatch(updateSettings(settingsToUpdate));
-    alert('Настройки сохранены!');
+    dispatch(updateSettings(settingsToUpdate)).then(() => {
+      alert('Настройки сохранены!');
+    });
   };
 
   const handleStartSimulation = () => {
@@ -105,6 +128,9 @@ const Settings = () => {
       }
     }
 
+    // Устанавливаем статус "загрузка" для лучшего UX
+    setSimulationStatus('loading');
+
     // Сохраняем настройки с правильной датой
     const settingsToUpdate = {
       ...localSettings,
@@ -113,14 +139,33 @@ const Settings = () => {
     
     dispatch(updateSettings(settingsToUpdate)).then(() => {
       // Запускаем симуляцию после сохранения настроек
-      setTimeout(() => {
-        dispatch(startSimulation());
-      }, 100);
+      dispatch(startSimulation()).then((action) => {
+        if (action.payload && action.payload.success) {
+          setSimulationStatus('running');
+          // Обновляем настройки чтобы получить актуальные данные
+          dispatch(fetchSettings());
+        } else {
+          setSimulationStatus('stopped');
+        }
+      }).catch(() => {
+        setSimulationStatus('stopped');
+      });
     });
   };
 
   const handleStopSimulation = () => {
-    dispatch(stopSimulation());
+    // Устанавливаем статус "загрузка" для лучшего UX
+    setSimulationStatus('loading');
+    
+    dispatch(stopSimulation()).then((action) => {
+      if (action.payload && action.payload.success) {
+        setSimulationStatus('stopped');
+        // Обновляем настройки чтобы получить актуальные данные
+        dispatch(fetchSettings());
+      }
+    }).catch(() => {
+      setSimulationStatus('running');
+    });
   };
 
   const handleDateChange = (e) => {
@@ -139,7 +184,46 @@ const Settings = () => {
     return `Доступные даты: ${firstDate} - ${lastDate}`;
   };
 
-  if (!settings) return <div className="card">Loading...</div>;
+  // Функция для получения текста статуса
+  const getStatusText = () => {
+    switch (simulationStatus) {
+      case 'loading':
+        return 'Загрузка...';
+      case 'running':
+        return 'Симуляция активна';
+      case 'stopped':
+        return 'Симуляция остановлена';
+      default:
+        return 'Статус неизвестен';
+    }
+  };
+
+  // Функция для получения цвета статуса
+  const getStatusColor = () => {
+    switch (simulationStatus) {
+      case 'loading':
+        return { bg: '#fff3cd', border: '#ffeaa7', text: '#856404' };
+      case 'running':
+        return { bg: '#d4edda', border: '#c3e6cb', text: '#155724' };
+      case 'stopped':
+        return { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' };
+      default:
+        return { bg: '#e2e3e5', border: '#d6d8db', text: '#383d41' };
+    }
+  };
+
+  const statusColors = getStatusColor();
+
+  if (!settings && simulationStatus === 'loading') {
+    return (
+      <div>
+        <h1>Настройки биржи</h1>
+        <div className="card">
+          <p>Загрузка настроек...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -174,44 +258,58 @@ const Settings = () => {
               Интервал между обновлениями цен (в секундах)
             </small>
           </div>
-          <button type="submit">Сохранить настройки</button>
+          <button 
+            type="submit"
+            disabled={simulationStatus === 'loading'}
+          >
+            {simulationStatus === 'loading' ? 'Сохранение...' : 'Сохранить настройки'}
+          </button>
         </form>
       </div>
 
+      {/* Блок управления симуляцией - оставляем на прежнем месте */}
       <div className="card">
         <h2>Управление симуляцией</h2>
+        
+        {/* Статус симуляции - теперь загружается сразу */}
+        <div style={{ 
+          padding: '1rem', 
+          backgroundColor: statusColors.bg,
+          color: statusColors.text,
+          borderRadius: '4px',
+          border: `1px solid ${statusColors.border}`,
+          marginBottom: '1rem',
+          fontWeight: 'bold',
+          fontSize: '1.1rem'
+        }}>
+          <strong>Статус: </strong>
+          {getStatusText()}
+          {simulationStatus === 'running' && currentStocks[0] && (
+            <span> | Текущая дата: {currentStocks[0].date}</span>
+          )}
+        </div>
+        
         <div style={{ marginBottom: '1rem' }}>
           <button 
             onClick={handleStartSimulation} 
-            disabled={settings.isRunning}
+            disabled={simulationStatus === 'running' || simulationStatus === 'loading'}
             style={{ 
-              backgroundColor: settings.isRunning ? '#ccc' : '#28a745',
+              backgroundColor: (simulationStatus === 'running' || simulationStatus === 'loading') ? '#ccc' : '#28a745',
               marginRight: '1rem'
             }}
           >
-            {settings.isRunning ? 'Симуляция запущена' : 'Начало торгов'}
+            {simulationStatus === 'loading' ? 'Запуск...' : 
+             simulationStatus === 'running' ? 'Симуляция запущена' : 'Начало торгов'}
           </button>
           <button 
             onClick={handleStopSimulation} 
-            disabled={!settings.isRunning}
-            style={{ backgroundColor: !settings.isRunning ? '#ccc' : '#dc3545' }}
+            disabled={simulationStatus !== 'running' || simulationStatus === 'loading'}
+            style={{ 
+              backgroundColor: (simulationStatus !== 'running' || simulationStatus === 'loading') ? '#ccc' : '#dc3545' 
+            }}
           >
-            Остановить торги
+            {simulationStatus === 'loading' ? 'Остановка...' : 'Остановить торги'}
           </button>
-        </div>
-        
-        <div style={{ 
-          padding: '1rem', 
-          backgroundColor: settings.isRunning ? '#d4edda' : '#f8d7da',
-          color: settings.isRunning ? '#155724' : '#721c24',
-          borderRadius: '4px',
-          border: `1px solid ${settings.isRunning ? '#c3e6cb' : '#f5c6cb'}`
-        }}>
-          <strong>Статус: </strong>
-          {settings.isRunning ? 'Симуляция активна' : 'Симуляция остановлена'}
-          {settings.isRunning && currentStocks[0] && (
-            <span> | Текущая дата: {currentStocks[0].date}</span>
-          )}
         </div>
       </div>
 
@@ -220,24 +318,26 @@ const Settings = () => {
         {currentStocks.length > 0 ? (
           <div>
             <p><strong>Текущая дата: </strong>{currentStocks[0]?.date || 'Нет данных'}</p>
-            <table>
-              <thead>
-                <tr>
-                  <th>Акция</th>
-                  <th>Компания</th>
-                  <th>Текущая цена</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentStocks.map(stock => (
-                  <tr key={stock.id}>
-                    <td><strong>{stock.symbol}</strong></td>
-                    <td>{stock.name}</td>
-                    <td>${stock.currentPrice?.toFixed(2) || 'N/A'}</td>
+            <div style={{ maxHeight: '300px', overflow: 'auto' }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Акция</th>
+                    <th>Компания</th>
+                    <th>Текущая цена</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {currentStocks.map(stock => (
+                    <tr key={stock.id}>
+                      <td><strong>{stock.symbol}</strong></td>
+                      <td>{stock.name}</td>
+                      <td>${stock.currentPrice?.toFixed(2) || 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
           <p>Нет данных о текущих торгах. Запустите симуляцию для начала торгов.</p>

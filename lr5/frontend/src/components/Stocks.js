@@ -7,7 +7,7 @@ const Stocks = () => {
   const dispatch = useDispatch();
   const { items: stocks, status } = useSelector(state => state.stocks);
   const [selectedStock, setSelectedStock] = useState(null);
-  const [viewMode, setViewMode] = useState('chart'); // 'chart' или 'table'
+  const [dataView, setDataView] = useState('chart'); // 'chart' или 'table'
 
   useEffect(() => {
     dispatch(fetchStocks());
@@ -61,29 +61,30 @@ const Stocks = () => {
         <div className="card">
           <h2>Исторические данные: {selectedStock.symbol} - {selectedStock.name}</h2>
           
+          {/* Переключатель между графиком и таблицей */}
           <div style={{ marginBottom: '1rem' }}>
             <button 
-              onClick={() => setViewMode('chart')}
+              onClick={() => setDataView('chart')}
               style={{ 
-                backgroundColor: viewMode === 'chart' ? '#3498db' : '#f8f9fa',
-                color: viewMode === 'chart' ? 'white' : '#333',
+                backgroundColor: dataView === 'chart' ? '#3498db' : '#f8f9fa',
+                color: dataView === 'chart' ? 'white' : '#333',
                 marginRight: '0.5rem'
               }}
             >
               График
             </button>
             <button 
-              onClick={() => setViewMode('table')}
+              onClick={() => setDataView('table')}
               style={{ 
-                backgroundColor: viewMode === 'table' ? '#3498db' : '#f8f9fa',
-                color: viewMode === 'table' ? 'white' : '#333'
+                backgroundColor: dataView === 'table' ? '#3498db' : '#f8f9fa',
+                color: dataView === 'table' ? 'white' : '#333'
               }}
             >
               Таблица
             </button>
           </div>
 
-          {viewMode === 'chart' ? (
+          {dataView === 'chart' ? (
             <StockChart stock={selectedStock} />
           ) : (
             <HistoricalDataTable stock={selectedStock} />
@@ -123,8 +124,52 @@ const HistoricalDataTable = ({ stock }) => {
     setCurrentPage(prev => Math.min(prev + 1, totalPages));
   };
 
+  // Функция для расчета изменения относительно предыдущего дня в данных
+  const getChangeFromPreviousDay = (currentIndex) => {
+    const globalIndex = startIndex + currentIndex;
+    if (globalIndex >= sortedData.length - 1) return null; // Нет предыдущего дня
+    
+    const currentPrice = sortedData[globalIndex].open;
+    const previousPrice = sortedData[globalIndex + 1].open;
+    return currentPrice - previousPrice;
+  };
+
+  // Статистика по данным
+  const prices = sortedData.map(data => data.open);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+
   return (
     <div>
+      {/* Статистика */}
+      <div style={{ 
+        marginBottom: '1rem', 
+        padding: '1rem', 
+        backgroundColor: '#f8f9fa', 
+        borderRadius: '4px',
+        display: 'flex',
+        gap: '2rem',
+        flexWrap: 'wrap'
+      }}>
+        <div>
+          <strong>Всего записей:</strong> {sortedData.length}
+        </div>
+        <div>
+          <strong>Минимальная цена:</strong> {minPrice.toFixed(2)}
+        </div>
+        <div>
+          <strong>Максимальная цена:</strong> {maxPrice.toFixed(2)}
+        </div>
+        <div>
+          <strong>Средняя цена:</strong> {avgPrice.toFixed(2)}
+        </div>
+        <div>
+          <strong>Период:</strong> {sortedData[sortedData.length - 1]?.date} - {sortedData[0]?.date}
+        </div>
+      </div>
+
+      {/* Пагинация */}
       <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <strong>Всего записей:</strong> {sortedData.length}
@@ -142,35 +187,46 @@ const HistoricalDataTable = ({ stock }) => {
         </div>
       </div>
 
+      {/* Таблица данных */}
       <div style={{ maxHeight: '500px', overflow: 'auto' }}>
         <table style={{ width: '100%' }}>
           <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8f9fa' }}>
             <tr>
               <th style={{ padding: '10px', borderBottom: '2px solid #dee2e6' }}>Дата</th>
-              <th style={{ padding: '10px', borderBottom: '2px solid #dee2e6' }}>Цена открытия ($)</th>
-              <th style={{ padding: '10px', borderBottom: '2px solid #dee2e6' }}>Год</th>
+              <th style={{ padding: '10px', borderBottom: '2px solid #dee2e6', textAlign: 'center' }}>Цена открытия</th>
+              <th style={{ padding: '10px', borderBottom: '2px solid #dee2e6', textAlign: 'center' }}>Изменение</th>
             </tr>
           </thead>
           <tbody>
             {currentData.map((data, index) => {
-              const year = data.date.split('.')[2];
-              const isCurrentYear = year === new Date().getFullYear().toString();
+              const change = getChangeFromPreviousDay(index);
               
               return (
                 <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#f8f9fa' : 'white' }}>
                   <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>
                     {data.date}
                   </td>
-                  <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6', textAlign: 'right' }}>
-                    <strong>${data.open.toFixed(2)}</strong>
+                  <td style={{ 
+                    padding: '10px', 
+                    borderBottom: '1px solid #dee2e6', 
+                    textAlign: 'center',
+                    fontWeight: 'bold'
+                  }}>
+                    {data.open.toFixed(2)}
                   </td>
                   <td style={{ 
                     padding: '10px', 
                     borderBottom: '1px solid #dee2e6',
-                    color: isCurrentYear ? '#28a745' : '#dc3545',
-                    fontWeight: 'bold'
+                    color: change > 0 ? '#28a745' : change < 0 ? '#dc3545' : '#666',
+                    fontWeight: 'bold',
+                    textAlign: 'center'
                   }}>
-                    {year}
+                    {change !== null ? (
+                      <>
+                        {change > 0 ? '↑' : change < 0 ? '↓' : '→'} 
+                        {Math.abs(change).toFixed(2)}
+                      </>
+                    ) : '-'}
                   </td>
                 </tr>
               );
