@@ -1,0 +1,22 @@
+{
+  "name": "broker-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch"
+  },
+  "dependencies": {
+    "@nestjs/common": "^9.0.0",
+    "@nestjs/core": "^9.0.0",
+    "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/platform-socket.io": "^9.0.0",
+    "@nestjs/websockets": "^9.0.0",
+    "socket.io": "^4.6.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^9.0.0",
+    "typescript": "^4.7.0",
+    "@types/node": "^18.0.0"
+  }
+}
