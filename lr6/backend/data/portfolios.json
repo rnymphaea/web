@@ -1,0 +1,20 @@
+[
+  {
+    "brokerId": 1,
+    "brokerName": "asdf",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "currentPrice": 157.37,
+        "averagePrice": 125.89600000000002,
+        "value": 157.37,
+        "profit": 31.47399999999999,
+        "profitPercentage": 24.99999999999999
+      }
+    ],
+    "cash": 2071.63,
+    "totalValue": 2229,
+    "totalProfit": 31.47399999999999
+  }
+]

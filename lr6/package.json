@@ -9,7 +9,7 @@
     "test:e2e": "cd e2e && node test.js"
   },
   "dependencies": {
-    "broker-simulator-rnymphaea": "1.0.1"
+    "broker-simulator-rnymphaea": "1.0.2"
   },
   "devDependencies": {
     "concurrently": "^7.6.0"

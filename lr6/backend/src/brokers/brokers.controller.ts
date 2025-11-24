@@ -57,4 +57,15 @@ export class BrokersController {
   getPrices() {
     return this.dataService.getCurrentPrices();
   }
+
+  @Get('stocks')
+  getStocks() {
+    return this.dataService.getAllStocks();
+  }
+
+  @Post('sync')
+  async syncWithAdmin(): Promise<{ success: boolean }> {
+    const success = await this.dataService.syncWithAdmin();
+    return { success };
+  }
 }
