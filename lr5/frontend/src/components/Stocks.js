@@ -95,7 +95,6 @@ const Stocks = () => {
   );
 };
 
-// Компонент для табличного представления исторических данных
 const HistoricalDataTable = ({ stock }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -104,14 +103,12 @@ const HistoricalDataTable = ({ stock }) => {
     return <div>Нет исторических данных</div>;
   }
 
-  // Сортируем данные по дате (от новых к старым)
   const sortedData = [...stock.historicalData].sort((a, b) => {
     const dateA = new Date(a.date.split('.').reverse().join('-'));
     const dateB = new Date(b.date.split('.').reverse().join('-'));
     return dateB - dateA;
   });
 
-  // Вычисляем пагинацию
   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = sortedData.slice(startIndex, startIndex + itemsPerPage);
@@ -124,7 +121,6 @@ const HistoricalDataTable = ({ stock }) => {
     setCurrentPage(prev => Math.min(prev + 1, totalPages));
   };
 
-  // Функция для расчета изменения относительно предыдущего дня в данных
   const getChangeFromPreviousDay = (currentIndex) => {
     const globalIndex = startIndex + currentIndex;
     if (globalIndex >= sortedData.length - 1) return null; // Нет предыдущего дня
@@ -134,7 +130,6 @@ const HistoricalDataTable = ({ stock }) => {
     return currentPrice - previousPrice;
   };
 
-  // Статистика по данным
   const prices = sortedData.map(data => data.open);
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
@@ -142,7 +137,6 @@ const HistoricalDataTable = ({ stock }) => {
 
   return (
     <div>
-      {/* Статистика */}
       <div style={{ 
         marginBottom: '1rem', 
         padding: '1rem', 
@@ -169,7 +163,6 @@ const HistoricalDataTable = ({ stock }) => {
         </div>
       </div>
 
-      {/* Пагинация */}
       <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <strong>Всего записей:</strong> {sortedData.length}
@@ -187,7 +180,6 @@ const HistoricalDataTable = ({ stock }) => {
         </div>
       </div>
 
-      {/* Таблица данных */}
       <div style={{ maxHeight: '500px', overflow: 'auto' }}>
         <table style={{ width: '100%' }}>
           <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8f9fa' }}>

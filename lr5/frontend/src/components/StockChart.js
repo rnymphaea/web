@@ -21,7 +21,6 @@ ChartJS.register(
   Legend
 );
 
-// Функция для парсинга даты в формате "dd.mm.yyyy"
 const parseDate = (dateString) => {
   if (!dateString) return new Date();
   
@@ -38,7 +37,6 @@ const parseDate = (dateString) => {
   return new Date(dateString);
 };
 
-// Функция для форматирования даты без года
 const formatDateWithoutYear = (dateString) => {
   try {
     const date = parseDate(dateString);
@@ -50,7 +48,6 @@ const formatDateWithoutYear = (dateString) => {
   }
 };
 
-// Функция для получения года из даты
 const getYearFromDate = (dateString) => {
   try {
     const date = parseDate(dateString);
@@ -67,20 +64,16 @@ const StockChart = ({ stock }) => {
     return <div>Нет данных для отображения графика</div>;
   }
 
-  // Сортируем данные по дате
   const sortedData = [...stock.historicalData].sort((a, b) => 
     parseDate(a.date) - parseDate(b.date)
   );
 
-  // Получаем уникальные годы из данных
   const availableYears = [...new Set(sortedData.map(data => getYearFromDate(data.date)))].sort();
 
-  // Устанавливаем выбранный год по умолчанию (самый новый)
   if (!selectedYear && availableYears.length > 0) {
     setSelectedYear(availableYears[availableYears.length - 1]);
   }
 
-  // Функция для получения цвета по году
   const getColorForYear = (year) => {
     const colors = {
       2025: 'rgb(75, 192, 192)',
@@ -93,7 +86,6 @@ const StockChart = ({ stock }) => {
     return colors[year] || `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;
   };
 
-  // Создаем данные для выбранного года
   const createChartData = () => {
     if (!selectedYear) return null;
 
@@ -184,7 +176,6 @@ const StockChart = ({ stock }) => {
     },
   };
 
-  // Получаем статистику для выбранного года
   const getYearStatistics = () => {
     if (!selectedYear) return null;
 
@@ -207,7 +198,6 @@ const StockChart = ({ stock }) => {
 
   return (
     <div style={{ height: '600px', width: '100%' }}>
-      {/* Выбор года */}
       <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
         <div>
           <strong>Выберите год для просмотра:</strong>
@@ -231,7 +221,6 @@ const StockChart = ({ stock }) => {
         </select>
       </div>
 
-      {/* Статистика года */}
       {statistics && (
         <div style={{ 
           marginBottom: '1rem', 
@@ -260,7 +249,6 @@ const StockChart = ({ stock }) => {
         </div>
       )}
 
-      {/* График */}
       {chartData ? (
         <Line data={chartData} options={chartOptions} />
       ) : (
@@ -276,7 +264,6 @@ const StockChart = ({ stock }) => {
         </div>
       )}
 
-      {/* Информация о доступных годах */}
       <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#e9ecef', borderRadius: '4px' }}>
         <strong>Доступные годы для {stock.symbol}:</strong>
         <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>

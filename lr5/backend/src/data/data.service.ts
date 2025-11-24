@@ -6,6 +6,17 @@ export interface Broker {
   id: number;
   name: string;
   initialFunds: number;
+  cash?: number;
+  stocks?: { [symbol: string]: number };
+  portfolio?: {
+    stocks: Array<{
+      symbol: string;
+      quantity: number;
+      currentPrice: number;
+      value: number;
+    }>;
+    totalValue: number;
+  };
 }
 
 export interface Stock {

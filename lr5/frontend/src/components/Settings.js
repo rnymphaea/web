@@ -14,7 +14,6 @@ const Settings = () => {
   const [simulationStatus, setSimulationStatus] = useState('loading'); // loading, running, stopped
 
   useEffect(() => {
-    // Загружаем настройки сразу при монтировании компонента
     dispatch(fetchSettings()).then((action) => {
       if (action.payload) {
         setLocalSettings(action.payload);
@@ -32,16 +31,13 @@ const Settings = () => {
       });
     });
 
-    // Слушаем события от сервера для обновления статуса
     newSocket.on('simulationStarted', () => {
       setSimulationStatus('running');
-      // Обновляем настройки чтобы получить актуальные данные
       dispatch(fetchSettings());
     });
 
     newSocket.on('simulationStopped', () => {
       setSimulationStatus('stopped');
-      // Обновляем настройки чтобы получить актуальные данные
       dispatch(fetchSettings());
     });
 
@@ -51,15 +47,12 @@ const Settings = () => {
   useEffect(() => {
     if (settings) {
       setLocalSettings(settings);
-      // Обновляем статус симуляции из настроек
       setSimulationStatus(settings.isRunning ? 'running' : 'stopped');
     }
   }, [settings]);
 
-  // Функция для преобразования даты в формат для input[type="date"]
   const formatDateForInput = (dateString) => {
     if (!dateString) {
-      // Если даты нет, устанавливаем первую доступную дату из данных
       if (stocks.length > 0 && stocks[0].historicalData.length > 0) {
         const firstDate = stocks[0].historicalData[0].date;
         return convertToInputFormat(firstDate);
@@ -70,7 +63,6 @@ const Settings = () => {
     return convertToInputFormat(dateString);
   };
 
-  // Конвертирует дату из "dd.mm.yyyy" в "yyyy-mm-dd"
   const convertToInputFormat = (dateString) => {
     if (dateString.includes('.')) {
       const parts = dateString.split('.');
@@ -84,7 +76,6 @@ const Settings = () => {
     return dateString;
   };
 
-  // Конвертирует дату из "yyyy-mm-dd" в "dd.mm.yyyy"
   const convertToDisplayFormat = (dateString) => {
     if (dateString.includes('-')) {
       const parts = dateString.split('-');
@@ -112,10 +103,8 @@ const Settings = () => {
       return;
     }
 
-    // Преобразуем дату в правильный формат для бэкенда
     const startDateForBackend = convertToDisplayFormat(localSettings.startDate);
     
-    // Проверяем, что дата существует в исторических данных
     const firstStock = stocks[0];
     if (firstStock && firstStock.historicalData) {
       const dateExists = firstStock.historicalData.some(
@@ -128,21 +117,17 @@ const Settings = () => {
       }
     }
 
-    // Устанавливаем статус "загрузка" для лучшего UX
     setSimulationStatus('loading');
 
-    // Сохраняем настройки с правильной датой
     const settingsToUpdate = {
       ...localSettings,
       startDate: startDateForBackend
     };
     
     dispatch(updateSettings(settingsToUpdate)).then(() => {
-      // Запускаем симуляцию после сохранения настроек
       dispatch(startSimulation()).then((action) => {
         if (action.payload && action.payload.success) {
           setSimulationStatus('running');
-          // Обновляем настройки чтобы получить актуальные данные
           dispatch(fetchSettings());
         } else {
           setSimulationStatus('stopped');
@@ -154,13 +139,11 @@ const Settings = () => {
   };
 
   const handleStopSimulation = () => {
-    // Устанавливаем статус "загрузка" для лучшего UX
     setSimulationStatus('loading');
     
     dispatch(stopSimulation()).then((action) => {
       if (action.payload && action.payload.success) {
         setSimulationStatus('stopped');
-        // Обновляем настройки чтобы получить актуальные данные
         dispatch(fetchSettings());
       }
     }).catch(() => {
@@ -175,7 +158,6 @@ const Settings = () => {
     });
   };
 
-  // Получаем доступные даты для подсказки
   const getAvailableDatesRange = () => {
     if (stocks.length === 0 || !stocks[0].historicalData.length) return '';
     
@@ -184,7 +166,6 @@ const Settings = () => {
     return `Доступные даты: ${firstDate} - ${lastDate}`;
   };
 
-  // Функция для получения текста статуса
   const getStatusText = () => {
     switch (simulationStatus) {
       case 'loading':
@@ -198,7 +179,6 @@ const Settings = () => {
     }
   };
 
-  // Функция для получения цвета статуса
   const getStatusColor = () => {
     switch (simulationStatus) {
       case 'loading':

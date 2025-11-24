@@ -1,9 +1,13 @@
 import { Controller, Get, Put, Body, Param } from '@nestjs/common';
 import { DataService, Stock } from '../data/data.service';
+import { SimulationGateway } from '../simulation/simulation.gateway'; // Добавьте этот импорт
 
 @Controller('stocks')
 export class StocksController {
-  constructor(private readonly dataService: DataService) {}
+  constructor(
+    private readonly dataService: DataService,
+    private readonly simulationGateway: SimulationGateway // Добавьте в конструктор
+  ) {}
 
   @Get()
   getStocks(): Stock[] {
@@ -19,6 +23,11 @@ export class StocksController {
     }
     stocks[index] = { ...stocks[index], ...updateData };
     this.dataService.saveStocks(stocks);
+    
+    // Отправляем событие об обновлении акций всем подключенным клиентам
+    console.log(`Stock ${id} updated, isTrading: ${updateData.isTrading}`);
+    this.simulationGateway.server.emit('stocksUpdated');
+    
     return stocks[index];
   }
 }

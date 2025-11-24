@@ -1,6 +1,6 @@
 {
   "name": "broker-simulator-rnymphaea",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Broker exchange simulation platform",
   "main": "backend/dist/src/main.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "dev": "concurrently \"cd backend && npm run start:dev\" \"cd frontend && npm run start\""
   },
   "keywords": [
-    "simulation", 
+    "simulation",
     "broker",
     "stocks"
   ],

@@ -26,7 +26,6 @@ export class SimulationGateway implements OnGatewayInit, OnGatewayConnection, On
     const settings = this.dataService.getSettings();
     const stocks = this.dataService.getStocks();
 
-    // Находим индекс для даты начала торгов
     let startIndex = 0;
     if (settings.startDate && stocks.length > 0 && stocks[0].historicalData) {
       const startDateIndex = stocks[0].historicalData.findIndex(
@@ -37,7 +36,6 @@ export class SimulationGateway implements OnGatewayInit, OnGatewayConnection, On
       }
     }
 
-    // Обновляем настройки с правильным индексом
     settings.currentDateIndex = startIndex;
     settings.isRunning = true;
     this.dataService.saveSettings(settings);
@@ -63,7 +61,6 @@ export class SimulationGateway implements OnGatewayInit, OnGatewayConnection, On
     const settings = this.dataService.getSettings();
     const stocks = this.dataService.getStocks();
 
-    // Проверяем, не достигли ли конца данных
     if (settings.currentDateIndex >= stocks[0].historicalData.length - 1) {
       this.stopSimulation();
       console.log('Simulation finished - reached end of historical data');
