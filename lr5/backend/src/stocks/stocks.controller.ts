@@ -24,7 +24,6 @@ export class StocksController {
     stocks[index] = { ...stocks[index], ...updateData };
     this.dataService.saveStocks(stocks);
     
-    // Отправляем событие об обновлении акций всем подключенным клиентам
     console.log(`Stock ${id} updated, isTrading: ${updateData.isTrading}`);
     this.simulationGateway.server.emit('stocksUpdated');
     

@@ -70,35 +70,41 @@ export class SimulationGateway implements OnGatewayInit, OnGatewayConnection, On
     settings.currentDateIndex += 1;
     this.dataService.saveSettings(settings);
 
-    const currentStocksData = stocks.map(stock => {
-      const historicalData = stock.historicalData[settings.currentDateIndex];
-      return {
-        id: stock.id,
-        symbol: stock.symbol,
-        name: stock.name,
-        currentPrice: historicalData ? historicalData.open : 0,
-        date: historicalData ? historicalData.date : 'N/A',
-      };
-    });
+    const currentStocksData = stocks
+      .filter(stock => stock.isTrading)
+      .map(stock => {
+        const historicalData = stock.historicalData[settings.currentDateIndex];
+        return {
+          id: stock.id,
+          symbol: stock.symbol,
+          name: stock.name,
+          currentPrice: historicalData ? historicalData.open : 0,
+          date: historicalData ? historicalData.date : 'N/A',
+          isTrading: stock.isTrading
+        };
+      });
 
     this.server.emit('stockUpdate', currentStocksData);
-    console.log(`Day ${settings.currentDateIndex}: ${currentStocksData[0]?.date}`);
+    console.log(`Day ${settings.currentDateIndex}: ${currentStocksData[0]?.date}, Trading stocks: ${currentStocksData.length}`);
   }
 
   private sendCurrentData() {
     const settings = this.dataService.getSettings();
     const stocks = this.dataService.getStocks();
 
-    const currentStocksData = stocks.map(stock => {
-      const historicalData = stock.historicalData[settings.currentDateIndex];
-      return {
-        id: stock.id,
-        symbol: stock.symbol,
-        name: stock.name,
-        currentPrice: historicalData ? historicalData.open : 0,
-        date: historicalData ? historicalData.date : 'N/A',
-      };
-    });
+    const currentStocksData = stocks
+      .filter(stock => stock.isTrading)
+      .map(stock => {
+        const historicalData = stock.historicalData[settings.currentDateIndex];
+        return {
+          id: stock.id,
+          symbol: stock.symbol,
+          name: stock.name,
+          currentPrice: historicalData ? historicalData.open : 0,
+          date: historicalData ? historicalData.date : 'N/A',
+          isTrading: stock.isTrading
+        };
+      });
 
     this.server.emit('stockUpdate', currentStocksData);
   }

@@ -156,7 +156,7 @@ const StockChart = ({ stock }) => {
         display: true,
         title: {
           display: true,
-          text: 'Дата (день.месяц)'
+          text: 'Дата'
         },
         grid: {
           display: false

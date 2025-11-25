@@ -132,7 +132,7 @@ export class DataService {
     const data: HistoricalData[] = [];
     const today = new Date();
     
-    for (let i = 365; i >= 0; i--) {
+    for (let i = 730; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       

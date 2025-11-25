@@ -1,7 +1,12 @@
 [
   {
-    "name": "asdf",
-    "initialFunds": 2229,
-    "id": 1
+    "id": 1,
+    "name": "Broker 1",
+    "initialFunds": 100000
+  },
+  {
+    "id": 2,
+    "name": "Broker 2",
+    "initialFunds": 200000
   }
 ]
