@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Server } from 'socket.io';
 import { io, Socket } from 'socket.io-client';
+import { PortfolioService } from '../portfolio/portfolio.service';
 
 export interface Broker {
   id: number;
@@ -38,6 +39,13 @@ export interface Stock {
   }>;
 }
 
+export interface Settings {
+  startDate: string;
+  speed: number;
+  isRunning: boolean;
+  currentDateIndex: number;
+}
+
 @Injectable()
 export class DataService {
   private brokers: Broker[] = [];
@@ -48,8 +56,14 @@ export class DataService {
   private currentDate: string = '';
   private stocks: Stock[] = [];
   private tradingStocks: Set<string> = new Set();
+  private settings: Settings = {
+    startDate: new Date().toLocaleDateString(),
+    speed: 1,
+    isRunning: false,
+    currentDateIndex: 0
+  };
 
-  constructor() {
+  constructor(private readonly portfolioService: PortfolioService) {
     this.connectToAdmin();
     this.loadInitialData();
   }
@@ -65,6 +79,12 @@ export class DataService {
       // Загружаем акции из админского бэкенда
       const stocksResponse = await fetch('http://localhost:3001/stocks');
       this.stocks = await stocksResponse.json();
+
+      // Загружаем настройки из админского бэкенда
+      const settingsResponse = await fetch('http://localhost:3001/simulation/settings');
+      if (settingsResponse.ok) {
+        this.settings = await settingsResponse.json();
+      }
 
       // Обновляем список акций в торгах
       this.updateTradingStocks();
@@ -91,6 +111,7 @@ export class DataService {
       console.log('✅ Loaded brokers from admin:', this.brokers.length);
       console.log('✅ Loaded stocks from admin:', this.stocks.length);
       console.log('✅ Trading stocks:', Array.from(this.tradingStocks));
+      console.log('✅ Settings:', this.settings);
 
       // Если брокеров нет, создаем тестового
       if (this.brokers.length === 0) {
@@ -273,6 +294,7 @@ export class DataService {
 
   setBrokerServer(server: Server) {
     this.brokerServer = server;
+    this.portfolioService.setBrokerServer(server);
   }
 
   private broadcastToBrokers() {
@@ -364,6 +386,10 @@ export class DataService {
     broker.cash -= totalCost;
     broker.stocks[symbol] = (broker.stocks[symbol] || 0) + quantity;
     
+    // Сохраняем в историю портфеля
+    this.portfolioService.addTransaction(brokerId, broker.name, symbol, quantity, price, 'buy');
+    this.portfolioService.updateCash(brokerId, broker.cash);
+
     this.transactions.push({
       brokerId,
       stockSymbol: symbol,
@@ -398,6 +424,10 @@ export class DataService {
       delete broker.stocks[symbol];
     }
     
+    // Сохраняем в историю портфеля
+    this.portfolioService.addTransaction(brokerId, broker.name, symbol, quantity, price, 'sell');
+    this.portfolioService.updateCash(brokerId, broker.cash);
+
     this.transactions.push({
       brokerId,
       stockSymbol: symbol,
@@ -423,38 +453,54 @@ export class DataService {
     return this.stocks;
   }
 
+  // Добавляем недостающие методы
+  getStocks(): Stock[] {
+    return this.stocks;
+  }
+
+  getSettings(): Settings {
+    return this.settings;
+  }
+
   getBrokerPortfolio(brokerId: number) {
     const broker = this.getBroker(brokerId);
     if (!broker) return null;
     
+    const portfolioData = this.portfolioService.getPortfolio(brokerId, this.currentPrices);
+    if (!portfolioData) return null;
+
+    // Формируем ответ с вычисленными значениями для фронтенда
     const portfolio = {
       broker,
-      stocks: [] as Array<{
-        symbol: string;
-        quantity: number;
-        currentPrice: number;
-        value: number;
-      }>,
-      totalValue: broker.cash || 0
+      stocks: portfolioData.stocks.map(stock => {
+        const currentPrice = this.currentPrices[stock.symbol] || 0;
+        const stats = this.portfolioService.calculateStockStats(stock, currentPrice);
+        
+        return {
+          symbol: stock.symbol,
+          quantity: stock.quantity,
+          currentPrice: currentPrice,
+          averagePrice: stats.averagePrice,
+          value: stats.currentValue,
+          profit: stats.profit,
+          profitPercentage: stats.profitPercentage,
+          purchaseHistory: stock.purchaseHistory
+        };
+      }),
+      totalValue: portfolioData.totalValue,
+      totalProfit: portfolioData.totalProfit,
+      cash: portfolioData.cash
     };
     
-    if (broker.stocks) {
-      Object.entries(broker.stocks).forEach(([symbol, quantity]) => {
-        if (quantity > 0) {
-          const currentPrice = this.currentPrices[symbol] || 0;
-          const value = currentPrice * quantity;
-          portfolio.stocks.push({
-            symbol,
-            quantity,
-            currentPrice,
-            value
-          });
-          portfolio.totalValue += value;
-        }
-      });
-    }
-    
     return portfolio;
+  }
+
+  // Получить данные для графика акции
+  getStockChartData(brokerId: number, symbol: string) {
+    const stock = this.stocks.find(s => s.symbol === symbol);
+    if (!stock) return null;
+
+    return this.portfolioService.getStockChartData(brokerId, symbol, stock.historicalData);
   }
 
   async syncWithAdmin(): Promise<boolean> {

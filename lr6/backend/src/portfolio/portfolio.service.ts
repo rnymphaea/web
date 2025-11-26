@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Server } from 'socket.io';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -7,17 +8,12 @@ export interface Purchase {
   quantity: number;
   price: number;
   date: Date;
+  type: 'buy' | 'sell';
 }
 
 export interface PortfolioStock {
   symbol: string;
   quantity: number;
-  currentPrice: number;
-  averagePrice: number;
-  totalCost: number;
-  currentValue: number;
-  profit: number;
-  profitPercentage: number;
   purchaseHistory: Purchase[];
 }
 
@@ -31,13 +27,32 @@ export interface Portfolio {
   purchaseHistory: Purchase[];
 }
 
+export interface StockChartData {
+  symbol: string;
+  prices: number[];
+  dates: string[];
+  currentPrice: number;
+}
+
+export interface StockStats {
+  averagePrice: number;
+  currentValue: number;
+  profit: number;
+  profitPercentage: number;
+}
+
 @Injectable()
 export class PortfolioService {
   private portfolios: Portfolio[] = [];
   private readonly dataPath = path.join(process.cwd(), 'data', 'portfolios.json');
+  private brokerServer: Server;
 
   constructor() {
     this.loadPortfolios();
+  }
+
+  setBrokerServer(server: Server) {
+    this.brokerServer = server;
   }
 
   private loadPortfolios() {
@@ -83,8 +98,34 @@ export class PortfolioService {
     }
   }
 
-  // Добавить покупку в историю
-  addPurchase(brokerId: number, brokerName: string, symbol: string, quantity: number, price: number): void {
+  // Вычисляем среднюю цену покупки для акции
+  private calculateAveragePrice(purchases: Purchase[]): number {
+    if (purchases.length === 0) return 0;
+    
+    const totalCost = purchases.reduce((sum, purchase) => sum + (purchase.price * purchase.quantity), 0);
+    const totalQuantity = purchases.reduce((sum, purchase) => sum + purchase.quantity, 0);
+    
+    return totalCost / totalQuantity;
+  }
+
+  // Вычисляем текущую стоимость и прибыль (публичный метод)
+  calculateStockStats(stock: PortfolioStock, currentPrice: number): StockStats {
+    const averagePrice = this.calculateAveragePrice(stock.purchaseHistory);
+    const currentValue = currentPrice * stock.quantity;
+    const totalCost = averagePrice * stock.quantity;
+    const profit = currentValue - totalCost;
+    const profitPercentage = averagePrice > 0 ? ((currentPrice - averagePrice) / averagePrice) * 100 : 0;
+
+    return {
+      averagePrice,
+      currentValue,
+      profit,
+      profitPercentage
+    };
+  }
+
+  // Добавить сделку в историю
+  addTransaction(brokerId: number, brokerName: string, symbol: string, quantity: number, price: number, type: 'buy' | 'sell'): void {
     let portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     
     if (!portfolio) {
@@ -100,96 +141,107 @@ export class PortfolioService {
       this.portfolios.push(portfolio);
     }
 
-    const purchase: Purchase = {
+    const transaction: Purchase = {
       symbol,
       quantity,
       price,
-      date: new Date()
+      date: new Date(),
+      type
     };
 
-    portfolio.purchaseHistory.push(purchase);
-    this.savePortfolios();
-    
-    console.log(`📝 Добавлена покупка: ${brokerName} купил ${quantity} ${symbol} по $${price}`);
-  }
+    // Добавляем в общую историю
+    portfolio.purchaseHistory.push(transaction);
 
-  // Обновить портфель с расчетом средней цены
-  updatePortfolio(brokerId: number, brokerName: string, stocks: { [symbol: string]: number }, cash: number, currentPrices: { [symbol: string]: number }): Portfolio {
-    let portfolio = this.portfolios.find(p => p.brokerId === brokerId);
-    
-    if (!portfolio) {
-      portfolio = {
-        brokerId,
-        brokerName,
-        stocks: [],
-        cash,
-        totalValue: cash,
-        totalProfit: 0,
+    // Обновляем или добавляем акцию в портфель
+    let stock = portfolio.stocks.find(s => s.symbol === symbol);
+    if (!stock) {
+      stock = {
+        symbol,
+        quantity: 0,
         purchaseHistory: []
       };
-      this.portfolios.push(portfolio);
+      portfolio.stocks.push(stock);
     }
 
-    // Получаем историю покупок для этого брокера
-    const brokerPurchases = portfolio.purchaseHistory.filter(p => 
-      Object.keys(stocks).includes(p.symbol)
-    );
+    // Добавляем в историю покупок акции
+    stock.purchaseHistory.push(transaction);
 
-    // Обновляем акции в портфеле
-    const portfolioStocks: PortfolioStock[] = [];
+    // Обновляем количество акций
+    if (type === 'buy') {
+      stock.quantity += quantity;
+    } else {
+      stock.quantity -= quantity;
+      
+      // Удаляем акцию из портфеля если количество 0
+      if (stock.quantity === 0) {
+        portfolio.stocks = portfolio.stocks.filter(s => s.symbol !== symbol);
+      }
+    }
+
+    this.savePortfolios();
+    
+    console.log(`📝 Добавлена сделка: ${brokerName} ${type === 'buy' ? 'купил' : 'продал'} ${quantity} ${symbol} по $${price}`);
+  }
+
+  // Получить портфель с вычисленными значениями
+  getPortfolio(brokerId: number, currentPrices: { [symbol: string]: number }): Portfolio | undefined {
+    const portfolio = this.portfolios.find(p => p.brokerId === brokerId);
+    if (!portfolio) return undefined;
+
+    // Вычисляем общую стоимость и прибыль
     let stockValue = 0;
     let totalProfit = 0;
 
-    Object.entries(stocks).forEach(([symbol, quantity]) => {
-      if (quantity > 0) {
-        const currentPrice = currentPrices[symbol] || 0;
-        
-        // Получаем историю покупок для этой акции
-        const symbolPurchases = brokerPurchases.filter(p => p.symbol === symbol);
-        
-        // Рассчитываем среднюю цену
-        let averagePrice = 0;
-        let totalCost = 0;
-        
-        if (symbolPurchases.length > 0) {
-          totalCost = symbolPurchases.reduce((sum, purchase) => sum + (purchase.price * purchase.quantity), 0);
-          averagePrice = totalCost / symbolPurchases.reduce((sum, purchase) => sum + purchase.quantity, 0);
-        } else {
-          // Если нет истории, используем текущую цену
-          averagePrice = currentPrice;
-          totalCost = currentPrice * quantity;
-        }
-
-        const currentValue = currentPrice * quantity;
-        const profit = currentValue - totalCost;
-        const profitPercentage = averagePrice > 0 ? ((currentPrice - averagePrice) / averagePrice) * 100 : 0;
-        
-        stockValue += currentValue;
-        totalProfit += profit;
-        
-        portfolioStocks.push({
-          symbol,
-          quantity,
-          currentPrice,
-          averagePrice,
-          totalCost,
-          currentValue,
-          profit,
-          profitPercentage,
-          purchaseHistory: symbolPurchases
-        });
-      }
+    portfolio.stocks.forEach(stock => {
+      const currentPrice = currentPrices[stock.symbol] || 0;
+      const stats = this.calculateStockStats(stock, currentPrice);
+      
+      stockValue += stats.currentValue;
+      totalProfit += stats.profit;
     });
 
-    portfolio.stocks = portfolioStocks;
-    portfolio.cash = cash;
-    portfolio.totalValue = cash + stockValue;
+    portfolio.totalValue = portfolio.cash + stockValue;
     portfolio.totalProfit = totalProfit;
-    portfolio.brokerName = brokerName;
 
-    this.savePortfolios();
-    
     return portfolio;
+  }
+
+  // Получить данные для графика акции
+  getStockChartData(brokerId: number, symbol: string, historicalData: any[]): StockChartData | null {
+    const portfolio = this.portfolios.find(p => p.brokerId === brokerId);
+    if (!portfolio) return null;
+
+    const stock = portfolio.stocks.find(s => s.symbol === symbol);
+    if (!stock) return null;
+
+    // Получаем цены из исторических данных
+    const prices = historicalData.map(data => data.open);
+    const dates = historicalData.map(data => data.date);
+
+    // Текущая цена - последняя из исторических данных
+    const currentPrice = prices.length > 0 ? prices[prices.length - 1] : 0;
+
+    return {
+      symbol,
+      prices,
+      dates,
+      currentPrice
+    };
+  }
+
+  // Получить историю покупок брокера
+  getPurchaseHistory(brokerId: number): Purchase[] {
+    const portfolio = this.portfolios.find(p => p.brokerId === brokerId);
+    return portfolio ? portfolio.purchaseHistory : [];
+  }
+
+  // Обновить денежные средства брокера
+  updateCash(brokerId: number, cash: number): void {
+    const portfolio = this.portfolios.find(p => p.brokerId === brokerId);
+    if (portfolio) {
+      portfolio.cash = cash;
+      this.savePortfolios();
+    }
   }
 
   getAllPortfolios(): Portfolio[] {
@@ -198,12 +250,6 @@ export class PortfolioService {
 
   getPortfolioByBrokerId(brokerId: number): Portfolio | undefined {
     return this.portfolios.find(p => p.brokerId === brokerId);
-  }
-
-  // Получить историю покупок брокера
-  getPurchaseHistory(brokerId: number): Purchase[] {
-    const portfolio = this.portfolios.find(p => p.brokerId === brokerId);
-    return portfolio ? portfolio.purchaseHistory : [];
   }
 
   deletePortfolio(brokerId: number): boolean {

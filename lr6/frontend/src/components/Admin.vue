@@ -6,6 +6,10 @@
     </header>
 
     <main class="main">
+      <div class="connection-status" :class="connectionClass">
+        {{ connectionText }}
+      </div>
+
       <div v-if="portfolios.length === 0" class="empty">
         <p>Нет данных о портфелях</p>
       </div>
@@ -14,25 +18,25 @@
         <div v-for="portfolio in portfolios" :key="portfolio.brokerId" class="portfolio">
           <div class="portfolio-header">
             <h2>{{ portfolio.brokerName }}</h2>
-            <div class="portfolio-total" :class="getProfitClass(portfolio.totalProfit)">
-              ${{ portfolio.totalValue.toLocaleString() }}
+            <div class="portfolio-total" :class="getProfitClass(portfolio.totalProfit || 0)">
+              ${{ (portfolio.totalValue || 0).toLocaleString() }}
               <div class="profit-badge">
-                {{ portfolio.totalProfit > 0 ? '+' : '' }}{{ portfolio.totalProfit.toFixed(2) }}
+                {{ (portfolio.totalProfit || 0) > 0 ? '+' : '' }}{{ (portfolio.totalProfit || 0).toFixed(2) }}
               </div>
             </div>
           </div>
 
           <div class="portfolio-details">
-            <div class="cash">Наличные: ${{ portfolio.cash.toLocaleString() }}</div>
+            <div class="cash">Наличные: ${{ (portfolio.cash || 0).toLocaleString() }}</div>
             
-            <div v-if="portfolio.stocks.length > 0" class="stocks">
+            <div v-if="portfolio.stocks && portfolio.stocks.length > 0" class="stocks">
               <div v-for="stock in portfolio.stocks" :key="stock.symbol" class="stock">
                 <span class="symbol">{{ stock.symbol }}</span>
-                <span class="quantity">{{ stock.quantity }} шт</span>
-                <span class="avg-price">${{ stock.averagePrice.toFixed(2) }}</span>
-                <span class="price">${{ stock.currentPrice.toFixed(2) }}</span>
-                <span class="value" :class="getStockProfitClass(stock.profit)">
-                  ${{ stock.profit.toFixed(2) }}
+                <span class="quantity">{{ stock.quantity || 0 }} шт</span>
+                <span class="avg-price">${{ (stock.averagePrice || 0).toFixed(2) }}</span>
+                <span class="price">${{ (stock.currentPrice || 0).toFixed(2) }}</span>
+                <span class="value" :class="getStockProfitClass(stock.profit || 0)">
+                  ${{ (stock.profit || 0).toFixed(2) }}
                 </span>
               </div>
             </div>
@@ -48,14 +52,32 @@
 </template>
 
 <script>
+import { io } from 'socket.io-client'
+
 export default {
   data() {
     return {
-      portfolios: []
+      portfolios: [],
+      socket: null,
+      isConnected: false
+    }
+  },
+  computed: {
+    connectionClass() {
+      return this.isConnected ? 'connected' : 'disconnected'
+    },
+    connectionText() {
+      return this.isConnected ? '✓ Подключено к бирже' : '✗ Отключено от биржи'
     }
   },
   async mounted() {
     await this.loadPortfolios();
+    this.setupWebSocket();
+  },
+  beforeUnmount() {
+    if (this.socket) {
+      this.socket.disconnect();
+    }
   },
   methods: {
     async loadPortfolios() {
@@ -64,10 +86,50 @@ export default {
         const result = await response.json();
         
         if (result.success) {
-          this.portfolios = result.data;
+          this.portfolios = result.data || [];
         }
       } catch (error) {
         console.error('Error loading portfolios:', error);
+        this.portfolios = [];
+      }
+    },
+
+    setupWebSocket() {
+      this.socket = io('http://localhost:3002');
+      
+      this.socket.on('connect', () => {
+        console.log('Connected to admin WebSocket');
+        this.isConnected = true;
+      });
+
+      this.socket.on('disconnect', () => {
+        console.log('Disconnected from admin WebSocket');
+        this.isConnected = false;
+      });
+
+      this.socket.on('priceUpdate', (data) => {
+        console.log('Received price update in admin:', data);
+        // При обновлении цен перезагружаем портфели
+        this.loadPortfolios();
+      });
+
+      this.socket.on('portfolioUpdate', (data) => {
+        console.log('Received portfolio update:', data);
+        // Если приходит конкретное обновление портфеля
+        this.handlePortfolioUpdate(data);
+      });
+    },
+
+    handlePortfolioUpdate(updatedPortfolio) {
+      // Находим индекс обновляемого портфеля
+      const index = this.portfolios.findIndex(p => p.brokerId === updatedPortfolio.brokerId);
+      
+      if (index !== -1) {
+        // Обновляем существующий портфель
+        this.portfolios.splice(index, 1, updatedPortfolio);
+      } else {
+        // Добавляем новый портфель
+        this.portfolios.push(updatedPortfolio);
       }
     },
 
@@ -124,6 +186,26 @@ export default {
   margin: 0 auto;
 }
 
+.connection-status {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.connection-status.connected {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.connection-status.disconnected {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
 .empty {
   text-align: center;
   padding: 4rem;
@@ -142,6 +224,12 @@ export default {
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portfolio:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .portfolio-header {
@@ -206,6 +294,11 @@ export default {
   padding: 0.5rem;
   background: #f8f9fa;
   border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.stock:hover {
+  background: #e9ecef;
 }
 
 .symbol {
@@ -260,3 +353,4 @@ export default {
   }
 }
 </style>
+

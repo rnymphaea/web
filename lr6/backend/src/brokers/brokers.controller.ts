@@ -7,9 +7,21 @@ interface PortfolioResponse {
     symbol: string;
     quantity: number;
     currentPrice: number;
+    averagePrice: number;
     value: number;
+    profit: number;
+    profitPercentage: number;
+    purchaseHistory: Array<{
+      symbol: string;
+      quantity: number;
+      price: number;
+      date: Date;
+      type: 'buy' | 'sell';
+    }>;
   }>;
   totalValue: number;
+  totalProfit: number;
+  cash: number;
 }
 
 @Controller('api')
@@ -61,6 +73,47 @@ export class BrokersController {
   @Get('stocks')
   getStocks() {
     return this.dataService.getAllStocks();
+  }
+
+  @Get('brokers/:id/stock/:symbol/chart')
+  getStockChart(
+    @Param('id') id: string,
+    @Param('symbol') symbol: string
+  ) {
+    const chartData = this.dataService.getStockChartData(parseInt(id), symbol);
+    if (!chartData) {
+      return { error: 'Stock not found' };
+    }
+    return chartData;
+  }
+
+  // Новый endpoint для графика любой акции с учетом текущей даты симуляции
+  @Get('stocks/:symbol/chart')
+  getStockChartForSymbol(@Param('symbol') symbol: string) {
+    const settings = this.dataService.getSettings();
+    const stocks = this.dataService.getAllStocks();
+    const stock = stocks.find(s => s.symbol === symbol);
+    
+    if (!stock) {
+      return { error: 'Stock not found' };
+    }
+
+    // Ограничиваем данные до текущей даты симуляции
+    const historicalData = stock.historicalData.slice(0, settings.currentDateIndex + 1);
+    const currentPrice = this.dataService.getCurrentPrices().prices[symbol] || 0;
+
+    const chartData = {
+      symbol: stock.symbol,
+      name: stock.name,
+      prices: historicalData.map(data => data.open),
+      dates: historicalData.map(data => data.date),
+      currentPrice: currentPrice,
+      currentDateIndex: settings.currentDateIndex,
+      totalDataPoints: stock.historicalData.length,
+      availableDataPoints: historicalData.length
+    };
+    
+    return chartData;
   }
 
   @Post('sync')
