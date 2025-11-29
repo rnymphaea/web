@@ -1,4 +1,4 @@
-// lr6/backend/src/data/data.service.ts
+// backend/src/data/data.service.ts
 
 import { Injectable } from '@nestjs/common';
 import { Server } from 'socket.io';
@@ -345,8 +345,10 @@ export class DataService {
   }
 
   createBroker(name: string): Broker {
-    const maxId = this.brokers.length > 0 
-      ? Math.max(...this.brokers.map(b => b.id)) 
+    // Находим максимальный ID среди всех брокеров (из загруженных и существующих)
+    const existingBrokers = this.brokers;
+    const maxId = existingBrokers.length > 0 
+      ? Math.max(...existingBrokers.map(b => b.id)) 
       : 0;
     
     const id = maxId + 1;
@@ -504,6 +506,11 @@ export class DataService {
     
     const portfolioData = this.portfolioService.getPortfolio(brokerId, this.currentPrices);
     if (!portfolioData) return null;
+
+    // Обновляем имя брокера в портфеле, если оно изменилось
+    if (portfolioData.brokerName !== broker.name) {
+      portfolioData.brokerName = broker.name;
+    }
 
     // Формируем ответ с вычисленными значениями для фронтенда
     const portfolio = {

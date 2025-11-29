@@ -6,13 +6,8 @@
     </header>
 
     <main class="main">
-      <div class="connection-status" :class="connectionClass">
-        {{ connectionText }}
-      </div>
-
       <div class="current-info">
         <p><strong>Текущая дата:</strong> {{ currentDate }}</p>
-        <p><strong>Статус симуляции:</strong> {{ simulationStatus }}</p>
       </div>
 
       <div v-if="portfolios.length === 0" class="empty">
@@ -20,14 +15,11 @@
       </div>
 
       <div v-else class="portfolios">
-        <div v-for="portfolio in portfoliosWithCurrentPrices" :key="portfolio.brokerId" class="portfolio">
+        <div v-for="portfolio in validPortfolios" :key="portfolio.brokerId" class="portfolio">
           <div class="portfolio-header">
-            <h2>{{ portfolio.brokerName }}</h2>
+            <h2>{{ portfolio.brokerName || `Брокер ${portfolio.brokerId}` }}</h2>
             <div class="portfolio-total" :class="getProfitClass(portfolio.totalProfit || 0)">
               ${{ (portfolio.totalValue || 0).toLocaleString() }}
-              <div class="profit-badge">
-                {{ (portfolio.totalProfit || 0) > 0 ? '+' : '' }}{{ (portfolio.totalProfit || 0).toFixed(2) }}
-              </div>
             </div>
           </div>
 
@@ -63,61 +55,29 @@ export default {
   data() {
     return {
       portfolios: [],
-      currentPrices: {}, // Храним текущие цены акций
+      currentPrices: {},
       socket: null,
-      isConnected: false,
       currentDate: '',
-      simulationSettings: null
+      brokers: [] // Добавляем список реальных брокеров
     }
   },
   computed: {
-    connectionClass() {
-      return this.isConnected ? 'connected' : 'disconnected'
-    },
-    connectionText() {
-      return this.isConnected ? '✓ Подключено к бирже' : '✗ Отключено от бирже'
-    },
-    simulationStatus() {
-      return this.simulationSettings?.isRunning ? 'Запущена' : 'Остановлена'
-    },
-    // Вычисляем портфели с актуальными ценами
-    portfoliosWithCurrentPrices() {
-      return this.portfolios.map(portfolio => {
-        // Пересчитываем стоимость портфеля с актуальными ценами
-        let stockValue = 0;
-        let totalProfit = 0;
-        
-        const updatedStocks = portfolio.stocks?.map(stock => {
-          const currentPrice = this.getCurrentStockPrice(stock.symbol);
-          const currentValue = currentPrice * stock.quantity;
-          const totalCost = stock.averagePrice * stock.quantity;
-          const profit = currentValue - totalCost;
-          
-          stockValue += currentValue;
-          totalProfit += profit;
-          
-          return {
-            ...stock,
-            currentPrice: currentPrice,
-            value: currentValue,
-            profit: profit
-          };
-        }) || [];
-        
-        const totalValue = portfolio.cash + stockValue;
-        
-        return {
-          ...portfolio,
-          stocks: updatedStocks,
-          totalValue: totalValue,
-          totalProfit: totalProfit
-        };
+    // Фильтруем портфели, оставляя только тех брокеров, которые существуют в системе
+    validPortfolios() {
+      return this.portfolios.filter(portfolio => {
+        // Если есть имя брокера - показываем
+        if (portfolio.brokerName && portfolio.brokerName.trim() !== '') {
+          return true;
+        }
+        // Или если брокер с таким ID существует в системе
+        const brokerExists = this.brokers.some(broker => broker.id === portfolio.brokerId);
+        return brokerExists;
       });
     }
   },
   async mounted() {
+    await this.loadBrokers(); // Загружаем список реальных брокеров
     await this.loadPortfolios();
-    await this.loadSimulationSettings();
     this.setupWebSocket();
   },
   beforeUnmount() {
@@ -126,6 +86,17 @@ export default {
     }
   },
   methods: {
+    async loadBrokers() {
+      try {
+        const response = await fetch('http://localhost:3001/brokers');
+        this.brokers = await response.json();
+        console.log('Loaded brokers from admin:', this.brokers);
+      } catch (error) {
+        console.error('Error loading brokers:', error);
+        this.brokers = [];
+      }
+    },
+
     async loadPortfolios() {
       try {
         const response = await fetch('http://localhost:3002/api/portfolios');
@@ -141,57 +112,21 @@ export default {
       }
     },
 
-    async loadSimulationSettings() {
-      try {
-        const response = await fetch('http://localhost:3001/simulation/settings');
-        this.simulationSettings = await response.json();
-        console.log('Simulation settings:', this.simulationSettings);
-      } catch (error) {
-        console.error('Error loading simulation settings:', error);
-        this.simulationSettings = { isRunning: false };
-      }
-    },
-
     setupWebSocket() {
-      // Подключаемся к брокерскому WebSocket для получения портфелей
       this.socket = io('http://localhost:3002');
       
-      this.socket.on('connect', () => {
-        console.log('Connected to broker WebSocket for admin');
-        this.isConnected = true;
-      });
-
-      this.socket.on('disconnect', () => {
-        console.log('Disconnected from broker WebSocket');
-        this.isConnected = false;
-      });
-
       this.socket.on('priceUpdate', (data) => {
-        console.log('Received price update in admin:', data);
-        // Обновляем текущие цены
         this.currentPrices = data.prices || {};
         this.currentDate = data.date || '';
       });
 
       this.socket.on('portfolioUpdate', (portfolio) => {
-        console.log('Received portfolio update:', portfolio);
         this.handlePortfolioUpdate(portfolio);
       });
 
-      // Подключаемся также к симуляционному WebSocket для получения обновлений цен
-      this.setupSimulationWebSocket();
-    },
-
-    setupSimulationWebSocket() {
       const simulationSocket = io('http://localhost:3001');
       
-      simulationSocket.on('connect', () => {
-        console.log('Connected to simulation WebSocket for admin');
-      });
-
       simulationSocket.on('stockUpdate', (data) => {
-        console.log('Received stock update from simulation:', data);
-        // Обновляем цены из симуляции
         if (data && Array.isArray(data)) {
           data.forEach(stock => {
             this.currentPrices[stock.symbol] = stock.currentPrice;
@@ -202,9 +137,9 @@ export default {
         }
       });
 
-      simulationSocket.on('settingsUpdated', (settings) => {
-        console.log('Settings updated in admin:', settings);
-        this.simulationSettings = settings;
+      // Также слушаем обновления брокеров
+      simulationSocket.on('brokersUpdated', async () => {
+        await this.loadBrokers();
       });
     },
 
@@ -212,20 +147,16 @@ export default {
       const index = this.portfolios.findIndex(p => p.brokerId === updatedPortfolio.brokerId);
       
       if (index !== -1) {
-        // Обновляем существующий портфель
         this.portfolios.splice(index, 1, updatedPortfolio);
       } else {
-        // Добавляем новый портфель
         this.portfolios.push(updatedPortfolio);
       }
     },
 
-    // Получить текущую цену акции
     getCurrentStockPrice(symbol) {
       return this.currentPrices[symbol] || 0;
     },
 
-    // Рассчитать прибыль для акции с текущими ценами
     calculateStockProfit(stock) {
       const currentPrice = this.getCurrentStockPrice(stock.symbol);
       const currentValue = currentPrice * stock.quantity;
@@ -247,13 +178,14 @@ export default {
 <style scoped>
 .admin {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: white;
+  font-family: Arial, sans-serif;
 }
 
 .header {
-  background: white;
+  background: #f8f9fa;
   padding: 1rem 2rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #dee2e6;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -262,22 +194,16 @@ export default {
 .header h1 {
   margin: 0;
   font-size: 1.5rem;
-  font-weight: 500;
   color: #333;
 }
 
 .back-btn {
-  background: #666;
+  background: #6c757d;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.back-btn:hover {
-  background: #555;
 }
 
 .main {
@@ -286,36 +212,12 @@ export default {
   margin: 0 auto;
 }
 
-.connection-status {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  font-weight: 500;
-  text-align: center;
-}
-
-.connection-status.connected {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.connection-status.disconnected {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
 .current-info {
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .current-info p {
-  margin: 0.5rem 0;
+  margin: 0;
   font-size: 0.9rem;
 }
 
@@ -323,7 +225,6 @@ export default {
   text-align: center;
   padding: 4rem;
   color: #666;
-  font-size: 1.1rem;
 }
 
 .portfolios {
@@ -333,16 +234,9 @@ export default {
 }
 
 .portfolio {
-  background: white;
-  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.portfolio:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .portfolio-header {
@@ -351,20 +245,17 @@ export default {
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #dee2e6;
 }
 
 .portfolio-header h2 {
   margin: 0;
   font-size: 1.2rem;
-  font-weight: 500;
-  color: #333;
 }
 
 .portfolio-total {
   font-size: 1.3rem;
   font-weight: 600;
-  text-align: right;
 }
 
 .portfolio-total.profit {
@@ -373,12 +264,6 @@ export default {
 
 .portfolio-total.loss {
   color: #dc3545;
-}
-
-.profit-badge {
-  font-size: 0.9rem;
-  font-weight: normal;
-  margin-top: 0.25rem;
 }
 
 .portfolio-details {
@@ -390,7 +275,6 @@ export default {
   padding: 0.5rem;
   background: #f8f9fa;
   border-radius: 4px;
-  color: #666;
 }
 
 .stocks {
@@ -407,24 +291,17 @@ export default {
   padding: 0.5rem;
   background: #f8f9fa;
   border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-.stock:hover {
-  background: #e9ecef;
 }
 
 .symbol {
   font-weight: 600;
-  color: #333;
 }
 
-.quantity {
+.quantity, .avg-price, .price {
   color: #666;
 }
 
-.avg-price, .price {
-  color: #666;
+.price, .avg-price {
   text-align: right;
 }
 

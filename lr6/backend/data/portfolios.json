@@ -20,6 +20,34 @@
         "price": 157.63,
         "date": "2025-11-29T22:17:36.942Z",
         "type": "sell"
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 152.35,
+        "date": "2025-11-29T22:40:04.420Z",
+        "type": "buy"
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 150.12,
+        "date": "2025-11-29T22:40:26.482Z",
+        "type": "sell"
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 152.22,
+        "date": "2025-11-29T22:49:23.995Z",
+        "type": "buy"
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 152.22,
+        "date": "2025-11-29T22:49:27.721Z",
+        "type": "sell"
       }
     ]
   }
