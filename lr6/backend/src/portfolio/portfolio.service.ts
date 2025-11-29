@@ -98,6 +98,16 @@ export class PortfolioService {
     }
   }
 
+  // Уведомить об изменении портфеля
+  notifyPortfolioUpdate(brokerId: number) {
+    if (this.brokerServer) {
+      const portfolio = this.getPortfolioByBrokerId(brokerId);
+      if (portfolio) {
+        this.brokerServer.emit('portfolioUpdate', portfolio);
+      }
+    }
+  }
+
   // Вычисляем среднюю цену покупки для акции
   private calculateAveragePrice(purchases: Purchase[]): number {
     if (purchases.length === 0) return 0;
@@ -179,6 +189,7 @@ export class PortfolioService {
     }
 
     this.savePortfolios();
+    this.notifyPortfolioUpdate(brokerId); // Добавляем уведомление
     
     console.log(`📝 Добавлена сделка: ${brokerName} ${type === 'buy' ? 'купил' : 'продал'} ${quantity} ${symbol} по $${price}`);
   }
@@ -241,6 +252,7 @@ export class PortfolioService {
     if (portfolio) {
       portfolio.cash = cash;
       this.savePortfolios();
+      this.notifyPortfolioUpdate(brokerId); // Добавляем уведомление
     }
   }
 

@@ -1,3 +1,5 @@
+// lr6/backend/src/data/data.service.ts
+
 import { Injectable } from '@nestjs/common';
 import { Server } from 'socket.io';
 import { io, Socket } from 'socket.io-client';
@@ -232,6 +234,7 @@ export class DataService {
       this.adminSocket.on('stockUpdate', (data: StockUpdate[]) => {
         console.log('📈 Received stock update from admin:', data.length, 'stocks');
         
+        // Обновляем текущие цены
         this.currentPrices = {};
         data.forEach(stock => {
           if (this.tradingStocks.has(stock.symbol)) {
@@ -244,7 +247,11 @@ export class DataService {
         console.log('📅 Current date:', this.currentDate);
         console.log('💵 Current trading prices:', this.currentPrices);
         
+        // Отправляем обновление всем подключенным клиентам
         this.broadcastToBrokers();
+        
+        // Отправляем обновление портфелей всем брокерам
+        this.broadcastPortfolioUpdates();
       });
 
       this.adminSocket.on('stocksUpdated', async () => {
@@ -267,11 +274,18 @@ export class DataService {
         console.log('💵 Current trading prices:', this.currentPrices);
         
         this.broadcastToBrokers();
+        this.broadcastPortfolioUpdates();
       });
 
       this.adminSocket.on('brokersUpdated', async () => {
         console.log('🔄 Brokers updated in admin, reloading...');
         await this.loadInitialData();
+        this.broadcastPortfolioUpdates();
+      });
+
+      this.adminSocket.on('settingsUpdated', (settings: Settings) => {
+        console.log('🔄 Settings updated from admin:', settings);
+        this.settings = settings;
       });
 
       this.adminSocket.on('disconnect', () => {
@@ -301,10 +315,24 @@ export class DataService {
     if (this.brokerServer) {
       const updateData = {
         prices: this.currentPrices,
-        date: this.currentDate
+        date: this.currentDate,
+        settings: this.settings
       };
       this.brokerServer.emit('priceUpdate', updateData);
       console.log('📤 Broadcasted price update to brokers:', updateData);
+    }
+  }
+
+  // Новый метод для отправки обновлений портфелей
+  private broadcastPortfolioUpdates() {
+    if (this.brokerServer) {
+      this.brokers.forEach(broker => {
+        const portfolio = this.getBrokerPortfolio(broker.id);
+        if (portfolio) {
+          this.brokerServer.emit('portfolioUpdate', portfolio);
+        }
+      });
+      console.log('📤 Broadcasted portfolio updates to all brokers');
     }
   }
 
@@ -336,6 +364,7 @@ export class DataService {
     console.log('📊 Total brokers now:', this.brokers.length);
     
     this.saveBrokerToAdmin(broker);
+    this.broadcastPortfolioUpdates();
     
     return broker;
   }
@@ -400,6 +429,10 @@ export class DataService {
     });
 
     console.log(`✅ Broker ${brokerId} bought ${quantity} ${symbol} at $${price}`);
+    
+    // Отправляем обновление портфеля
+    this.broadcastPortfolioUpdates();
+    
     return true;
   }
 
@@ -438,6 +471,10 @@ export class DataService {
     });
 
     console.log(`✅ Broker ${brokerId} sold ${quantity} ${symbol} at $${price}`);
+    
+    // Отправляем обновление портфеля
+    this.broadcastPortfolioUpdates();
+    
     return true;
   }
 
@@ -453,7 +490,6 @@ export class DataService {
     return this.stocks;
   }
 
-  // Добавляем недостающие методы
   getStocks(): Stock[] {
     return this.stocks;
   }
@@ -479,7 +515,7 @@ export class DataService {
         return {
           symbol: stock.symbol,
           quantity: stock.quantity,
-          currentPrice: currentPrice,
+          currentPrice: currentPrice, // Используем актуальные цены
           averagePrice: stats.averagePrice,
           value: stats.currentValue,
           profit: stats.profit,
@@ -495,7 +531,6 @@ export class DataService {
     return portfolio;
   }
 
-  // Получить данные для графика акции
   getStockChartData(brokerId: number, symbol: string) {
     const stock = this.stocks.find(s => s.symbol === symbol);
     if (!stock) return null;

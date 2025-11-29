@@ -10,12 +10,17 @@
         {{ connectionText }}
       </div>
 
+      <div class="current-info">
+        <p><strong>Текущая дата:</strong> {{ currentDate }}</p>
+        <p><strong>Статус симуляции:</strong> {{ simulationStatus }}</p>
+      </div>
+
       <div v-if="portfolios.length === 0" class="empty">
         <p>Нет данных о портфелях</p>
       </div>
 
       <div v-else class="portfolios">
-        <div v-for="portfolio in portfolios" :key="portfolio.brokerId" class="portfolio">
+        <div v-for="portfolio in portfoliosWithCurrentPrices" :key="portfolio.brokerId" class="portfolio">
           <div class="portfolio-header">
             <h2>{{ portfolio.brokerName }}</h2>
             <div class="portfolio-total" :class="getProfitClass(portfolio.totalProfit || 0)">
@@ -34,9 +39,9 @@
                 <span class="symbol">{{ stock.symbol }}</span>
                 <span class="quantity">{{ stock.quantity || 0 }} шт</span>
                 <span class="avg-price">${{ (stock.averagePrice || 0).toFixed(2) }}</span>
-                <span class="price">${{ (stock.currentPrice || 0).toFixed(2) }}</span>
-                <span class="value" :class="getStockProfitClass(stock.profit || 0)">
-                  ${{ (stock.profit || 0).toFixed(2) }}
+                <span class="price">${{ (getCurrentStockPrice(stock.symbol) || 0).toFixed(2) }}</span>
+                <span class="value" :class="getStockProfitClass(calculateStockProfit(stock))">
+                  ${{ (calculateStockProfit(stock) || 0).toFixed(2) }}
                 </span>
               </div>
             </div>
@@ -58,8 +63,11 @@ export default {
   data() {
     return {
       portfolios: [],
+      currentPrices: {}, // Храним текущие цены акций
       socket: null,
-      isConnected: false
+      isConnected: false,
+      currentDate: '',
+      simulationSettings: null
     }
   },
   computed: {
@@ -67,11 +75,49 @@ export default {
       return this.isConnected ? 'connected' : 'disconnected'
     },
     connectionText() {
-      return this.isConnected ? '✓ Подключено к бирже' : '✗ Отключено от биржи'
+      return this.isConnected ? '✓ Подключено к бирже' : '✗ Отключено от бирже'
+    },
+    simulationStatus() {
+      return this.simulationSettings?.isRunning ? 'Запущена' : 'Остановлена'
+    },
+    // Вычисляем портфели с актуальными ценами
+    portfoliosWithCurrentPrices() {
+      return this.portfolios.map(portfolio => {
+        // Пересчитываем стоимость портфеля с актуальными ценами
+        let stockValue = 0;
+        let totalProfit = 0;
+        
+        const updatedStocks = portfolio.stocks?.map(stock => {
+          const currentPrice = this.getCurrentStockPrice(stock.symbol);
+          const currentValue = currentPrice * stock.quantity;
+          const totalCost = stock.averagePrice * stock.quantity;
+          const profit = currentValue - totalCost;
+          
+          stockValue += currentValue;
+          totalProfit += profit;
+          
+          return {
+            ...stock,
+            currentPrice: currentPrice,
+            value: currentValue,
+            profit: profit
+          };
+        }) || [];
+        
+        const totalValue = portfolio.cash + stockValue;
+        
+        return {
+          ...portfolio,
+          stocks: updatedStocks,
+          totalValue: totalValue,
+          totalProfit: totalProfit
+        };
+      });
     }
   },
   async mounted() {
     await this.loadPortfolios();
+    await this.loadSimulationSettings();
     this.setupWebSocket();
   },
   beforeUnmount() {
@@ -87,6 +133,7 @@ export default {
         
         if (result.success) {
           this.portfolios = result.data || [];
+          console.log('Loaded portfolios:', this.portfolios);
         }
       } catch (error) {
         console.error('Error loading portfolios:', error);
@@ -94,34 +141,74 @@ export default {
       }
     },
 
+    async loadSimulationSettings() {
+      try {
+        const response = await fetch('http://localhost:3001/simulation/settings');
+        this.simulationSettings = await response.json();
+        console.log('Simulation settings:', this.simulationSettings);
+      } catch (error) {
+        console.error('Error loading simulation settings:', error);
+        this.simulationSettings = { isRunning: false };
+      }
+    },
+
     setupWebSocket() {
+      // Подключаемся к брокерскому WebSocket для получения портфелей
       this.socket = io('http://localhost:3002');
       
       this.socket.on('connect', () => {
-        console.log('Connected to admin WebSocket');
+        console.log('Connected to broker WebSocket for admin');
         this.isConnected = true;
       });
 
       this.socket.on('disconnect', () => {
-        console.log('Disconnected from admin WebSocket');
+        console.log('Disconnected from broker WebSocket');
         this.isConnected = false;
       });
 
       this.socket.on('priceUpdate', (data) => {
         console.log('Received price update in admin:', data);
-        // При обновлении цен перезагружаем портфели
-        this.loadPortfolios();
+        // Обновляем текущие цены
+        this.currentPrices = data.prices || {};
+        this.currentDate = data.date || '';
       });
 
-      this.socket.on('portfolioUpdate', (data) => {
-        console.log('Received portfolio update:', data);
-        // Если приходит конкретное обновление портфеля
-        this.handlePortfolioUpdate(data);
+      this.socket.on('portfolioUpdate', (portfolio) => {
+        console.log('Received portfolio update:', portfolio);
+        this.handlePortfolioUpdate(portfolio);
+      });
+
+      // Подключаемся также к симуляционному WebSocket для получения обновлений цен
+      this.setupSimulationWebSocket();
+    },
+
+    setupSimulationWebSocket() {
+      const simulationSocket = io('http://localhost:3001');
+      
+      simulationSocket.on('connect', () => {
+        console.log('Connected to simulation WebSocket for admin');
+      });
+
+      simulationSocket.on('stockUpdate', (data) => {
+        console.log('Received stock update from simulation:', data);
+        // Обновляем цены из симуляции
+        if (data && Array.isArray(data)) {
+          data.forEach(stock => {
+            this.currentPrices[stock.symbol] = stock.currentPrice;
+          });
+        }
+        if (data && data.length > 0) {
+          this.currentDate = data[0].date || '';
+        }
+      });
+
+      simulationSocket.on('settingsUpdated', (settings) => {
+        console.log('Settings updated in admin:', settings);
+        this.simulationSettings = settings;
       });
     },
 
     handlePortfolioUpdate(updatedPortfolio) {
-      // Находим индекс обновляемого портфеля
       const index = this.portfolios.findIndex(p => p.brokerId === updatedPortfolio.brokerId);
       
       if (index !== -1) {
@@ -131,6 +218,19 @@ export default {
         // Добавляем новый портфель
         this.portfolios.push(updatedPortfolio);
       }
+    },
+
+    // Получить текущую цену акции
+    getCurrentStockPrice(symbol) {
+      return this.currentPrices[symbol] || 0;
+    },
+
+    // Рассчитать прибыль для акции с текущими ценами
+    calculateStockProfit(stock) {
+      const currentPrice = this.getCurrentStockPrice(stock.symbol);
+      const currentValue = currentPrice * stock.quantity;
+      const totalCost = stock.averagePrice * stock.quantity;
+      return currentValue - totalCost;
     },
 
     getProfitClass(profit) {
@@ -204,6 +304,19 @@ export default {
   background: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
+}
+
+.current-info {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.current-info p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
 }
 
 .empty {
@@ -353,4 +466,3 @@ export default {
   }
 }
 </style>
-

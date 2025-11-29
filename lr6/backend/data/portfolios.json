@@ -2,70 +2,24 @@
   {
     "brokerId": 1,
     "brokerName": "asdf",
-    "stocks": [
-      {
-        "symbol": "AAPL",
-        "quantity": 3,
-        "currentPrice": 157.37,
-        "averagePrice": 125.89600000000002,
-        "value": 157.37,
-        "profit": 31.47399999999999,
-        "profitPercentage": 24.99999999999999,
-        "purchaseHistory": [
-          {
-            "symbol": "AAPL",
-            "quantity": 1,
-            "price": 152.93,
-            "date": "2025-11-24T13:25:29.535Z",
-            "type": "buy"
-          },
-          {
-            "symbol": "AAPL",
-            "quantity": 1,
-            "price": 150.89,
-            "date": "2025-11-24T13:44:15.565Z",
-            "type": "buy"
-          }
-        ]
-      },
-      {
-        "symbol": "SBUX",
-        "quantity": 1,
-        "purchaseHistory": [
-          {
-            "symbol": "SBUX",
-            "quantity": 1,
-            "price": 92.87,
-            "date": "2025-11-24T13:06:36.670Z",
-            "type": "buy"
-          }
-        ]
-      }
-    ],
-    "cash": 2078.11,
-    "totalValue": 2473.4,
-    "totalProfit": -1.4000000000000483,
+    "stocks": [],
+    "cash": 2229,
+    "totalValue": 2229,
+    "totalProfit": 0,
     "purchaseHistory": [
       {
-        "symbol": "SBUX",
+        "symbol": "AAPL",
         "quantity": 1,
-        "price": 92.87,
-        "date": "2025-11-24T13:06:36.670Z",
+        "price": 157.63,
+        "date": "2025-11-29T22:16:00.733Z",
         "type": "buy"
       },
       {
         "symbol": "AAPL",
         "quantity": 1,
-        "price": 152.93,
-        "date": "2025-11-24T13:25:29.535Z",
-        "type": "buy"
-      },
-      {
-        "symbol": "AAPL",
-        "quantity": 1,
-        "price": 150.89,
-        "date": "2025-11-24T13:44:15.565Z",
-        "type": "buy"
+        "price": 157.63,
+        "date": "2025-11-29T22:17:36.942Z",
+        "type": "sell"
       }
     ]
   }
