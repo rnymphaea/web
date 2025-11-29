@@ -50,5 +50,36 @@
         "type": "sell"
       }
     ]
+  },
+  {
+    "brokerId": 2,
+    "brokerName": "TestBroker_1764458511936",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-29T23:22:05.391Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99696.16,
+    "totalValue": 0,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-29T23:22:05.391Z",
+        "type": "buy"
+      }
+    ]
   }
 ]

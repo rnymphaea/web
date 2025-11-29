@@ -1,0 +1,382 @@
+<html lang=""><head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Vue App</title>
+  <script defer="" src="/js/chunk-vendors.js"></script><script defer="" src="/js/app.js"></script><style type="text/css">
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+input, select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+button:hover {
+  background: #2980b9;
+}
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+.profit { color: green;
+}
+.loss { color: red;
+}
+</style><style type="text/css">
+.container[data-v-503a8989] {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+.header[data-v-503a8989] {
+  margin-bottom: 2rem;
+}
+.header h1[data-v-503a8989] {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+.section[data-v-503a8989] {
+  margin-bottom: 2rem;
+}
+.section h2[data-v-503a8989] {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+}
+.portfolio-summary[data-v-503a8989] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+.summary-item[data-v-503a8989] {
+  display: flex;
+  justify-content: space-between;
+}
+table[data-v-503a8989] {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #dee2e6;
+}
+th[data-v-503a8989], td[data-v-503a8989] {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+}
+th[data-v-503a8989] {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+.profit[data-v-503a8989] {
+  color: #28a745;
+}
+.loss[data-v-503a8989] {
+  color: #dc3545;
+}
+.actions[data-v-503a8989] {
+  display: flex;
+  gap: 0.5rem;
+}
+.actions button[data-v-503a8989] {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+.modal[data-v-503a8989] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content[data-v-503a8989] {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 4px;
+  max-width: 500px;
+  width: 90%;
+}
+.chart-modal[data-v-503a8989] {
+  max-width: 800px;
+  width: 95%;
+}
+.chart-container[data-v-503a8989] {
+  height: 400px;
+  margin-bottom: 1rem;
+}
+.chart-loading[data-v-503a8989] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: #666;
+}
+.form-group[data-v-503a8989] {
+  margin-bottom: 1rem;
+}
+label[data-v-503a8989] {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+input[data-v-503a8989] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+.dialog-actions[data-v-503a8989] {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+button[data-v-503a8989] {
+  padding: 0.5rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+}
+button[data-v-503a8989]:hover {
+  background: #0056b3;
+}
+button[data-v-503a8989]:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+@media (max-width: 768px) {
+.container[data-v-503a8989] {
+    padding: 1rem;
+}
+.portfolio-summary[data-v-503a8989] {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+}
+table[data-v-503a8989] {
+    font-size: 0.8rem;
+}
+th[data-v-503a8989], td[data-v-503a8989] {
+    padding: 0.5rem;
+}
+.actions[data-v-503a8989] {
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.modal-content[data-v-503a8989] {
+    padding: 1rem;
+}
+.chart-modal[data-v-503a8989] {
+    max-width: 100%;
+    width: 95%;
+}
+.chart-container[data-v-503a8989] {
+    height: 300px;
+}
+}
+</style><style type="text/css">
+.admin[data-v-1fd8a062] {
+  min-height: 100vh;
+  background: white;
+  font-family: Arial, sans-serif;
+}
+.header[data-v-1fd8a062] {
+  background: #f8f9fa;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header h1[data-v-1fd8a062] {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+.back-btn[data-v-1fd8a062] {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.main[data-v-1fd8a062] {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.current-info[data-v-1fd8a062] {
+  margin-bottom: 1.5rem;
+}
+.current-info p[data-v-1fd8a062] {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.empty[data-v-1fd8a062] {
+  text-align: center;
+  padding: 4rem;
+  color: #666;
+}
+.portfolios[data-v-1fd8a062] {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+}
+.portfolio[data-v-1fd8a062] {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 1.5rem;
+}
+.portfolio-header[data-v-1fd8a062] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+.portfolio-header h2[data-v-1fd8a062] {
+  margin: 0;
+  font-size: 1.2rem;
+}
+.portfolio-total[data-v-1fd8a062] {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+.portfolio-total.profit[data-v-1fd8a062] {
+  color: #28a745;
+}
+.portfolio-total.loss[data-v-1fd8a062] {
+  color: #dc3545;
+}
+.portfolio-details[data-v-1fd8a062] {
+  font-size: 0.9rem;
+}
+.cash[data-v-1fd8a062] {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+.stocks[data-v-1fd8a062] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.stock[data-v-1fd8a062] {
+  display: grid;
+  grid-template-columns: 60px 1fr 80px 80px 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+.symbol[data-v-1fd8a062] {
+  font-weight: 600;
+}
+.quantity[data-v-1fd8a062], .avg-price[data-v-1fd8a062], .price[data-v-1fd8a062] {
+  color: #666;
+}
+.price[data-v-1fd8a062], .avg-price[data-v-1fd8a062] {
+  text-align: right;
+}
+.value[data-v-1fd8a062] {
+  font-weight: 600;
+  text-align: right;
+}
+.value.profit[data-v-1fd8a062] {
+  color: #28a745;
+}
+.value.loss[data-v-1fd8a062] {
+  color: #dc3545;
+}
+.no-stocks[data-v-1fd8a062] {
+  text-align: center;
+  padding: 1rem;
+  color: #999;
+  font-style: italic;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+@media (max-width: 768px) {
+.main[data-v-1fd8a062] {
+    padding: 1rem;
+}
+.portfolios[data-v-1fd8a062] {
+    grid-template-columns: 1fr;
+}
+.stock[data-v-1fd8a062] {
+    grid-template-columns: 50px 1fr 70px 70px 1fr;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+}
+</style></head>
+  <body>
+    <div id="app" data-v-app=""><div id="app"><div class="container"><div class="card"><h1>Вход в систему брокера</h1><form><div class="form-group"><label>Выберите брокера:</label><select><option value="">Новый брокер</option><option value="1">asdf</option><option value="2">TestBroker_1764458511936</option></select></div><div class="form-group"><label>Имя нового брокера:</label><input required=""></div><button type="submit">Войти</button><button type="button">Администратор</button></form></div></div></div></div>
+  
+
+</body></html>
