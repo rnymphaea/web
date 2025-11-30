@@ -58,25 +58,22 @@ export default {
       currentPrices: {},
       socket: null,
       currentDate: '',
-      brokers: [] // Добавляем список реальных брокеров
+      brokers: []
     }
   },
   computed: {
-    // Фильтруем портфели, оставляя только тех брокеров, которые существуют в системе
     validPortfolios() {
       return this.portfolios.filter(portfolio => {
-        // Если есть имя брокера - показываем
         if (portfolio.brokerName && portfolio.brokerName.trim() !== '') {
           return true;
         }
-        // Или если брокер с таким ID существует в системе
         const brokerExists = this.brokers.some(broker => broker.id === portfolio.brokerId);
         return brokerExists;
       });
     }
   },
   async mounted() {
-    await this.loadBrokers(); // Загружаем список реальных брокеров
+    await this.loadBrokers();
     await this.loadPortfolios();
     this.setupWebSocket();
   },
@@ -90,9 +87,7 @@ export default {
       try {
         const response = await fetch('http://localhost:3001/brokers');
         this.brokers = await response.json();
-        console.log('Loaded brokers from admin:', this.brokers);
       } catch (error) {
-        console.error('Error loading brokers:', error);
         this.brokers = [];
       }
     },
@@ -104,10 +99,8 @@ export default {
         
         if (result.success) {
           this.portfolios = result.data || [];
-          console.log('Loaded portfolios:', this.portfolios);
         }
       } catch (error) {
-        console.error('Error loading portfolios:', error);
         this.portfolios = [];
       }
     },
@@ -137,7 +130,6 @@ export default {
         }
       });
 
-      // Также слушаем обновления брокеров
       simulationSocket.on('brokersUpdated', async () => {
         await this.loadBrokers();
       });

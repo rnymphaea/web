@@ -66,7 +66,6 @@ export class PortfolioService {
         const data = fs.readFileSync(this.dataPath, 'utf8');
         const parsedData = JSON.parse(data);
         
-        // Восстанавливаем даты
         this.portfolios = parsedData.map((portfolio: any) => ({
           ...portfolio,
           purchaseHistory: (portfolio.purchaseHistory || []).map((purchase: any) => ({
@@ -81,11 +80,8 @@ export class PortfolioService {
             }))
           }))
         }));
-        
-        console.log(`✅ Загружено ${this.portfolios.length} портфелей`);
       }
     } catch (error) {
-      console.error('❌ Ошибка загрузки портфелей:', error);
       this.portfolios = [];
     }
   }
@@ -94,11 +90,9 @@ export class PortfolioService {
     try {
       fs.writeFileSync(this.dataPath, JSON.stringify(this.portfolios, null, 2));
     } catch (error) {
-      console.error('❌ Ошибка сохранения портфелей:', error);
     }
   }
 
-  // Уведомить об изменении портфеля
   notifyPortfolioUpdate(brokerId: number) {
     if (this.brokerServer) {
       const portfolio = this.getPortfolioByBrokerId(brokerId);
@@ -108,7 +102,6 @@ export class PortfolioService {
     }
   }
 
-  // Инициализировать портфель для нового брокера
   initializePortfolio(brokerId: number, brokerName: string, initialCash: number): void {
     let portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     
@@ -124,9 +117,7 @@ export class PortfolioService {
       };
       this.portfolios.push(portfolio);
       this.savePortfolios();
-      console.log(`✅ Инициализирован портфель для брокера ${brokerName} (ID: ${brokerId}) с балансом $${initialCash}`);
     } else {
-      // Обновляем имя брокера если портфель уже существует
       if (portfolio.brokerName !== brokerName) {
         portfolio.brokerName = brokerName;
         this.savePortfolios();
@@ -134,17 +125,14 @@ export class PortfolioService {
     }
   }
 
-  // Обновить имя брокера в портфеле
   updateBrokerName(brokerId: number, brokerName: string): void {
     const portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     if (portfolio && portfolio.brokerName !== brokerName) {
       portfolio.brokerName = brokerName;
       this.savePortfolios();
-      console.log(`✅ Обновлено имя брокера в портфеле: ${brokerName} (ID: ${brokerId})`);
     }
   }
 
-  // Вычисляем среднюю цену покупки для акции
   private calculateAveragePrice(purchases: Purchase[]): number {
     if (purchases.length === 0) return 0;
     
@@ -154,7 +142,6 @@ export class PortfolioService {
     return totalCost / totalQuantity;
   }
 
-  // Вычисляем текущую стоимость и прибыль (публичный метод)
   calculateStockStats(stock: PortfolioStock, currentPrice: number): StockStats {
     const averagePrice = this.calculateAveragePrice(stock.purchaseHistory);
     const currentValue = currentPrice * stock.quantity;
@@ -170,18 +157,15 @@ export class PortfolioService {
     };
   }
 
-  // Добавить сделку в историю
   addTransaction(brokerId: number, brokerName: string, symbol: string, quantity: number, price: number, type: 'buy' | 'sell'): void {
     let portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     
     if (!portfolio) {
-      // Если портфеля нет, создаем его
       this.initializePortfolio(brokerId, brokerName, 100000);
       portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     }
 
     if (!portfolio) {
-      console.error(`❌ Не удалось создать портфель для брокера ${brokerId}`);
       return;
     }
 
@@ -193,10 +177,8 @@ export class PortfolioService {
       type
     };
 
-    // Добавляем в общую историю
     portfolio.purchaseHistory.push(transaction);
 
-    // Обновляем или добавляем акцию в портфель
     let stock = portfolio.stocks.find(s => s.symbol === symbol);
     if (!stock) {
       stock = {
@@ -207,41 +189,32 @@ export class PortfolioService {
       portfolio.stocks.push(stock);
     }
 
-    // Добавляем в историю покупок акции
     stock.purchaseHistory.push(transaction);
 
-    // Обновляем количество акций
     if (type === 'buy') {
       stock.quantity += quantity;
     } else {
       stock.quantity -= quantity;
       
-      // Удаляем акцию из портфеля если количество 0
       if (stock.quantity === 0) {
         portfolio.stocks = portfolio.stocks.filter(s => s.symbol !== symbol);
       }
     }
 
     this.savePortfolios();
-    this.notifyPortfolioUpdate(brokerId); // Добавляем уведомление
-    
-    console.log(`📝 Добавлена сделка: ${brokerName} ${type === 'buy' ? 'купил' : 'продал'} ${quantity} ${symbol} по $${price}`);
+    this.notifyPortfolioUpdate(brokerId);
   }
 
-  // Получить портфель с вычисленными значениями
   getPortfolio(brokerId: number, currentPrices: { [symbol: string]: number }): Portfolio | undefined {
     let portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     
-    // Если портфель не найден, создаем базовый
     if (!portfolio) {
-      console.log(`🔄 Портфель для брокера ${brokerId} не найден, создаем базовый`);
       this.initializePortfolio(brokerId, `Брокер ${brokerId}`, 100000);
       portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     }
 
     if (!portfolio) return undefined;
 
-    // Вычисляем общую стоимость и прибыль
     let stockValue = 0;
     let totalProfit = 0;
 
@@ -259,7 +232,6 @@ export class PortfolioService {
     return portfolio;
   }
 
-  // Получить данные для графика акции
   getStockChartData(brokerId: number, symbol: string, historicalData: any[]): StockChartData | null {
     const portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     if (!portfolio) return null;
@@ -267,11 +239,9 @@ export class PortfolioService {
     const stock = portfolio.stocks.find(s => s.symbol === symbol);
     if (!stock) return null;
 
-    // Получаем цены из исторических данных
     const prices = historicalData.map(data => data.open);
     const dates = historicalData.map(data => data.date);
 
-    // Текущая цена - последняя из исторических данных
     const currentPrice = prices.length > 0 ? prices[prices.length - 1] : 0;
 
     return {
@@ -282,18 +252,15 @@ export class PortfolioService {
     };
   }
 
-  // Получить историю покупок брокера
   getPurchaseHistory(brokerId: number): Purchase[] {
     const portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     return portfolio ? portfolio.purchaseHistory : [];
   }
 
-  // Обновить денежные средства брокера
   updateCash(brokerId: number, cash: number): void {
     let portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     
     if (!portfolio) {
-      console.log(`🔄 Портфель для брокера ${brokerId} не найден при обновлении баланса, создаем`);
       this.initializePortfolio(brokerId, `Брокер ${brokerId}`, cash);
       portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     }
@@ -301,8 +268,7 @@ export class PortfolioService {
     if (portfolio) {
       portfolio.cash = cash;
       this.savePortfolios();
-      this.notifyPortfolioUpdate(brokerId); // Добавляем уведомление
-      console.log(`💰 Обновлен баланс брокера ${brokerId}: $${cash}`);
+      this.notifyPortfolioUpdate(brokerId);
     }
   }
 

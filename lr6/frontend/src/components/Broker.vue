@@ -72,7 +72,6 @@
       </table>
     </div>
 
-    <!-- Trade Dialog -->
     <div v-if="showDialog" class="modal" @click.self="showDialog = false">
       <div class="modal-content">
         <h3>{{ tradeType === 'buy' ? 'Покупка' : 'Продажа' }} {{ tradeSymbol }}</h3>
@@ -89,7 +88,6 @@
       </div>
     </div>
 
-    <!-- Stock Chart Dialog -->
     <div v-if="showChartDialog" class="modal" @click.self="showChartDialog = false">
       <div class="modal-content chart-modal">
         <h3>График {{ chartSymbol }}</h3>
@@ -211,7 +209,6 @@ export default {
         const response = await fetch('http://localhost:3001/stocks')
         this.allStocks = await response.json()
       } catch (error) {
-        console.error('Error loading stocks:', error)
         this.allStocks = []
       }
     },
@@ -235,7 +232,6 @@ export default {
         }
         
       } catch (error) {
-        console.error('Error loading broker data:', error)
         this.portfolio = { stocks: [], totalValue: 0, totalProfit: 0 }
         this.broker = { cash: 0, name: 'Error' }
       }
@@ -268,7 +264,6 @@ export default {
         })
         
       } catch (error) {
-        console.error('WebSocket setup error:', error)
       }
     },
     
@@ -444,7 +439,6 @@ export default {
           alert('Ошибка операции')
         }
       } catch (error) {
-        console.error('Trade error:', error)
         alert('Ошибка операции')
       }
     },
