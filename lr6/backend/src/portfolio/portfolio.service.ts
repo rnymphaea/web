@@ -27,20 +27,6 @@ export interface Portfolio {
   purchaseHistory: Purchase[];
 }
 
-export interface StockChartData {
-  symbol: string;
-  prices: number[];
-  dates: string[];
-  currentPrice: number;
-}
-
-export interface StockStats {
-  averagePrice: number;
-  currentValue: number;
-  profit: number;
-  profitPercentage: number;
-}
-
 @Injectable()
 export class PortfolioService {
   private portfolios: Portfolio[] = [];
@@ -142,7 +128,7 @@ export class PortfolioService {
     return totalCost / totalQuantity;
   }
 
-  calculateStockStats(stock: PortfolioStock, currentPrice: number): StockStats {
+  calculateStockStats(stock: PortfolioStock, currentPrice: number) {
     const averagePrice = this.calculateAveragePrice(stock.purchaseHistory);
     const currentValue = currentPrice * stock.quantity;
     const totalCost = averagePrice * stock.quantity;
@@ -232,7 +218,7 @@ export class PortfolioService {
     return portfolio;
   }
 
-  getStockChartData(brokerId: number, symbol: string, historicalData: any[]): StockChartData | null {
+  getStockChartData(brokerId: number, symbol: string, historicalData: any[]) {
     const portfolio = this.portfolios.find(p => p.brokerId === brokerId);
     if (!portfolio) return null;
 
@@ -250,11 +236,6 @@ export class PortfolioService {
       dates,
       currentPrice
     };
-  }
-
-  getPurchaseHistory(brokerId: number): Purchase[] {
-    const portfolio = this.portfolios.find(p => p.brokerId === brokerId);
-    return portfolio ? portfolio.purchaseHistory : [];
   }
 
   updateCash(brokerId: number, cash: number): void {

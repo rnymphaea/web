@@ -18,8 +18,8 @@
         <div v-for="portfolio in validPortfolios" :key="portfolio.brokerId" class="portfolio">
           <div class="portfolio-header">
             <h2>{{ portfolio.brokerName || `Брокер ${portfolio.brokerId}` }}</h2>
-            <div class="portfolio-total" :class="getProfitClass(portfolio.totalProfit || 0)">
-              ${{ (portfolio.totalValue || 0).toLocaleString() }}
+            <div class="portfolio-total" :class="getProfitClass(calculatePortfolioProfit(portfolio))">
+              ${{ (calculatePortfolioTotalValue(portfolio) || 0).toLocaleString() }}
             </div>
           </div>
 
@@ -30,9 +30,9 @@
               <div v-for="stock in portfolio.stocks" :key="stock.symbol" class="stock">
                 <span class="symbol">{{ stock.symbol }}</span>
                 <span class="quantity">{{ stock.quantity || 0 }} шт</span>
-                <span class="avg-price">${{ (stock.averagePrice || 0).toFixed(2) }}</span>
-                <span class="price">${{ (getCurrentStockPrice(stock.symbol) || 0).toFixed(2) }}</span>
-                <span class="value" :class="getStockProfitClass(calculateStockProfit(stock))">
+                <span class="avg-price">${{ (calculateAveragePrice(stock) || 0).toFixed(2) }}</span>
+                <span class="current-price">${{ (getCurrentStockPrice(stock.symbol) || 0).toFixed(2) }}</span>
+                <span class="profit" :class="getStockProfitClass(calculateStockProfit(stock))">
                   ${{ (calculateStockProfit(stock) || 0).toFixed(2) }}
                 </span>
               </div>
@@ -149,11 +149,49 @@ export default {
       return this.currentPrices[symbol] || 0;
     },
 
+    calculateAveragePrice(stock) {
+      if (!stock.purchaseHistory || stock.purchaseHistory.length === 0) return 0;
+      
+      const buyTransactions = stock.purchaseHistory.filter(p => p.type === 'buy');
+      if (buyTransactions.length === 0) return 0;
+      
+      const totalCost = buyTransactions.reduce((sum, purchase) => sum + (purchase.price * purchase.quantity), 0);
+      const totalQuantity = buyTransactions.reduce((sum, purchase) => sum + purchase.quantity, 0);
+      
+      return totalCost / totalQuantity;
+    },
+
     calculateStockProfit(stock) {
       const currentPrice = this.getCurrentStockPrice(stock.symbol);
+      const averagePrice = this.calculateAveragePrice(stock);
       const currentValue = currentPrice * stock.quantity;
-      const totalCost = stock.averagePrice * stock.quantity;
+      const totalCost = averagePrice * stock.quantity;
       return currentValue - totalCost;
+    },
+
+    calculatePortfolioTotalValue(portfolio) {
+      let stockValue = 0;
+      
+      if (portfolio.stocks && portfolio.stocks.length > 0) {
+        portfolio.stocks.forEach(stock => {
+          const currentPrice = this.getCurrentStockPrice(stock.symbol);
+          stockValue += currentPrice * stock.quantity;
+        });
+      }
+      
+      return (portfolio.cash || 0) + stockValue;
+    },
+
+    calculatePortfolioProfit(portfolio) {
+      let totalProfit = 0;
+      
+      if (portfolio.stocks && portfolio.stocks.length > 0) {
+        portfolio.stocks.forEach(stock => {
+          totalProfit += this.calculateStockProfit(stock);
+        });
+      }
+      
+      return totalProfit;
     },
 
     getProfitClass(profit) {
@@ -289,24 +327,24 @@ export default {
   font-weight: 600;
 }
 
-.quantity, .avg-price, .price {
+.quantity, .avg-price, .current-price {
   color: #666;
 }
 
-.price, .avg-price {
+.current-price, .avg-price {
   text-align: right;
 }
 
-.value {
+.profit {
   font-weight: 600;
   text-align: right;
 }
 
-.value.profit {
+.profit.profit {
   color: #28a745;
 }
 
-.value.loss {
+.profit.loss {
   color: #dc3545;
 }
 

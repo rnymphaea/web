@@ -251,7 +251,7 @@ export default {
           this.updatePriceHistory(data)
           
           if (this.showChartDialog && this.chartSymbol) {
-            this.updateChartData()
+            this.updateChartFromHistory()
           }
           
           this.loadBrokerData()
@@ -397,20 +397,12 @@ export default {
         ]
       }
     },
-    
-    updateChartData() {
-      this.updateChartFromHistory()
-    },
 
     openTradeDialog(symbol, type) {
       this.tradeSymbol = symbol
       this.tradeType = type
       this.tradeQuantity = 1
       this.showDialog = true
-    },
-    
-    closeDialog() {
-      this.showDialog = false
     },
     
     async executeTrade() {
@@ -434,7 +426,7 @@ export default {
         const result = await response.json()
         if (result.success) {
           await this.loadBrokerData()
-          this.closeDialog()
+          this.showDialog = false
         } else {
           alert('Ошибка операции')
         }
@@ -455,6 +447,7 @@ export default {
 </script>
 
 <style scoped>
+/* Стили остаются без изменений */
 .container {
   max-width: 1200px;
   margin: 0 auto;

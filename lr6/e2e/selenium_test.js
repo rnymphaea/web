@@ -13,6 +13,7 @@ class BrokerTests {
     const options = new chrome.Options();
     if (process.env.HEADLESS !== 'false') {
       options.addArguments('--headless');
+      options.addArguments('--disable-gpu');
     }
     options.addArguments('--no-sandbox');
     options.addArguments('--disable-dev-shm-usage');
@@ -23,7 +24,11 @@ class BrokerTests {
       .setChromeOptions(options)
       .build();
 
-    await this.driver.manage().setTimeouts({ implicit: 30000 });
+    await this.driver.manage().setTimeouts({ 
+      implicit: 10000,
+      pageLoad: 30000,
+      script: 30000 
+    });
   }
 
   async teardown() {
@@ -36,7 +41,6 @@ class BrokerTests {
     try {
       const alert = await this.driver.switchTo().alert();
       const alertText = await alert.getText();
-      console.log(`Alert detected: ${alertText}`);
       await alert.accept();
       await this.driver.sleep(1000);
       return alertText;
@@ -49,107 +53,124 @@ class BrokerTests {
     return await this.driver.wait(until.elementLocated(By.css(selector)), timeout);
   }
 
+  async waitForElementStable(selector, timeout = 30000) {
+    let element;
+    let attempts = 0;
+    const maxAttempts = 5;
+    
+    while (attempts < maxAttempts) {
+      try {
+        element = await this.waitForElement(selector, timeout);
+        // Проверяем, что элемент видим и стабилен
+        await this.driver.wait(until.elementIsVisible(element), 5000);
+        await this.driver.sleep(500); // Даем время для стабилизации
+        return element;
+      } catch (error) {
+        attempts++;
+        if (attempts >= maxAttempts) throw error;
+        await this.driver.sleep(1000);
+      }
+    }
+  }
+
   async waitForText(selector, text, timeout = 30000) {
     return await this.driver.wait(
-      until.elementTextContains(await this.waitForElement(selector), text),
+      until.elementTextContains(await this.waitForElementStable(selector), text),
       timeout
     );
   }
 
+  async retryOperation(operation, maxAttempts = 3) {
+    let lastError;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+        if (attempt < maxAttempts) {
+          await this.driver.sleep(1000 * attempt);
+        }
+      }
+    }
+    throw lastError;
+  }
+
   async getCashBalance() {
-    try {
+    return await this.retryOperation(async () => {
       await this.handleAlert();
       
-      const elements = await this.driver.findElements(By.xpath('//*[contains(text(), "Денежные средства:")]'));
-      if (elements.length > 0) {
-        const parent = await elements[0].findElement(By.xpath('./..'));
-        const cashElement = await parent.findElement(By.css('span:last-child'));
-        const cashText = await cashElement.getText();
-        return parseFloat(cashText.replace('$', '').replace(',', ''));
-      }
+      // Попробуем несколько способов найти баланс
+      const selectors = [
+        '.portfolio-summary .summary-item',
+        '.summary-item',
+        '.section .summary-item'
+      ];
       
-      const summaryItems = await this.driver.findElements(By.css('.portfolio-summary .summary-item'));
-      for (let item of summaryItems) {
-        const text = await item.getText();
-        if (text.includes('Денежные средства:')) {
-          const spans = await item.findElements(By.css('span'));
-          if (spans.length >= 2) {
-            const cashText = await spans[1].getText();
-            return parseFloat(cashText.replace('$', '').replace(',', ''));
+      for (let selector of selectors) {
+        try {
+          const summaryItems = await this.driver.findElements(By.css(selector));
+          for (let item of summaryItems) {
+            const text = await item.getText();
+            if (text.includes('Денежные средства:')) {
+              const spans = await item.findElements(By.css('span'));
+              if (spans.length >= 2) {
+                const cashText = await spans[1].getText();
+                const cashValue = parseFloat(cashText.replace('$', '').replace(',', ''));
+                if (!isNaN(cashValue)) {
+                  return cashValue;
+                }
+              }
+            }
           }
+        } catch (error) {
+          // Продолжаем пробовать другие селекторы
         }
       }
       
       return 0;
-    } catch (error) {
-      console.log('Error getting cash balance:', error);
-      return 0;
-    }
+    });
   }
 
   async getTotalProfit() {
-    try {
+    return await this.retryOperation(async () => {
       await this.handleAlert();
       
-      const elements = await this.driver.findElements(By.xpath('//*[contains(text(), "Прибыль:")]'));
-      if (elements.length > 0) {
-        const parent = await elements[0].findElement(By.xpath('./..'));
-        const profitElement = await parent.findElement(By.css('span:last-child'));
-        const profitText = await profitElement.getText();
-        return parseFloat(profitText.replace('$', '').replace(',', ''));
-      }
+      const selectors = [
+        '.portfolio-summary .summary-item',
+        '.summary-item',
+        '.section .summary-item'
+      ];
       
-      const summaryItems = await this.driver.findElements(By.css('.portfolio-summary .summary-item'));
-      for (let item of summaryItems) {
-        const text = await item.getText();
-        if (text.includes('Прибыль:')) {
-          const spans = await item.findElements(By.css('span'));
-          if (spans.length >= 2) {
-            const profitText = await spans[1].getText();
-            return parseFloat(profitText.replace('$', '').replace(',', ''));
+      for (let selector of selectors) {
+        try {
+          const summaryItems = await this.driver.findElements(By.css(selector));
+          for (let item of summaryItems) {
+            const text = await item.getText();
+            if (text.includes('Прибыль:')) {
+              const spans = await item.findElements(By.css('span'));
+              if (spans.length >= 2) {
+                const profitText = await spans[1].getText();
+                const profitValue = parseFloat(profitText.replace('$', '').replace(',', ''));
+                if (!isNaN(profitValue)) {
+                  return profitValue;
+                }
+              }
+            }
           }
+        } catch (error) {
+          // Продолжаем пробовать другие селекторы
         }
       }
       
       return 0;
-    } catch (error) {
-      console.log('Error getting total profit:', error);
-      return 0;
-    }
-  }
-
-  async debugPageStructure() {
-    try {
-      await this.handleAlert();
-      console.log('Debugging page structure...');
-      
-      const sections = await this.driver.findElements(By.css('.section'));
-      console.log(`Found ${sections.length} sections`);
-      
-      const portfolioSummaries = await this.driver.findElements(By.css('.portfolio-summary'));
-      console.log(`Found ${portfolioSummaries.length} portfolio summaries`);
-      
-      const summaryItems = await this.driver.findElements(By.css('.summary-item'));
-      console.log(`Found ${summaryItems.length} summary items`);
-      
-      for (let i = 0; i < summaryItems.length; i++) {
-        const text = await summaryItems[i].getText();
-        console.log(`Summary item ${i}: ${text}`);
-      }
-      
-      const tables = await this.driver.findElements(By.css('table'));
-      console.log(`Found ${tables.length} tables`);
-      
-    } catch (error) {
-      console.log('Debug error:', error);
-    }
+    });
   }
 
   async getStockPrice(symbol) {
-    try {
+    return await this.retryOperation(async () => {
       await this.handleAlert();
       
-      const stocksTable = await this.waitForElement('table:first-of-type');
+      const stocksTable = await this.waitForElementStable('table:first-of-type');
       const stockRows = await stocksTable.findElements(By.css('tbody tr'));
       
       for (let row of stockRows) {
@@ -163,18 +184,16 @@ class BrokerTests {
         }
       }
       return 0;
-    } catch (error) {
-      console.log(`Error getting price for ${symbol}:`, error);
-      return 0;
-    }
+    });
   }
 
   async getPortfolioStocks() {
-    try {
+    return await this.retryOperation(async () => {
       await this.handleAlert();
       
       const stocks = [];
       const tables = await this.driver.findElements(By.css('table'));
+      
       if (tables.length > 1) {
         const portfolioTable = tables[1];
         const portfolioRows = await portfolioTable.findElements(By.css('tbody tr'));
@@ -185,18 +204,19 @@ class BrokerTests {
             const symbol = await symbolElement.getText();
             
             const quantityElement = await row.findElement(By.css('td:nth-child(2)'));
-            const quantity = parseInt(await quantityElement.getText());
+            const quantityText = await quantityElement.getText();
+            const quantity = parseInt(quantityText);
             
-            stocks.push({ symbol, quantity });
+            if (symbol && !isNaN(quantity)) {
+              stocks.push({ symbol, quantity });
+            }
           } catch (error) {
+            // Пропускаем проблемные строки
           }
         }
       }
       return stocks;
-    } catch (error) {
-      console.log('Error getting portfolio stocks:', error);
-      return [];
-    }
+    });
   }
 
   async testBrokerCreationAndLogin() {
@@ -204,23 +224,27 @@ class BrokerTests {
     
     await this.driver.get(this.baseUrl);
     
-    const newBrokerOption = await this.waitForElement('select option[value=""]');
+    // Ждем полной загрузки страницы
+    await this.driver.wait(until.elementLocated(By.css('select')), 10000);
+    
+    const newBrokerOption = await this.waitForElementStable('select option[value=""]');
     await newBrokerOption.click();
     
-    const brokerNameInput = await this.waitForElement('input');
+    const brokerNameInput = await this.waitForElementStable('input');
     await brokerNameInput.clear();
     await brokerNameInput.sendKeys(this.testBrokerName);
     
-    const submitButton = await this.waitForElement('button[type="submit"]');
+    const submitButton = await this.waitForElementStable('button[type="submit"]');
     await submitButton.click();
     
     await this.waitForText('h1', 'Брокер:');
     console.log('Broker login successful');
     
-    await this.driver.sleep(5000);
+    // Увеличиваем время ожидания загрузки данных
+    await this.driver.sleep(8000);
     
     try {
-      const dateElement = await this.waitForElement('.header p');
+      const dateElement = await this.waitForElementStable('.header p');
       const dateText = await dateElement.getText();
       assert(dateText.includes('Текущая дата:'), 'Current date should be displayed');
       console.log('Current date displayed');
@@ -228,14 +252,12 @@ class BrokerTests {
       console.log('Date display check skipped');
     }
     
-    await this.debugPageStructure();
-    
     const initialCash = await this.getCashBalance();
     console.log(`Initial cash balance: $${initialCash}`);
     
     if (initialCash === 0) {
       console.log('Cash balance is 0, waiting longer for data load...');
-      await this.driver.sleep(10000);
+      await this.driver.sleep(15000);
       
       const retryCash = await this.getCashBalance();
       console.log(`Retry cash balance: $${retryCash}`);
@@ -253,8 +275,8 @@ class BrokerTests {
   async testStockPurchaseAndBalanceUpdate() {
     console.log('Running test: Stock Purchase and Balance Update');
     
-    await this.waitForElement('table tbody tr');
-    await this.driver.sleep(5000);
+    await this.waitForElementStable('table tbody tr');
+    await this.driver.sleep(8000); // Увеличиваем ожидание
     
     const initialCash = await this.getCashBalance();
     console.log(`Initial cash: $${initialCash}`);
@@ -264,7 +286,11 @@ class BrokerTests {
       console.log('Skipping exact mathematical checks due to zero balance');
     }
     
-    const stockRows = await this.driver.findElements(By.css('table:first-of-type tbody tr'));
+    const stockRows = await this.retryOperation(async () => {
+      const stocksTable = await this.waitForElementStable('table:first-of-type');
+      return await stocksTable.findElements(By.css('tbody tr'));
+    });
+    
     assert(stockRows.length > 0, 'Should have stocks available');
     
     const firstStockRow = stockRows[0];
@@ -289,10 +315,10 @@ class BrokerTests {
     assert(buyButton, 'Buy button should be available');
     await buyButton.click();
     
-    await this.waitForElement('.modal');
+    await this.waitForElementStable('.modal');
     await this.driver.sleep(2000);
     
-    const quantityInput = await this.waitForElement('input[type="number"]');
+    const quantityInput = await this.waitForElementStable('input[type="number"]');
     await quantityInput.clear();
     await quantityInput.sendKeys('2');
     
@@ -318,7 +344,9 @@ class BrokerTests {
     } catch (error) {
       console.log('Modal might have closed already');
     }
-    await this.driver.sleep(8000);
+    
+    // Увеличиваем время ожидания обновления баланса
+    await this.driver.sleep(10000);
     
     const updatedCash = await this.getCashBalance();
     console.log(`Updated cash: $${updatedCash}`);
@@ -332,33 +360,8 @@ class BrokerTests {
     
     await this.driver.sleep(5000);
     
-    const tables = await this.driver.findElements(By.css('table'));
-    let portfolioTable = tables.length > 1 ? tables[1] : tables[0];
-    
-    const portfolioRows = await portfolioTable.findElements(By.css('tbody tr'));
-    
-    let stockFound = false;
-    for (let row of portfolioRows) {
-      const symbolElement = await row.findElement(By.css('td:first-child'));
-      const symbol = await symbolElement.getText();
-      
-      if (symbol === stockSymbol) {
-        const quantityElement = await row.findElement(By.css('td:nth-child(2)'));
-        const quantity = await quantityElement.getText();
-        assert.strictEqual(quantity, '2', 'Stock quantity should be 2');
-        stockFound = true;
-        
-        try {
-          const profitElement = await row.findElement(By.css('td:last-child'));
-          const profitText = await profitElement.getText();
-          const profit = parseFloat(profitText.replace('$', ''));
-          console.log(`Stock ${stockSymbol} added to portfolio with quantity 2, profit: $${profit}`);
-        } catch (error) {
-          console.log(`Stock ${stockSymbol} added to portfolio with quantity 2`);
-        }
-        break;
-      }
-    }
+    const portfolioStocks = await this.getPortfolioStocks();
+    let stockFound = portfolioStocks.some(stock => stock.symbol === stockSymbol && stock.quantity === 2);
     
     assert(stockFound, 'Purchased stock should appear in portfolio');
     
@@ -368,41 +371,24 @@ class BrokerTests {
   async testStockSaleAndProfitCalculation() {
     console.log('Running test: stock sale and profit calculation');
     
-    await this.driver.sleep(6000);
+    await this.driver.sleep(8000);
     
     const cashBeforeSale = await this.getCashBalance();
     console.log(`Cash before sale: $${cashBeforeSale}`);
     
-    const tables = await this.driver.findElements(By.css('table'));
-    let portfolioTable = tables.length > 1 ? tables[1] : tables[0];
+    const portfolioStocks = await this.getPortfolioStocks();
+    assert(portfolioStocks.length > 0, 'Should have stocks in portfolio');
     
-    const portfolioRows = await portfolioTable.findElements(By.css('tbody tr'));
-    assert(portfolioRows.length > 0, 'Should have stocks in portfolio');
+    const firstStock = portfolioStocks[0];
+    const stockSymbol = firstStock.symbol;
+    const stockQuantity = firstStock.quantity;
     
-    const firstPortfolioStock = portfolioRows[0];
-    const stockSymbolElement = await firstPortfolioStock.findElement(By.css('td:first-child'));
-    const stockSymbol = await stockSymbolElement.getText();
-    
-    const stockQuantityElement = await firstPortfolioStock.findElement(By.css('td:nth-child(2)'));
-    const stockQuantity = parseInt(await stockQuantityElement.getText());
-    
-    const stocksTable = tables[0];
-    const stockRows = await stocksTable.findElements(By.css('tbody tr'));
-    
-    let currentPrice = 0;
-    for (let row of stockRows) {
-      const symbolElement = await row.findElement(By.css('td:first-child'));
-      const symbol = await symbolElement.getText();
-      
-      if (symbol === stockSymbol) {
-        const priceElement = await row.findElement(By.css('td:nth-child(2)'));
-        const priceText = await priceElement.getText();
-        currentPrice = parseFloat(priceText.replace('$', ''));
-        break;
-      }
-    }
+    const currentPrice = await this.getStockPrice(stockSymbol);
     
     console.log(`Selling 1 share of ${stockSymbol} at $${currentPrice} (have ${stockQuantity})`);
+    
+    const stocksTable = await this.waitForElementStable('table:first-of-type');
+    const stockRows = await stocksTable.findElements(By.css('tbody tr'));
     
     let sellButton = null;
     for (let row of stockRows) {
@@ -425,10 +411,10 @@ class BrokerTests {
     assert(sellButton, 'Sell button should be available for owned stock');
     await sellButton.click();
     
-    await this.waitForElement('.modal');
+    await this.waitForElementStable('.modal');
     await this.driver.sleep(2000);
     
-    const quantityInput = await this.waitForElement('input[type="number"]');
+    const quantityInput = await this.waitForElementStable('input[type="number"]');
     await quantityInput.clear();
     await quantityInput.sendKeys('1');
     
@@ -452,7 +438,8 @@ class BrokerTests {
     } catch (error) {
       console.log('Modal might have closed already');
     }
-    await this.driver.sleep(8000);
+    
+    await this.driver.sleep(10000);
     
     const cashAfterSale = await this.getCashBalance();
     console.log(`Cash after sale: $${cashAfterSale}`);
@@ -466,40 +453,15 @@ class BrokerTests {
     
     await this.driver.sleep(5000);
     
-    const updatedTables = await this.driver.findElements(By.css('table'));
-    let updatedPortfolioTable = updatedTables.length > 1 ? updatedTables[1] : updatedTables[0];
-    
-    const updatedPortfolioRows = await updatedPortfolioTable.findElements(By.css('tbody tr'));
-    
-    let remainingQuantity = 0;
-    let stockStillExists = false;
-    
-    for (let row of updatedPortfolioRows) {
-      const symbolElement = await row.findElement(By.css('td:first-child'));
-      const symbol = await symbolElement.getText();
-      
-      if (symbol === stockSymbol) {
-        const quantityElement = await row.findElement(By.css('td:nth-child(2)'));
-        remainingQuantity = parseInt(await quantityElement.getText());
-        stockStillExists = true;
-        
-        try {
-          const profitElement = await row.findElement(By.css('td:last-child'));
-          const profitText = await profitElement.getText();
-          const profit = parseFloat(profitText.replace('$', ''));
-          console.log(`Remaining stock profit: $${profit}`);
-        } catch (error) {
-          console.log(`Stock still in portfolio with quantity: ${remainingQuantity}`);
-        }
-        break;
-      }
-    }
+    const updatedPortfolioStocks = await this.getPortfolioStocks();
+    const stockStillExists = updatedPortfolioStocks.some(stock => stock.symbol === stockSymbol);
+    const remainingStock = updatedPortfolioStocks.find(stock => stock.symbol === stockSymbol);
     
     const expectedQuantity = stockQuantity - 1;
     if (expectedQuantity > 0) {
       assert(stockStillExists, 'Stock should still be in portfolio');
-      assert.strictEqual(remainingQuantity, expectedQuantity, `Stock quantity should be ${expectedQuantity}`);
-      console.log(`Portfolio updated correctly. Remaining quantity: ${remainingQuantity}`);
+      assert.strictEqual(remainingStock.quantity, expectedQuantity, `Stock quantity should be ${expectedQuantity}`);
+      console.log(`Portfolio updated correctly. Remaining quantity: ${remainingStock.quantity}`);
     } else {
       assert(!stockStillExists, 'Stock should be removed from portfolio when quantity reaches 0');
       console.log('Stock removed from portfolio as expected');
@@ -511,12 +473,16 @@ class BrokerTests {
   async testCannotBuyWithInsufficientFunds() {
     console.log('Running test: cannot buy with insufficient funds');
     
-    await this.driver.sleep(5000);
+    await this.driver.sleep(8000);
     
     const currentCash = await this.getCashBalance();
     console.log(`Current cash balance: $${currentCash}`);
     
-    const stockRows = await this.driver.findElements(By.css('table:first-of-type tbody tr'));
+    const stockRows = await this.retryOperation(async () => {
+      const stocksTable = await this.waitForElementStable('table:first-of-type');
+      return await stocksTable.findElements(By.css('tbody tr'));
+    });
+    
     assert(stockRows.length > 0, 'Should have stocks available');
     
     const firstStockRow = stockRows[0];
@@ -545,10 +511,10 @@ class BrokerTests {
     assert(buyButton, 'Buy button should be available');
     await buyButton.click();
     
-    await this.waitForElement('.modal');
+    await this.waitForElementStable('.modal');
     await this.driver.sleep(2000);
     
-    const quantityInput = await this.waitForElement('input[type="number"]');
+    const quantityInput = await this.waitForElementStable('input[type="number"]');
     await quantityInput.clear();
     await quantityInput.sendKeys(excessiveQuantity.toString());
     
@@ -573,7 +539,7 @@ class BrokerTests {
       if (alertText && alertText.includes('Ошибка')) {
         console.log('Purchase correctly blocked - error alert shown');
       } else {
-        await this.driver.sleep(3000);
+        await this.driver.sleep(5000);
         const cashAfterAttempt = await this.getCashBalance();
         const cashDifference = Math.abs(cashAfterAttempt - currentCash);
         
@@ -609,12 +575,16 @@ class BrokerTests {
   async testCannotSellStocksNotInPortfolio() {
     console.log('Running test: Cannot Sell Stocks Not In Portfolio');
     
-    await this.driver.sleep(5000);
+    await this.driver.sleep(8000);
     
     const portfolioStocks = await this.getPortfolioStocks();
     console.log(`Current portfolio stocks:`, portfolioStocks);
     
-    const stockRows = await this.driver.findElements(By.css('table:first-of-type tbody tr'));
+    const stockRows = await this.retryOperation(async () => {
+      const stocksTable = await this.waitForElementStable('table:first-of-type');
+      return await stocksTable.findElements(By.css('tbody tr'));
+    });
+    
     let stockNotInPortfolio = null;
     
     for (let row of stockRows) {
@@ -649,10 +619,10 @@ class BrokerTests {
     await sellButton.click();
     
     try {
-      await this.waitForElement('.modal');
+      await this.waitForElementStable('.modal');
       await this.driver.sleep(2000);
       
-      const quantityInput = await this.waitForElement('input[type="number"]');
+      const quantityInput = await this.waitForElementStable('input[type="number"]');
       await quantityInput.clear();
       await quantityInput.sendKeys('1');
       
@@ -675,7 +645,7 @@ class BrokerTests {
         if (alertText && alertText.includes('Ошибка')) {
           console.log('Sale correctly blocked - error alert shown');
         } else {
-          await this.driver.sleep(3000);
+          await this.driver.sleep(5000);
           const updatedPortfolioStocks = await this.getPortfolioStocks();
           const stockStillNotInPortfolio = !updatedPortfolioStocks.some(stock => stock.symbol === stockNotInPortfolio.symbol);
           
@@ -709,30 +679,17 @@ class BrokerTests {
   async testProfitLossDisplay() {
     console.log('Running test: Profit/Loss Display');
     
-    await this.driver.sleep(6000);
+    await this.driver.sleep(8000);
     
     const totalProfit = await this.getTotalProfit();
     console.log(`Total profit/loss: $${totalProfit}`);
     
     console.log('Total profit display verified');
     
-    const tables = await this.driver.findElements(By.css('table'));
-    if (tables.length > 1) {
-      const portfolioTable = tables[1];
-      const portfolioRows = await portfolioTable.findElements(By.css('tbody tr'));
-      
-      for (let row of portfolioRows) {
-        try {
-          const symbolElement = await row.findElement(By.css('td:first-child'));
-          const symbol = await symbolElement.getText();
-          
-          const profitElement = await row.findElement(By.css('td:last-child'));
-          const profitText = await profitElement.getText();
-          const profit = parseFloat(profitText.replace('$', ''));
-          
-          console.log(`Stock ${symbol} profit: $${profit}`);
-        } catch (error) {
-        }
+    const portfolioStocks = await this.getPortfolioStocks();
+    if (portfolioStocks.length > 0) {
+      for (let stock of portfolioStocks) {
+        console.log(`Stock ${stock.symbol} quantity: ${stock.quantity}`);
       }
     }
     

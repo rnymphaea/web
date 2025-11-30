@@ -11,15 +11,6 @@ export interface Broker {
   stocks?: { [symbol: string]: number };
 }
 
-interface Transaction {
-  brokerId: number;
-  stockSymbol: string;
-  type: 'buy' | 'sell';
-  quantity: number;
-  price: number;
-  timestamp: Date;
-}
-
 interface StockUpdate {
   id: number;
   symbol: string;
@@ -49,7 +40,6 @@ export interface Settings {
 @Injectable()
 export class DataService {
   private brokers: Broker[] = [];
-  private transactions: Transaction[] = [];
   private adminSocket: Socket;
   private brokerServer: Server;
   private currentPrices: { [symbol: string]: number } = {};
@@ -345,15 +335,6 @@ export class DataService {
     this.portfolioService.addTransaction(brokerId, broker.name, symbol, quantity, price, 'buy');
     this.portfolioService.updateCash(brokerId, broker.cash);
 
-    this.transactions.push({
-      brokerId,
-      stockSymbol: symbol,
-      type: 'buy',
-      quantity,
-      price,
-      timestamp: new Date()
-    });
-
     this.broadcastPortfolioUpdates();
     
     return true;
@@ -381,15 +362,6 @@ export class DataService {
     this.portfolioService.addTransaction(brokerId, broker.name, symbol, quantity, price, 'sell');
     this.portfolioService.updateCash(brokerId, broker.cash);
 
-    this.transactions.push({
-      brokerId,
-      stockSymbol: symbol,
-      type: 'sell',
-      quantity,
-      price,
-      timestamp: new Date()
-    });
-
     this.broadcastPortfolioUpdates();
     
     return true;
@@ -399,15 +371,7 @@ export class DataService {
     return { prices: this.currentPrices, date: this.currentDate };
   }
 
-  getTradingStocks(): Stock[] {
-    return this.stocks.filter(stock => stock.isTrading);
-  }
-
   getAllStocks(): Stock[] {
-    return this.stocks;
-  }
-
-  getStocks(): Stock[] {
     return this.stocks;
   }
 
