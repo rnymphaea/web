@@ -106,6 +106,10 @@ export class DataService {
         };
         
         console.log('✅ Created broker object:', newBroker);
+        
+        // Инициализируем портфель для каждого брокера
+        this.portfolioService.initializePortfolio(broker.id, broker.name, initialFunds);
+        
         return newBroker;
       });
 
@@ -126,6 +130,7 @@ export class DataService {
           stocks: {}
         };
         this.brokers.push(defaultBroker);
+        this.portfolioService.initializePortfolio(1, 'Default Broker', 100000);
         console.log('✅ Created default broker:', defaultBroker);
       }
 
@@ -143,6 +148,7 @@ export class DataService {
           stocks: {}
         };
         this.brokers.push(fallbackBroker);
+        this.portfolioService.initializePortfolio(1, 'Fallback Broker', 100000);
         console.log('✅ Created fallback broker:', fallbackBroker);
       }
     }
@@ -362,6 +368,10 @@ export class DataService {
     };
     
     this.brokers.push(broker);
+    
+    // Создаем начальный портфель для нового брокера
+    this.portfolioService.initializePortfolio(id, name, 100000);
+    
     console.log('✅ Created new broker:', broker);
     console.log('📊 Total brokers now:', this.brokers.length);
     
@@ -504,12 +514,19 @@ export class DataService {
     const broker = this.getBroker(brokerId);
     if (!broker) return null;
     
+    // Всегда получаем или создаем портфель
     const portfolioData = this.portfolioService.getPortfolio(brokerId, this.currentPrices);
-    if (!portfolioData) return null;
+    
+    if (!portfolioData) {
+      console.log(`❌ Portfolio not found for broker ${brokerId}, creating new one`);
+      this.portfolioService.initializePortfolio(brokerId, broker.name, broker.cash || 100000);
+      return this.getBrokerPortfolio(brokerId); // Рекурсивно вызываем снова
+    }
 
     // Обновляем имя брокера в портфеле, если оно изменилось
     if (portfolioData.brokerName !== broker.name) {
       portfolioData.brokerName = broker.name;
+      this.portfolioService.updateBrokerName(brokerId, broker.name);
     }
 
     // Формируем ответ с вычисленными значениями для фронтенда

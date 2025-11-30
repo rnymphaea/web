@@ -53,7 +53,7 @@
   },
   {
     "brokerId": 2,
-    "brokerName": "TestBroker_1764458511936",
+    "brokerName": "TestBroker_1764459948072",
     "stocks": [
       {
         "symbol": "AAPL",
@@ -70,7 +70,7 @@
       }
     ],
     "cash": 99696.16,
-    "totalValue": 0,
+    "totalValue": 100000,
     "totalProfit": 0,
     "purchaseHistory": [
       {
@@ -79,6 +79,622 @@
         "price": 151.92,
         "date": "2025-11-29T23:22:05.391Z",
         "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 3,
+    "brokerName": "TestBroker_1764460388139",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-29T23:55:19.595Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99696.16,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-29T23:55:19.595Z",
+        "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 4,
+    "brokerName": "TestBroker_1764460585042",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-29T23:56:55.902Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99696.16,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-29T23:56:55.902Z",
+        "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 5,
+    "brokerName": "TestBroker_1764460813267",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-30T00:00:43.412Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99696.16,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-30T00:00:43.412Z",
+        "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 6,
+    "brokerName": "TestBroker_1764460852754",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-30T00:01:22.613Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99696.16,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-30T00:01:22.613Z",
+        "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 7,
+    "brokerName": "TestBroker_1764461185245",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 1,
+            "price": 151.92,
+            "date": "2025-11-30T00:06:36.762Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99848.08,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 151.92,
+        "date": "2025-11-30T00:06:36.762Z",
+        "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 10,
+    "brokerName": "TestBroker_1764461716959",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-30T00:15:27.937Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99696.16,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-30T00:15:27.937Z",
+        "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 11,
+    "brokerName": "TestBroker_1764461896960",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 5,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 5,
+            "price": 151.92,
+            "date": "2025-11-30T00:18:24.772Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99240.4,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 5,
+        "price": 151.92,
+        "date": "2025-11-30T00:18:24.772Z",
+        "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 13,
+    "brokerName": "TestBroker_1764462610310",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-30T00:30:14.719Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99696.16,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-30T00:30:14.719Z",
+        "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 15,
+    "brokerName": "TestBroker_1764463036697",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-30T00:37:43.896Z",
+            "type": "buy"
+          },
+          {
+            "symbol": "AAPL",
+            "quantity": 1,
+            "price": 151.92,
+            "date": "2025-11-30T00:38:05.757Z",
+            "type": "sell"
+          }
+        ]
+      }
+    ],
+    "cash": 99848.08,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-30T00:37:43.896Z",
+        "type": "buy"
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 151.92,
+        "date": "2025-11-30T00:38:05.757Z",
+        "type": "sell"
+      }
+    ]
+  },
+  {
+    "brokerId": 17,
+    "brokerName": "asdff",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 1,
+            "price": 151.92,
+            "date": "2025-11-30T00:38:58.456Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99848.08,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 151.92,
+        "date": "2025-11-30T00:38:58.456Z",
+        "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 18,
+    "brokerName": "TestBroker_1764463154397",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-30T00:39:42.152Z",
+            "type": "buy"
+          },
+          {
+            "symbol": "AAPL",
+            "quantity": 1,
+            "price": 151.92,
+            "date": "2025-11-30T00:40:04.078Z",
+            "type": "sell"
+          }
+        ]
+      }
+    ],
+    "cash": 99848.08,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-30T00:39:42.152Z",
+        "type": "buy"
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 151.92,
+        "date": "2025-11-30T00:40:04.078Z",
+        "type": "sell"
+      }
+    ]
+  },
+  {
+    "brokerId": 19,
+    "brokerName": "aaaaaa",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 1,
+            "price": 151.92,
+            "date": "2025-11-30T00:40:26.479Z",
+            "type": "buy"
+          }
+        ]
+      }
+    ],
+    "cash": 99848.08,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 151.92,
+        "date": "2025-11-30T00:40:26.479Z",
+        "type": "buy"
+      }
+    ]
+  },
+  {
+    "brokerId": 8,
+    "brokerName": "TestBroker_1764461537681",
+    "stocks": [],
+    "cash": 100000,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": []
+  },
+  {
+    "brokerId": 9,
+    "brokerName": "TestBroker_1764461716959",
+    "stocks": [],
+    "cash": 100000,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": []
+  },
+  {
+    "brokerId": 12,
+    "brokerName": "TestBroker_1764462319648",
+    "stocks": [],
+    "cash": 100000,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": []
+  },
+  {
+    "brokerId": 14,
+    "brokerName": "TestBroker_1764462830668",
+    "stocks": [],
+    "cash": 100000,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": []
+  },
+  {
+    "brokerId": 16,
+    "brokerName": "asdff",
+    "stocks": [],
+    "cash": 100000,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": []
+  },
+  {
+    "brokerId": 20,
+    "brokerName": "asdfasdf",
+    "stocks": [],
+    "cash": 100000,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": []
+  },
+  {
+    "brokerId": 21,
+    "brokerName": "фывафыва",
+    "stocks": [],
+    "cash": 100000,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": []
+  },
+  {
+    "brokerId": 22,
+    "brokerName": "фывафыва",
+    "stocks": [],
+    "cash": 100000,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": []
+  },
+  {
+    "brokerId": 23,
+    "brokerName": "a",
+    "stocks": [],
+    "cash": 100000,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": []
+  },
+  {
+    "brokerId": 24,
+    "brokerName": "TestBroker_1764463777891",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-30T00:49:54.581Z",
+            "type": "buy"
+          },
+          {
+            "symbol": "AAPL",
+            "quantity": 1,
+            "price": 151.92,
+            "date": "2025-11-30T00:50:16.465Z",
+            "type": "sell"
+          }
+        ]
+      }
+    ],
+    "cash": 99848.08,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-30T00:49:54.581Z",
+        "type": "buy"
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 151.92,
+        "date": "2025-11-30T00:50:16.465Z",
+        "type": "sell"
+      }
+    ]
+  },
+  {
+    "brokerId": 25,
+    "brokerName": "TestBroker_1764464114929",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-30T00:55:32.781Z",
+            "type": "buy"
+          },
+          {
+            "symbol": "AAPL",
+            "quantity": 1,
+            "price": 151.92,
+            "date": "2025-11-30T00:55:54.597Z",
+            "type": "sell"
+          }
+        ]
+      }
+    ],
+    "cash": 99848.08,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-30T00:55:32.781Z",
+        "type": "buy"
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 151.92,
+        "date": "2025-11-30T00:55:54.597Z",
+        "type": "sell"
+      }
+    ]
+  },
+  {
+    "brokerId": 26,
+    "brokerName": "TestBroker_1764464510501",
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "purchaseHistory": [
+          {
+            "symbol": "AAPL",
+            "quantity": 2,
+            "price": 151.92,
+            "date": "2025-11-30T01:02:07.308Z",
+            "type": "buy"
+          },
+          {
+            "symbol": "AAPL",
+            "quantity": 1,
+            "price": 151.92,
+            "date": "2025-11-30T01:02:29.070Z",
+            "type": "sell"
+          }
+        ]
+      }
+    ],
+    "cash": 99848.08,
+    "totalValue": 100000,
+    "totalProfit": 0,
+    "purchaseHistory": [
+      {
+        "symbol": "AAPL",
+        "quantity": 2,
+        "price": 151.92,
+        "date": "2025-11-30T01:02:07.308Z",
+        "type": "buy"
+      },
+      {
+        "symbol": "AAPL",
+        "quantity": 1,
+        "price": 151.92,
+        "date": "2025-11-30T01:02:29.070Z",
+        "type": "sell"
       }
     ]
   }

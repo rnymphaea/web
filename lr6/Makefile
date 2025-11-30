@@ -7,3 +7,6 @@ admin-frontend:
 admin-backend:
 	cd node_modules/broker-simulator-rnymphaea/backend && npm run start
 
+clean:
+	rm -rf node_modules package-lock.json && cd backend && rm -rf dist node_modules package-lock.json && cd ../frontend && rm -rf build node_modules package-lock.json && cd ../e2e && rm -rf node_modules package-lock.json 
+
