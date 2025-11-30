@@ -87,7 +87,6 @@ export class BrokersController {
     return chartData;
   }
 
-  // Новый endpoint для графика любой акции с учетом текущей даты симуляции
   @Get('stocks/:symbol/chart')
   getStockChartForSymbol(@Param('symbol') symbol: string) {
     const settings = this.dataService.getSettings();
@@ -98,7 +97,6 @@ export class BrokersController {
       return { error: 'Stock not found' };
     }
 
-    // Ограничиваем данные до текущей даты симуляции
     const historicalData = stock.historicalData.slice(0, settings.currentDateIndex + 1);
     const currentPrice = this.dataService.getCurrentPrices().prices[symbol] || 0;
 

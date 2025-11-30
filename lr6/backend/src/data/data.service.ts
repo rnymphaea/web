@@ -1,5 +1,3 @@
-// backend/src/data/data.service.ts
-
 import { Injectable } from '@nestjs/common';
 import { Server } from 'socket.io';
 import { io, Socket } from 'socket.io-client';
@@ -72,29 +70,20 @@ export class DataService {
 
   private async loadInitialData() {
     try {
-      console.log('🔄 Loading initial data from admin backend...');
-      
-      // Загружаем брокеров из админского бэкенда
       const brokersResponse = await fetch('http://localhost:3001/brokers');
       const adminBrokers = await brokersResponse.json();
       
-      // Загружаем акции из админского бэкенда
       const stocksResponse = await fetch('http://localhost:3001/stocks');
       this.stocks = await stocksResponse.json();
 
-      // Загружаем настройки из админского бэкенда
       const settingsResponse = await fetch('http://localhost:3001/simulation/settings');
       if (settingsResponse.ok) {
         this.settings = await settingsResponse.json();
       }
 
-      // Обновляем список акций в торгах
       this.updateTradingStocks();
 
-      // Инициализируем брокеров с начальными данными
       this.brokers = adminBrokers.map((broker: any) => {
-        console.log('👤 Processing broker:', broker);
-        
         const initialFunds = broker.initialFunds || 100000;
         
         const newBroker: Broker = {
@@ -105,23 +94,12 @@ export class DataService {
           stocks: {}
         };
         
-        console.log('✅ Created broker object:', newBroker);
-        
-        // Инициализируем портфель для каждого брокера
         this.portfolioService.initializePortfolio(broker.id, broker.name, initialFunds);
         
         return newBroker;
       });
 
-      console.log('✅ Final brokers list:', this.brokers);
-      console.log('✅ Loaded brokers from admin:', this.brokers.length);
-      console.log('✅ Loaded stocks from admin:', this.stocks.length);
-      console.log('✅ Trading stocks:', Array.from(this.tradingStocks));
-      console.log('✅ Settings:', this.settings);
-
-      // Если брокеров нет, создаем тестового
       if (this.brokers.length === 0) {
-        console.log('⚠️ No brokers found, creating default broker...');
         const defaultBroker: Broker = {
           id: 1,
           name: 'Default Broker',
@@ -131,15 +109,10 @@ export class DataService {
         };
         this.brokers.push(defaultBroker);
         this.portfolioService.initializePortfolio(1, 'Default Broker', 100000);
-        console.log('✅ Created default broker:', defaultBroker);
       }
 
     } catch (error) {
-      console.error('❌ Failed to load initial data from admin:', error);
-      
-      // Создаем тестового брокера при ошибке
       if (this.brokers.length === 0) {
-        console.log('🔄 Creating fallback broker due to error...');
         const fallbackBroker: Broker = {
           id: 1,
           name: 'Fallback Broker',
@@ -149,7 +122,6 @@ export class DataService {
         };
         this.brokers.push(fallbackBroker);
         this.portfolioService.initializePortfolio(1, 'Fallback Broker', 100000);
-        console.log('✅ Created fallback broker:', fallbackBroker);
       }
     }
   }
@@ -161,15 +133,10 @@ export class DataService {
     tradingStocksList.forEach(stock => {
       this.tradingStocks.add(stock.symbol);
     });
-    
-    console.log('🔄 Updated trading stocks:', Array.from(this.tradingStocks));
-    console.log('📊 Total trading stocks:', tradingStocksList.length);
   }
 
   private async reloadStocksFromAdmin() {
     try {
-      console.log('🔄 Reloading stocks from admin backend...');
-      
       const stocksResponse = await fetch('http://localhost:3001/stocks');
       if (!stocksResponse.ok) {
         throw new Error(`Failed to fetch stocks: ${stocksResponse.status}`);
@@ -178,34 +145,23 @@ export class DataService {
       this.stocks = await stocksResponse.json();
       this.updateTradingStocks();
       
-      console.log('✅ Stocks reloaded. Trading stocks:', Array.from(this.tradingStocks));
-      
-      // Очищаем текущие цены
       this.currentPrices = {};
       
-      // Запрашиваем актуальные цены у админского бэкенда
       if (this.adminSocket && this.adminSocket.connected) {
-        console.log('📡 Requesting current prices from admin...');
         this.adminSocket.emit('getCurrentData');
       } else {
-        console.log('❌ Admin socket not connected, trying fallback...');
         await this.fetchCurrentPricesViaHttp();
       }
       
     } catch (error) {
-      console.error('❌ Failed to reload stocks from admin:', error);
     }
   }
 
   private async fetchCurrentPricesViaHttp() {
     try {
-      console.log('🔄 Fetching current prices via HTTP...');
-      
-      // Получаем текущие настройки симуляции
       const settingsResponse = await fetch('http://localhost:3001/simulation/settings');
       const settings = await settingsResponse.json();
       
-      // Формируем текущие цены на основе historicalData и currentDateIndex
       this.currentPrices = {};
       this.stocks.forEach(stock => {
         if (this.tradingStocks.has(stock.symbol) && stock.historicalData) {
@@ -217,57 +173,40 @@ export class DataService {
         }
       });
       
-      console.log('✅ Prices loaded via HTTP:', this.currentPrices);
       this.broadcastToBrokers();
       
     } catch (error) {
-      console.error('❌ Failed to fetch prices via HTTP:', error);
     }
   }
 
   private connectToAdmin() {
     try {
-      console.log('🔌 Connecting to admin WebSocket...');
       this.adminSocket = io('http://localhost:3001', {
         transports: ['websocket']
       });
       
       this.adminSocket.on('connect', () => {
-        console.log('✅ Connected to admin WebSocket');
         this.adminSocket.emit('getCurrentData');
       });
       
       this.adminSocket.on('stockUpdate', (data: StockUpdate[]) => {
-        console.log('📈 Received stock update from admin:', data.length, 'stocks');
-        
-        // Обновляем текущие цены
         this.currentPrices = {};
         data.forEach(stock => {
           if (this.tradingStocks.has(stock.symbol)) {
             this.currentPrices[stock.symbol] = stock.currentPrice;
             this.currentDate = stock.date;
-            console.log(`💰 ${stock.symbol}: $${stock.currentPrice}`);
           }
         });
         
-        console.log('📅 Current date:', this.currentDate);
-        console.log('💵 Current trading prices:', this.currentPrices);
-        
-        // Отправляем обновление всем подключенным клиентам
         this.broadcastToBrokers();
-        
-        // Отправляем обновление портфелей всем брокерам
         this.broadcastPortfolioUpdates();
       });
 
       this.adminSocket.on('stocksUpdated', async () => {
-        console.log('🔄 Stocks updated event received from admin!');
         await this.reloadStocksFromAdmin();
       });
 
       this.adminSocket.on('currentData', (data: StockUpdate[]) => {
-        console.log('📊 Received current data from admin:', data.length, 'stocks');
-        
         this.currentPrices = {};
         data.forEach(stock => {
           if (this.tradingStocks.has(stock.symbol)) {
@@ -275,40 +214,31 @@ export class DataService {
             this.currentDate = stock.date;
           }
         });
-        
-        console.log('📅 Current date:', this.currentDate);
-        console.log('💵 Current trading prices:', this.currentPrices);
         
         this.broadcastToBrokers();
         this.broadcastPortfolioUpdates();
       });
 
       this.adminSocket.on('brokersUpdated', async () => {
-        console.log('🔄 Brokers updated in admin, reloading...');
         await this.loadInitialData();
         this.broadcastPortfolioUpdates();
       });
 
       this.adminSocket.on('settingsUpdated', (settings: Settings) => {
-        console.log('🔄 Settings updated from admin:', settings);
         this.settings = settings;
       });
 
       this.adminSocket.on('disconnect', () => {
-        console.log('❌ Disconnected from admin WebSocket');
         setTimeout(() => this.connectToAdmin(), 5000);
       });
 
       this.adminSocket.on('connect_error', (error: any) => {
-        console.log('❌ Connection error to admin:', error.message);
       });
 
       this.adminSocket.on('error', (error: any) => {
-        console.log('❌ WebSocket error:', error);
       });
 
     } catch (error) {
-      console.error('❌ Failed to connect to admin:', error);
     }
   }
 
@@ -325,11 +255,9 @@ export class DataService {
         settings: this.settings
       };
       this.brokerServer.emit('priceUpdate', updateData);
-      console.log('📤 Broadcasted price update to brokers:', updateData);
     }
   }
 
-  // Новый метод для отправки обновлений портфелей
   private broadcastPortfolioUpdates() {
     if (this.brokerServer) {
       this.brokers.forEach(broker => {
@@ -338,7 +266,6 @@ export class DataService {
           this.brokerServer.emit('portfolioUpdate', portfolio);
         }
       });
-      console.log('📤 Broadcasted portfolio updates to all brokers');
     }
   }
 
@@ -351,7 +278,6 @@ export class DataService {
   }
 
   createBroker(name: string): Broker {
-    // Находим максимальный ID среди всех брокеров (из загруженных и существующих)
     const existingBrokers = this.brokers;
     const maxId = existingBrokers.length > 0 
       ? Math.max(...existingBrokers.map(b => b.id)) 
@@ -369,11 +295,7 @@ export class DataService {
     
     this.brokers.push(broker);
     
-    // Создаем начальный портфель для нового брокера
     this.portfolioService.initializePortfolio(id, name, 100000);
-    
-    console.log('✅ Created new broker:', broker);
-    console.log('📊 Total brokers now:', this.brokers.length);
     
     this.saveBrokerToAdmin(broker);
     this.broadcastPortfolioUpdates();
@@ -393,20 +315,15 @@ export class DataService {
       });
       
       if (response.ok) {
-        console.log('✅ Broker saved to admin backend');
         const savedBroker = await response.json();
-        console.log('📋 Saved broker data:', savedBroker);
       } else {
-        console.error('❌ Failed to save broker to admin:', response.status);
       }
     } catch (error) {
-      console.error('❌ Failed to save broker to admin:', error);
     }
   }
 
   buyStock(brokerId: number, symbol: string, quantity: number): boolean {
     if (!this.tradingStocks.has(symbol)) {
-      console.log('❌ Buy failed: stock not trading', { symbol });
       return false;
     }
 
@@ -414,20 +331,17 @@ export class DataService {
     const price = this.currentPrices[symbol];
     
     if (!broker || !price) {
-      console.log('❌ Buy failed: broker or price not found', { brokerId, symbol, price });
       return false;
     }
     
     const totalCost = price * quantity;
     if (broker.cash < totalCost) {
-      console.log('❌ Buy failed: insufficient funds');
       return false;
     }
     
     broker.cash -= totalCost;
     broker.stocks[symbol] = (broker.stocks[symbol] || 0) + quantity;
     
-    // Сохраняем в историю портфеля
     this.portfolioService.addTransaction(brokerId, broker.name, symbol, quantity, price, 'buy');
     this.portfolioService.updateCash(brokerId, broker.cash);
 
@@ -440,9 +354,6 @@ export class DataService {
       timestamp: new Date()
     });
 
-    console.log(`✅ Broker ${brokerId} bought ${quantity} ${symbol} at $${price}`);
-    
-    // Отправляем обновление портфеля
     this.broadcastPortfolioUpdates();
     
     return true;
@@ -453,12 +364,10 @@ export class DataService {
     const price = this.currentPrices[symbol];
     
     if (!broker || !price) {
-      console.log('❌ Sell failed: broker or price not found');
       return false;
     }
     
     if (!broker.stocks[symbol] || broker.stocks[symbol] < quantity) {
-      console.log('❌ Sell failed: insufficient stocks');
       return false;
     }
     
@@ -469,7 +378,6 @@ export class DataService {
       delete broker.stocks[symbol];
     }
     
-    // Сохраняем в историю портфеля
     this.portfolioService.addTransaction(brokerId, broker.name, symbol, quantity, price, 'sell');
     this.portfolioService.updateCash(brokerId, broker.cash);
 
@@ -482,9 +390,6 @@ export class DataService {
       timestamp: new Date()
     });
 
-    console.log(`✅ Broker ${brokerId} sold ${quantity} ${symbol} at $${price}`);
-    
-    // Отправляем обновление портфеля
     this.broadcastPortfolioUpdates();
     
     return true;
@@ -514,22 +419,18 @@ export class DataService {
     const broker = this.getBroker(brokerId);
     if (!broker) return null;
     
-    // Всегда получаем или создаем портфель
     const portfolioData = this.portfolioService.getPortfolio(brokerId, this.currentPrices);
     
     if (!portfolioData) {
-      console.log(`❌ Portfolio not found for broker ${brokerId}, creating new one`);
       this.portfolioService.initializePortfolio(brokerId, broker.name, broker.cash || 100000);
-      return this.getBrokerPortfolio(brokerId); // Рекурсивно вызываем снова
+      return this.getBrokerPortfolio(brokerId);
     }
 
-    // Обновляем имя брокера в портфеле, если оно изменилось
     if (portfolioData.brokerName !== broker.name) {
       portfolioData.brokerName = broker.name;
       this.portfolioService.updateBrokerName(brokerId, broker.name);
     }
 
-    // Формируем ответ с вычисленными значениями для фронтенда
     const portfolio = {
       broker,
       stocks: portfolioData.stocks.map(stock => {
@@ -539,7 +440,7 @@ export class DataService {
         return {
           symbol: stock.symbol,
           quantity: stock.quantity,
-          currentPrice: currentPrice, // Используем актуальные цены
+          currentPrice: currentPrice,
           averagePrice: stats.averagePrice,
           value: stats.currentValue,
           profit: stats.profit,
@@ -571,7 +472,6 @@ export class DataService {
       }
       return false;
     } catch (error) {
-      console.error('Sync with admin failed:', error);
       return false;
     }
   }

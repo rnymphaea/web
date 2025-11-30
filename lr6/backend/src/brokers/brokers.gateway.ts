@@ -20,7 +20,6 @@ export class BrokersGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
   handleConnection(client: any) {
     console.log(`Broker client connected: ${client.id}`);
-    // Отправляем текущие данные при подключении
     const currentData = this.dataService.getCurrentPrices();
     client.emit('priceUpdate', currentData);
   }
