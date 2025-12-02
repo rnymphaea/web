@@ -61,7 +61,6 @@ class BrokerTests {
     while (attempts < maxAttempts) {
       try {
         element = await this.waitForElement(selector, timeout);
-        // Проверяем, что элемент видим и стабилен
         await this.driver.wait(until.elementIsVisible(element), 5000);
         await this.driver.sleep(500); // Даем время для стабилизации
         return element;
@@ -99,7 +98,6 @@ class BrokerTests {
     return await this.retryOperation(async () => {
       await this.handleAlert();
       
-      // Попробуем несколько способов найти баланс
       const selectors = [
         '.portfolio-summary .summary-item',
         '.summary-item',
@@ -123,7 +121,6 @@ class BrokerTests {
             }
           }
         } catch (error) {
-          // Продолжаем пробовать другие селекторы
         }
       }
       
@@ -158,7 +155,6 @@ class BrokerTests {
             }
           }
         } catch (error) {
-          // Продолжаем пробовать другие селекторы
         }
       }
       
@@ -211,7 +207,6 @@ class BrokerTests {
               stocks.push({ symbol, quantity });
             }
           } catch (error) {
-            // Пропускаем проблемные строки
           }
         }
       }
@@ -224,7 +219,6 @@ class BrokerTests {
     
     await this.driver.get(this.baseUrl);
     
-    // Ждем полной загрузки страницы
     await this.driver.wait(until.elementLocated(By.css('select')), 10000);
     
     const newBrokerOption = await this.waitForElementStable('select option[value=""]');
@@ -240,7 +234,6 @@ class BrokerTests {
     await this.waitForText('h1', 'Брокер:');
     console.log('Broker login successful');
     
-    // Увеличиваем время ожидания загрузки данных
     await this.driver.sleep(8000);
     
     try {
@@ -345,7 +338,6 @@ class BrokerTests {
       console.log('Modal might have closed already');
     }
     
-    // Увеличиваем время ожидания обновления баланса
     await this.driver.sleep(10000);
     
     const updatedCash = await this.getCashBalance();
