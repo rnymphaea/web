@@ -407,12 +407,46 @@ export default {
     
     async executeTrade() {
       try {
+        if (this.tradeQuantity <= 0) {
+            alert('Количество акций должно быть положительным числом')
+            return
+        }
+
         const currentPrice = this.getCurrentPrice(this.tradeSymbol)
         if (!currentPrice) {
           alert('Не удалось получить текущую цену')
           return
         }
 
+
+     const totalCost = currentPrice * this.tradeQuantity
+    
+    if (this.tradeType === 'buy') {
+      const availableCash = this.broker?.cash || 0
+      if (totalCost > availableCash) {
+        alert(`Недостаточно средств для покупки\n` +
+              `Требуется: $${totalCost.toFixed(2)}\n` +
+              `Доступно: $${availableCash.toFixed(2)}\n`)
+        return
+      }
+    }
+
+    if (this.tradeType === 'sell') {
+      const portfolioStock = this.portfolio?.stocks?.find(s => s.symbol === this.tradeSymbol)
+      const availableQuantity = portfolioStock?.quantity || 0
+      
+      if (!portfolioStock) {
+        alert(`У вас нет акций ${this.tradeSymbol} для продажи`)
+        return
+      }
+      
+      if (portfolioStock.quantity < this.tradeQuantity) {
+        alert(`Недостаточно акций для продажи\n` +
+              `Запрошено акций: ${this.tradeQuantity}\n` +
+              `Доступно акций: ${availableQuantity}\n`)
+        return
+      }
+    }               
         const endpoint = this.tradeType === 'buy' ? 'buy' : 'sell'
         const response = await fetch(`http://localhost:3002/api/brokers/${this.brokerId}/${endpoint}`, {
           method: 'POST',
@@ -447,7 +481,7 @@ export default {
 </script>
 
 <style scoped>
-/* Стили остаются без изменений */
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
