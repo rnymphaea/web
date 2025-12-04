@@ -1,5 +1,3 @@
-import { emptyCell } from "./utils.js";
-
 export let mapManager = {
     mapData: null,
     tLayer: null,

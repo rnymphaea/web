@@ -2,35 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script type="module" src="js/app.js"></script>
     <title>Game</title>
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #333;
+            background-color: #222;
+            display: block;
+            margin: 10px 0;
+        }
+        
+        .gameBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .startGame {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .endGame {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        #gameStatus {
+            margin: 10px 0;
+            padding: 5px;
+            background-color: white;
+            border-radius: 5px;
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
-    <h2 id="user"></h2>
-    <div class="gameDataRow">
-        <h2 id="gameStatus">Начните игру</h2>
-        <h2 id="weaponStatus" style="color: green">Оружие готово</h2>
-    </div>
-    <div class="gameDataRow">
-        <h2 id="points"></h2>
-        <h2 id="level">Уровень 1</h2>
-    </div>
-    <div class="gameDataRow">
-        <h2 id="bonus"></h2>
-    </div>
-    <div class="gameDataRow">
-        <canvas id="gameCanvas" width="1000" height="600"></canvas>
-        <div class="records">
-            <h2>Таблица рекордов</h2>
-            <ol id="listOfRecords" class="listOfRecords">
-                <li>
-                </li>
-            </ol>
-        </div>
-    </div>
-    <button id="startGame" class="gameBtn startGame">Начать игры</button>
-    <button id="endGame" class="gameBtn endGame">Закончить игру</button>
+    <h2>Тест отображения карты</h2>
+    <div id="gameStatus">Нажмите "Начать игру" для загрузки карты</div>
+    <br>
+    <canvas id="gameCanvas" width="1000" height="600"></canvas>
+    <br>
+    <button id="startGame" class="gameBtn startGame">Начать игру</button>
+    <button id="endGame" class="gameBtn endGame">Сбросить</button>
+    
+    <script type="module" src="app.js"></script>
 </body>
 </html>
-
