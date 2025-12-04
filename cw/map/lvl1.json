@@ -62,11 +62,11 @@
  "tilesets":[
         {
          "firstgid":1,
-         "source":"Tileset.tsx"
+         "source":"Tileset.tsj"
         }, 
         {
          "firstgid":82,
-         "source":"Overlay.tsx"
+         "source":"Overlay.tsj"
         }],
  "tilewidth":32,
  "type":"map",
