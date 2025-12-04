@@ -10,7 +10,7 @@ export let mapManager = {
     imgLoaded: false,
     jsonLoaded: false,
     directory: "",
-    view: {x: 0, y: 0, w: 1000, h: 600},
+    view: {x: 0, y: 0, w: 1200, h: 800},
 
     loadMap: function(path, dir){
         this.directory = dir;
