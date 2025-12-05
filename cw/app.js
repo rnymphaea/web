@@ -1,33 +1,48 @@
-// app.js
 import { mapManager } from "./map.js";
+import { spriteManager } from "./sprite.js";
+import { createPlayer } from "./entity.js";
 
 let canvas = document.getElementById('gameCanvas');
 let ctx = canvas.getContext('2d');
 let gameStarted = false;
+let player = null;
 
 // Константы
-const emptyCell = 0;
 const maps = ["lvl1.json"];
 
 function initializeGame() {
-    // Загружаем карту
     mapManager.loadMap(maps[0], "map");
     
-    // Ждем загрузки и рисуем
+    spriteManager.loadAtlas("map/sprites.json", "map/spritesheet.png");
+    
+    player = createPlayer();
+    
     const checkAndDraw = () => {
-        if (mapManager.imgLoaded && mapManager.jsonLoaded) {
+        if (mapManager.imgLoaded && mapManager.jsonLoaded && 
+            spriteManager.imgLoaded && spriteManager.jsonLoaded) {
             try {
                 // Очищаем канвас
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
                 // Рисуем карту
                 mapManager.draw(ctx);
-                document.getElementById('gameStatus').textContent = 'Карта загружена успешно!';
-                console.log('Карта отрисована');
-                console.log('Размер карты:', mapManager.xCount, 'x', mapManager.yCount);
-                console.log('Размер тайла:', mapManager.tSize.x, 'x', mapManager.tSize.y);
+                
+                // Рисуем игрока
+                player.draw(ctx);
+                
+                // Центрируем камеру на игроке
+                mapManager.centerAt(player.pos_x, player.pos_y);
+                
+                document.getElementById('gameStatus').textContent = 'Игрок на карте!';
+                console.log('Игрок создан на позиции:', player.pos_x, player.pos_y);
+                console.log('Доступные спрайты:', spriteManager.sprites.length);
+                
+                // Выводим список доступных спрайтов для отладки
+                spriteManager.sprites.forEach((sprite, i) => {
+                    console.log(i + 1, sprite.name);
+                });
             } catch (error) {
-                document.getElementById('gameStatus').textContent = 'Ошибка при отрисовке карты';
+                document.getElementById('gameStatus').textContent = 'Ошибка при отрисовке';
                 console.error('Ошибка отрисовки:', error);
             }
         } else {
@@ -38,7 +53,7 @@ function initializeGame() {
     checkAndDraw();
 }
 
-// Управление камерой
+// Управление камерой для перемещения
 document.addEventListener('keydown', (e) => {
     if (!mapManager.imgLoaded || !mapManager.jsonLoaded) return;
     
@@ -62,18 +77,19 @@ document.addEventListener('keydown', (e) => {
         case 'd':
             view.x = Math.min(mapManager.mapSize.x - view.w, view.x + moveSpeed);
             break;
-        case 'r':
-            view.x = 0;
-            view.y = 0;
+        case 'r': // Сброс камеры на игрока
+            if (player) {
+                mapManager.centerAt(player.pos_x, player.pos_y);
+            }
             break;
         default:
             return;
     }
     
-    // Перерисовываем карту
+    // Перерисовываем
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     mapManager.draw(ctx);
-    console.log('Камера перемещена:', view.x, view.y);
+    if (player) player.draw(ctx);
 });
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -84,8 +100,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         gameStarted = true;
-        document.getElementById('gameStatus').textContent = 'Загрузка карты...';
-        console.log('Начало загрузки карты');
+        document.getElementById('gameStatus').textContent = 'Загрузка карты и спрайтов...';
+        console.log('Начало загрузки');
         
         initializeGame();
     });
@@ -93,11 +109,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById("endGame").addEventListener('click', () => {
         gameStarted = false;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        document.getElementById('gameStatus').textContent = 'Карта сброшена';
+        document.getElementById('gameStatus').textContent = 'Сброшено';
         
         // Сбрасываем менеджер карты
         mapManager.clearMap();
-        console.log('Карта сброшена');
+        console.log('Сброшено');
     });
 });
 
