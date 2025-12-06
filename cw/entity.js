@@ -1,8 +1,11 @@
-import { spriteManager } from "./sprite.js"
+import { spriteManager } from "./sprite.js";
 
 export let Entity = {
-    pos_x: 0, pos_y: 0,
-    size_x: 32, size_y: 32,
+    pos_x: 0, 
+    pos_y: 0,
+    size_x: 32, 
+    size_y: 32,
+    velocityY: 0,
     extend: function(extendProto){
         let object = Object.create(this);
         for (let property in extendProto){
@@ -15,33 +18,83 @@ export let Entity = {
 };
 
 export let Player = Entity.extend({
-    move_x: 0, move_y: 0,
+    move_x: 0,
+    move_y: 0,
     currentState: "idle_right",
     speed: 5,
+    isJumping: false,
+    lastDirection: "right", // для запоминания направления
+    
+    // Таймеры для анимации
+    animationTimer: 0,
+    animationFrame: 0,
+    runAnimationFrames: ["1", "2", "3", "4"], // Номера кадров для бега
+    
     draw: function(ctx){
         spriteManager.drawSprite(ctx, this.currentState, this.pos_x, this.pos_y);
     },
     
+    update: function(){
+        // Обновляем анимацию
+        this.updateAnimation();
+        
+        // Обновляем состояние
+        this.changeState();
+    },
+    
+    updateAnimation: function(){
+        this.animationTimer++;
+        
+        // Анимация бега (смена кадров каждые 5 обновлений)
+        if (this.move_x !== 0 && this.animationTimer % 5 === 0) {
+            this.animationFrame = (this.animationFrame + 1) % this.runAnimationFrames.length;
+        }
+        
+        // Сброс анимации при остановке
+        if (this.move_x === 0) {
+            this.animationFrame = 0;
+        }
+    },
+    
     changeState: function(){
-        if (this.move_x === 1){
-            this.currentState = "run_right_1";
+        // Запоминаем направление
+        if (this.move_x > 0) {
+            this.lastDirection = "right";
+        } else if (this.move_x < 0) {
+            this.lastDirection = "left";
         }
-        else if (this.move_x === -1){
-            this.currentState = "run_left_1";
-        }
-        else{
-            if (this.currentState === "run_left_1" || this.currentState === "run_left_2" || 
-                this.currentState === "run_left_3" || this.currentState === "run_left_4" ||
-                this.currentState === "idle_left"){
-                this.currentState = "idle_left";
+        
+        // Обработка прыжка
+        if (this.isJumping || this.velocityY < 0) {
+            if (this.lastDirection === "right") {
+                this.currentState = "run_right_3"; // Спрайт прыжка вправо
+            } else {
+                this.currentState = "run_left_3"; // Спрайт прыжка влево
             }
-            else{
+            return;
+        }
+        
+        // Обработка бега
+        if (this.move_x !== 0) {
+            let frame = this.runAnimationFrames[this.animationFrame];
+            if (this.move_x > 0) {
+                this.currentState = "run_right_" + frame;
+            } else {
+                this.currentState = "run_left_" + frame;
+            }
+        } 
+        // Обработка покоя
+        else {
+            if (this.lastDirection === "right") {
                 this.currentState = "idle_right";
+            } else {
+                this.currentState = "idle_left";
             }
         }
     }
 });
 
 export function createPlayer(){
-    return Entity.extend(Player);
+    let player = Entity.extend(Player);
+    return player;
 }

@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game</title>
+    <title>Platformer Game</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="game-container">
         <header>
-            <h2>Тест отображения карты</h2>
-            <div id="gameStatus">Нажмите "Начать игру" для загрузки карты</div>
+            <h2>Платформер</h2>
+            <div id="gameStatus">Нажмите "Начать игру"</div>
         </header>
         
         <main>
@@ -19,8 +19,14 @@
         
         <footer class="controls">
             <button id="startGame" class="gameBtn startGame">Начать игру</button>
-            <button id="endGame" class="gameBtn endGame">Сбросить</button>
+            <button id="endGame" class="gameBtn endGame">Остановить</button>
         </footer>
+        
+        <div class="instructions">
+            <p>Управление:</p>
+            <p>← → или A D - движение</p>
+            <p>↑ или W или Пробел - прыжок</p>
+        </div>
     </div>
     
     <script type="module" src="app.js"></script>

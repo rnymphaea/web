@@ -1,96 +1,48 @@
 import { mapManager } from "./map.js";
 import { spriteManager } from "./sprite.js";
 import { createPlayer } from "./entity.js";
+import { gameManager } from "./game.js";
+import { eventsManager } from "./events.js";
+import { maps, PLAYER_START_X, PLAYER_START_Y } from "./utils.js";
 
 let canvas = document.getElementById('gameCanvas');
-let ctx = canvas.getContext('2d');
+export let ctx = canvas.getContext('2d');
 let gameStarted = false;
-let player = null;
 
-// Константы
-const maps = ["lvl1.json"];
+function preloadGame(mapPath) {
+    mapManager.loadMap(mapPath, "map");
+    spriteManager.loadAtlas("map/sprites.json", "map/spritesheet.png");
+}
 
 function initializeGame() {
-    mapManager.loadMap(maps[0], "map");
-    
-    spriteManager.loadAtlas("map/sprites.json", "map/spritesheet.png");
-    
-    player = createPlayer();
-    
-    const checkAndDraw = () => {
+    // Ждем загрузки всех ресурсов
+    const checkAndInit = () => {
         if (mapManager.imgLoaded && mapManager.jsonLoaded && 
             spriteManager.imgLoaded && spriteManager.jsonLoaded) {
+            
             try {
-                // Очищаем канвас
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Создаем игрока с начальной позицией
+                let player = createPlayer();
+                player.pos_x = PLAYER_START_X;
+                player.pos_y = PLAYER_START_Y;
                 
-                // Рисуем карту
-                mapManager.draw(ctx);
+                // Запускаем игровой менеджер
+                gameManager.init(player);
                 
-                // Рисуем игрока
-                player.draw(ctx);
-                
-                // Центрируем камеру на игроке
-                mapManager.centerAt(player.pos_x, player.pos_y);
-                
-                document.getElementById('gameStatus').textContent = 'Игрок на карте!';
+                document.getElementById('gameStatus').textContent = 'Игра началась!';
                 console.log('Игрок создан на позиции:', player.pos_x, player.pos_y);
-                console.log('Доступные спрайты:', spriteManager.sprites.length);
                 
-                // Выводим список доступных спрайтов для отладки
-                spriteManager.sprites.forEach((sprite, i) => {
-                    console.log(i + 1, sprite.name);
-                });
             } catch (error) {
-                document.getElementById('gameStatus').textContent = 'Ошибка при отрисовке';
-                console.error('Ошибка отрисовки:', error);
+                document.getElementById('gameStatus').textContent = 'Ошибка инициализации';
+                console.error('Ошибка инициализации:', error);
             }
         } else {
-            setTimeout(checkAndDraw, 100);
+            setTimeout(checkAndInit, 100);
         }
     };
     
-    checkAndDraw();
+    checkAndInit();
 }
-
-// Управление камерой для перемещения
-document.addEventListener('keydown', (e) => {
-    if (!mapManager.imgLoaded || !mapManager.jsonLoaded) return;
-    
-    const moveSpeed = 50;
-    const view = mapManager.view;
-    
-    switch(e.key.toLowerCase()) {
-        case 'arrowup':
-        case 'w':
-            view.y = Math.max(0, view.y - moveSpeed);
-            break;
-        case 'arrowdown':
-        case 's':
-            view.y = Math.min(mapManager.mapSize.y - view.h, view.y + moveSpeed);
-            break;
-        case 'arrowleft':
-        case 'a':
-            view.x = Math.max(0, view.x - moveSpeed);
-            break;
-        case 'arrowright':
-        case 'd':
-            view.x = Math.min(mapManager.mapSize.x - view.w, view.x + moveSpeed);
-            break;
-        case 'r': // Сброс камеры на игрока
-            if (player) {
-                mapManager.centerAt(player.pos_x, player.pos_y);
-            }
-            break;
-        default:
-            return;
-    }
-    
-    // Перерисовываем
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    mapManager.draw(ctx);
-    if (player) player.draw(ctx);
-});
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM загружен');
@@ -100,20 +52,22 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         gameStarted = true;
-        document.getElementById('gameStatus').textContent = 'Загрузка карты и спрайтов...';
+        document.getElementById('gameStatus').textContent = 'Загрузка...';
         console.log('Начало загрузки');
         
+        preloadGame(maps[0]);
         initializeGame();
     });
     
     document.getElementById("endGame").addEventListener('click', () => {
         gameStarted = false;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        document.getElementById('gameStatus').textContent = 'Сброшено';
+        gameManager.stop();
         
-        // Сбрасываем менеджер карты
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById('gameStatus').textContent = 'Игра остановлена';
+        
         mapManager.clearMap();
-        console.log('Сброшено');
+        console.log('Игра остановлена');
     });
 });
 
