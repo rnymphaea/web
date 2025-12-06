@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Загружаем звуки
     soundManager.loadArray([
-        "sound/jump.mp3",
+        "sound/attack.mp3",
         "sound/win.mp3", 
         "sound/lose.mp3"
     ]);

@@ -1,6 +1,7 @@
 import { spriteManager } from "./sprite.js";
 import { ATTACK_COOLDOWN, ENEMY_TYPES, DASH_DISTANCE, DASH_SPEED, DASH_DURATION, isSolidTile } from "./utils.js";
 import { mapManager } from "./map.js";
+import { soundManager } from "./app.js";
 
 export let Entity = {
     pos_x: 0, 
@@ -147,6 +148,8 @@ export let Player = Entity.extend({
         if (!this.isAttacking && this.attack()) {
             this.isAttacking = true;
             this.attackTimer = 0;
+            // Воспроизводим звук атаки
+            soundManager.play("sound/attack.mp3", { volume: 0.6 });
             return true;
         }
         return false;

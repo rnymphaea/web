@@ -1,14 +1,13 @@
 import { mapManager } from "./map.js";
 import { emptyCell, isSolidTile, DASH_SPEED, DASH_DURATION } from "./utils.js";
-import { soundManager } from "./app.js";
 
 export let physicManager = {
     gravity: 0.8,
     jumpPower: 16,
     maxFallSpeed: 20,
-    wasOnGround: false,
     
     update: function(obj){
+        // Проверяем загрузку карты как в учебнике
         if (!mapManager.jsonLoaded || !mapManager.imgLoaded || 
             !mapManager.tLayer || !mapManager.tLayer.data) {
             console.log('Ожидание загрузки карты для физики...');
@@ -17,16 +16,9 @@ export let physicManager = {
         
         let onGround = this.isOnGround(obj);
         
-        // Проверяем, был ли прыжок (был на земле, теперь прыгает)
-        if (this.wasOnGround && obj.isJumping && obj.jumpCount === 0) {
-            soundManager.play("sound/jump.mp3", { volume: 0.5 });
-        }
-        
         if (onGround) {
             obj.jumpCount = 0;
         }
-        
-        this.wasOnGround = onGround;
         
         let canJump = !this.isHittingCeiling(obj);
         
