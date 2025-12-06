@@ -20,8 +20,11 @@ export let physicManager = {
             obj.jumpCount = 0;
         }
         
+        // Проверяем столкновение с потолком перед прыжком
+        let canJump = !this.isHittingCeiling(obj);
+        
         // Обработка прыжка
-        if (obj.isJumping && obj.jumpCount < 2) {
+        if (obj.isJumping && obj.jumpCount < 2 && canJump) {
             obj.velocityY = -this.jumpPower;
             obj.jumpCount++;
         }
@@ -32,6 +35,11 @@ export let physicManager = {
         // Ограничиваем максимальную скорость падения
         if (obj.velocityY > this.maxFallSpeed) {
             obj.velocityY = this.maxFallSpeed;
+        }
+        
+        // Проверяем столкновение с потолком при движении вверх
+        if (obj.velocityY < 0 && this.isHittingCeiling(obj)) {
+            obj.velocityY = 0; // Останавливаем движение вверх
         }
         
         // Применяем вертикальное движение
@@ -64,6 +72,27 @@ export let physicManager = {
         let rightTile = mapManager.getTilesetIdx(obj.pos_x + obj.size_x - 5, checkY);
         
         return isSolidTile(leftTile) || isSolidTile(rightTile);
+    },
+    
+    isHittingCeiling: function(obj){
+        // Проверяем столкновение с потолком/блоком сверху
+        let checkY = obj.pos_y - 1; // Проверяем на 1px выше головы
+        
+        // Проверяем несколько точек сверху
+        let points = [
+            obj.pos_x + 8,
+            obj.pos_x + obj.size_x / 2,
+            obj.pos_x + obj.size_x - 8
+        ];
+        
+        for (let pointX of points) {
+            let tileId = mapManager.getTilesetIdx(pointX, checkY);
+            if (isSolidTile(tileId)) {
+                return true;
+            }
+        }
+        
+        return false;
     },
     
     isUnderGround: function(obj){

@@ -4,7 +4,7 @@ export const emptyCell = 0; // ID пустого тайла (воздух)
 // ТОЛЬКО тайлы с ID 1-22 являются препятствиями
 // Все остальные (включая 367-481) - фон
 export function isSolidTile(tileId) {
-    return tileId >= 1 && tileId <= 22;
+    return tileId >= 1 && tileId <= 30;
 }
 
 // Стартовая позиция игрока

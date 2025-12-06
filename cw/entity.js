@@ -98,3 +98,49 @@ export function createPlayer(){
     let player = Entity.extend(Player);
     return player;
 }
+
+export let Enemy = Entity.extend({
+    move_x: 0,
+    move_y: 0,
+    currentState: "enemy_1",
+    speed: 3,
+    detectionRadius: 300, // Радиус обнаружения игрока
+    lastDirection: "left",
+    
+    draw: function(ctx){
+        spriteManager.drawSprite(ctx, this.currentState, this.pos_x, this.pos_y);
+    },
+    
+    update: function(player){
+        if (!player) return;
+        
+        // Проверяем расстояние до игрока
+        let distance = Math.sqrt(
+            Math.pow(this.pos_x - player.pos_x, 2) + 
+            Math.pow(this.pos_y - player.pos_y, 2)
+        );
+        
+        // Если игрок в радиусе обнаружения
+        if (distance < this.detectionRadius) {
+            // Определяем направление к игроку
+            if (player.pos_x > this.pos_x) {
+                this.move_x = 1; // Бежим вправо
+                this.currentState = "enemy_1";
+            } else {
+                this.move_x = -1; // Бежим влево
+                this.currentState = "enemy_1";
+            }
+        } else {
+            this.move_x = 0; // Стоим на месте
+        }
+        
+        // Движение
+        if (this.move_x !== 0) {
+            this.pos_x += this.move_x * this.speed;
+        }
+    }
+});
+
+export function createEnemy(){
+    return Entity.extend(Enemy);
+}
