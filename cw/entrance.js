@@ -42,7 +42,22 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showRecordsTable() {
-    const records = JSON.parse(localStorage.getItem('gameRecords') || '[]');
+    // ИСПРАВЛЕНИЕ: корректное получение массива рекордов
+    let records;
+    try {
+        const recordsStr = localStorage.getItem('gameRecords');
+        if (!recordsStr) {
+            records = [];
+        } else {
+            records = JSON.parse(recordsStr);
+            if (!Array.isArray(records)) {
+                records = [];
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка парсинга рекордов:', error);
+        records = [];
+    }
     
     // Фильтруем только тех, кто прошел уровень (прогресс = 100%)
     const completedGames = records.filter(record => record.progress === 100);

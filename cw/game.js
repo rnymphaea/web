@@ -22,9 +22,7 @@ export let gameManager = {
     init: function(player, levelIndex) {
         console.log(`Инициализация уровня ${levelIndex + 1}`);
         
-        // Останавливаем предыдущий игровой цикл
         this.stop();
-        
         this.player = player;
         this.currentLevel = levelIndex;
         this.gameTime = 0;
@@ -62,7 +60,6 @@ export let gameManager = {
         this.gameTime = 0;
         gameStartTime = Date.now();
         
-        // Создаем элемент для отображения таймера
         let timerElement = document.getElementById('gameTimer');
         if (!timerElement) {
             timerElement = document.createElement('div');
@@ -71,10 +68,7 @@ export let gameManager = {
             document.querySelector('main').appendChild(timerElement);
         }
         
-        // Обновляем таймер каждую секунду
-        if (gameTimerInterval) {
-            clearInterval(gameTimerInterval);
-        }
+        if (gameTimerInterval) clearInterval(gameTimerInterval);
         
         gameTimerInterval = setInterval(() => {
             this.gameTime = Math.floor((Date.now() - gameStartTime) / 1000);
@@ -97,8 +91,7 @@ export let gameManager = {
         const gameLoop = (currentTime) => {
             if (!this.isRunning) return;
             
-            // Вычисляем deltaTime для фиксированного обновления
-            const deltaTime = Math.min(currentTime - this.lastTime, 100) / 16.67; // Нормализуем к 60 FPS
+            const deltaTime = Math.min(currentTime - this.lastTime, 100) / 16.67;
             this.lastTime = currentTime;
             
             this.update(deltaTime);
@@ -120,7 +113,6 @@ export let gameManager = {
             progress = Math.min(100, Math.floor((1 - this.player.pos_y / mapManager.mapSize.y) * 100));
         }
         
-        // Сохраняем запись только если игрок прошел уровень (прогресс 100%)
         if (progress === 100 || this.gameWon) {
             const record = {
                 name: playerName,
@@ -129,7 +121,22 @@ export let gameManager = {
                 level: this.currentLevel + 1
             };
             
-            const records = JSON.parse(localStorage.getItem('gameRecords') || '[]');
+            // ИСПРАВЛЕНИЕ: корректное получение массива рекордов
+            let records = localStorage.getItem('gameRecords');
+            if (!records) {
+                records = [];
+            } else {
+                try {
+                    records = JSON.parse(records);
+                    if (!Array.isArray(records)) {
+                        records = [];
+                    }
+                } catch (error) {
+                    console.error('Ошибка парсинга рекордов:', error);
+                    records = [];
+                }
+            }
+            
             records.push(record);
             localStorage.setItem('gameRecords', JSON.stringify(records));
             
@@ -141,7 +148,7 @@ export let gameManager = {
         if (!this.player || !this.player.isAlive || this.gameOver) return;
         
         if (!mapManager.jsonLoaded || !mapManager.imgLoaded || 
-            !mapManager.tLayer || !mapManager.tLayer.data) {
+            !mapManager.tLayers || mapManager.tLayers.length === 0) {
             console.log('Ожидание загрузки карты для обновления игры...');
             return;
         }
@@ -156,7 +163,7 @@ export let gameManager = {
             
             setTimeout(() => {
                 nextLevel();
-            }, 2000); // 2 секунды задержки
+            }, 2000);
             return;
         }
         
@@ -202,7 +209,7 @@ export let gameManager = {
                 enemy.update(this.player);
 
                 if (mapManager.jsonLoaded && mapManager.imgLoaded && 
-                    mapManager.tLayer && mapManager.tLayer.data) {
+                    mapManager.tLayers && mapManager.tLayers.length > 0) {
                     const speedMultiplier = deltaTime;
                     enemy.speed = (1 + Math.random() * 1) * speedMultiplier;
                     physicManager.update(enemy);

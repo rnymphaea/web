@@ -48,7 +48,6 @@ export let Player = Entity.extend({
     animationFrame: 0,
     runAnimationFrames: ["1", "2", "3", "4"],
     
-    // Новые поля для рывка
     dashCharges: 0,
     isDashing: false,
     dashTimer: 0,
@@ -59,7 +58,6 @@ export let Player = Entity.extend({
     },
     
     update: function(){
-        // Обновляем таймер атаки
         if (this.isAttacking) {
             this.attackTimer++;
             if (this.attackTimer > 10) {
@@ -68,7 +66,6 @@ export let Player = Entity.extend({
             }
         }
         
-        // Обновляем рывок
         if (this.isDashing) {
             this.dashTimer--;
             if (this.dashTimer <= 0) {
@@ -148,14 +145,12 @@ export let Player = Entity.extend({
         if (!this.isAttacking && this.attack()) {
             this.isAttacking = true;
             this.attackTimer = 0;
-            // Воспроизводим звук атаки
             soundManager.play("sound/attack.mp3", { volume: 0.6 });
             return true;
         }
         return false;
     },
     
-    // Рывок
     startDash: function() {
         if (this.dashCharges > 0 && !this.isDashing) {
             this.isDashing = true;
@@ -167,12 +162,10 @@ export let Player = Entity.extend({
         return false;
     },
     
-    // Добавить заряд рывка (при убийстве врага)
     addDashCharge: function() {
         this.dashCharges++;
     },
     
-    // Получить текущую скорость (может пригодиться)
     getCurrentSpeed: function() {
         if (this.isDashing) {
             return DASH_SPEED;
@@ -261,33 +254,32 @@ export let Enemy = Entity.extend({
             this.move_x = 0;
         }
         
-        // Движение врага с проверкой препятствий
         if (this.move_x !== 0) {
             let newX = this.pos_x + (this.move_x * this.speed);
             
-            // Проверяем препятствия
-            let canMove = true;
-            
-            if (this.move_x > 0) { // Движение вправо
-                // Проверяем правую нижнюю точку
-                let checkX = newX + this.size_x;
-                let checkY = this.pos_y + this.size_y - 5;
-                let tileId = mapManager.getTilesetIdx(checkX, checkY);
-                if (isSolidTile(tileId)) {
-                    canMove = false;
+            // ИЗМЕНЕНО: проверяем наличие слоев
+            if (mapManager.tLayers && mapManager.tLayers.length > 0) {
+                let canMove = true;
+                
+                if (this.move_x > 0) {
+                    let checkX = newX + this.size_x;
+                    let checkY = this.pos_y + this.size_y - 5;
+                    let tileId = mapManager.getTilesetIdx(checkX, checkY);
+                    if (isSolidTile(tileId)) {
+                        canMove = false;
+                    }
+                } else {
+                    let checkX = newX;
+                    let checkY = this.pos_y + this.size_y - 5;
+                    let tileId = mapManager.getTilesetIdx(checkX, checkY);
+                    if (isSolidTile(tileId)) {
+                        canMove = false;
+                    }
                 }
-            } else { // Движение влево
-                // Проверяем левую нижнюю точку
-                let checkX = newX;
-                let checkY = this.pos_y + this.size_y - 5;
-                let tileId = mapManager.getTilesetIdx(checkX, checkY);
-                if (isSolidTile(tileId)) {
-                    canMove = false;
+                
+                if (canMove) {
+                    this.pos_x = newX;
                 }
-            }
-            
-            if (canMove) {
-                this.pos_x = newX;
             }
         }
     }

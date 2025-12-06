@@ -1,6 +1,6 @@
 export let mapManager = {
     mapData: null,
-    tLayer: null,
+    tLayers: [],  // МАССИВ СЛОЕВ вместо одного
     xCount: 0,
     yCount: 0,
     tSize: {x: 32, y: 32},
@@ -34,14 +34,16 @@ export let mapManager = {
             this.mapSize.x = this.xCount * this.tSize.x;
             this.mapSize.y = this.yCount * this.tSize.y;
 
-            // Инициализируем tLayer сразу при парсинге
+            // СОБИРАЕМ ВСЕ СЛОИ
+            this.tLayers = [];
             for (let i = 0; i < this.mapData.layers.length; i++){
                 let layer = this.mapData.layers[i];
                 if (layer.type === "tilelayer"){
-                    this.tLayer = layer;
-                    break;
+                    this.tLayers.push(layer);
                 }
             }
+
+            console.log(`Загружено слоев карты: ${this.tLayers.length}`);
 
             for (let i = 0; i < this.mapData.tilesets.length; i++){
                 let tileset = this.mapData.tilesets[i];
@@ -93,7 +95,7 @@ export let mapManager = {
     },
 
     draw: function(ctx){
-        if (!this.imgLoaded || !this.jsonLoaded || !this.tLayer){
+        if (!this.imgLoaded || !this.jsonLoaded || this.tLayers.length === 0){
             // Показываем сообщение о загрузке
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -104,24 +106,42 @@ export let mapManager = {
             return;
         }
         
-        for (let i = 0; i < this.tLayer.data.length; i++){
-            let tile = this.getTile(this.tLayer.data[i]);
-            if (!tile || !tile.img) continue;
+        // РИСУЕМ ВСЕ СЛОИ ПО ОЧЕРЕДИ
+        for (let layerIndex = 0; layerIndex < this.tLayers.length; layerIndex++) {
+            let layer = this.tLayers[layerIndex];
             
-            let pX = (i % this.xCount) * this.tSize.x;
-            let pY = Math.floor(i / this.xCount) * this.tSize.y;
-
-            // Проверяем видимость тайла
-            if (!this.isVisible(pX, pY, this.tSize.x, this.tSize.y)) {
+            // Проверяем видимость слоя
+            if (layer.visible === false) {
                 continue;
             }
+            
+            for (let i = 0; i < layer.data.length; i++){
+                let tile = this.getTile(layer.data[i]);
+                if (!tile || !tile.img) continue;
+                
+                let pX = (i % this.xCount) * this.tSize.x;
+                let pY = Math.floor(i / this.xCount) * this.tSize.y;
 
-            pX -= this.view.x;
-            pY -= this.view.y;
+                // Проверяем видимость тайла
+                if (!this.isVisible(pX, pY, this.tSize.x, this.tSize.y)) {
+                    continue;
+                }
 
-            ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x,
-                this.tSize.y, pX, pY, this.tSize.x, this.tSize.y);
-        }            
+                pX -= this.view.x;
+                pY -= this.view.y;
+
+                // Применяем прозрачность слоя если есть
+                if (layer.opacity && layer.opacity < 1) {
+                    ctx.globalAlpha = layer.opacity;
+                    ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x,
+                        this.tSize.y, pX, pY, this.tSize.x, this.tSize.y);
+                    ctx.globalAlpha = 1.0;
+                } else {
+                    ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x,
+                        this.tSize.y, pX, pY, this.tSize.x, this.tSize.y);
+                }
+            }
+        }
     },
 
     getTile: function(tileIndex){
@@ -166,9 +186,9 @@ export let mapManager = {
     },
 
     getTilesetIdx: function(x, y){
-        // Защитная проверка как в учебнике
-        if (!this.tLayer || !this.tLayer.data) {
-            return 0; // Возвращаем значение по умолчанию
+        // Берем ПЕРВЫЙ слой для коллизий (обычно это основной слой)
+        if (this.tLayers.length === 0 || !this.tLayers[0].data) {
+            return 0;
         }
         
         let wX = x;
@@ -177,17 +197,17 @@ export let mapManager = {
         // Проверяем границы карты
         if (wX < 0 || wY < 0 || 
             wX >= this.mapSize.x || wY >= this.mapSize.y) {
-            return 0; // Возвращаем значение по умолчанию
+            return 0;
         }
         
         let idx = Math.floor(wY / this.tSize.y) * this.xCount + Math.floor(wX / this.tSize.x);
         
         // Проверяем границы массива
-        if (idx < 0 || idx >= this.tLayer.data.length) {
+        if (idx < 0 || idx >= this.tLayers[0].data.length) {
             return 0;
         }
         
-        return this.tLayer.data[idx];
+        return this.tLayers[0].data[idx];
     },
 
     centerAt: function (x, y) {
@@ -217,7 +237,7 @@ export let mapManager = {
 
     clearMap: function(){
         this.mapData = null;
-        this.tLayer = null;
+        this.tLayers = [];  // Очищаем массив
         this.xCount = 0;
         this.yCount = 0;
         this.tSize = {x: 32, y: 32};

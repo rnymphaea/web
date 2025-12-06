@@ -7,9 +7,9 @@ export let physicManager = {
     maxFallSpeed: 20,
     
     update: function(obj){
-        // Проверяем загрузку карты как в учебнике
+        // ИЗМЕНЕНО: проверяем наличие слоев
         if (!mapManager.jsonLoaded || !mapManager.imgLoaded || 
-            !mapManager.tLayer || !mapManager.tLayer.data) {
+            !mapManager.tLayers || mapManager.tLayers.length === 0) {
             console.log('Ожидание загрузки карты для физики...');
             return;
         }
@@ -128,9 +128,7 @@ export let physicManager = {
             return true;
         }
         
-        // Проверяем левый верхний угол
         let leftTopTile = mapManager.getTilesetIdx(newX + 1, obj.pos_y + 1);
-        // Проверяем левый нижний угол
         let leftBottomTile = mapManager.getTilesetIdx(newX + 1, obj.pos_y + obj.size_y - 1);
         
         return isSolidTile(leftTopTile) || isSolidTile(leftBottomTile);
@@ -141,9 +139,7 @@ export let physicManager = {
             return true;
         }
         
-        // Проверяем правый верхний угол
         let rightTopTile = mapManager.getTilesetIdx(newX + obj.size_x - 1, obj.pos_y + 1);
-        // Проверяем правый нижний угол
         let rightBottomTile = mapManager.getTilesetIdx(newX + obj.size_x - 1, obj.pos_y + obj.size_y - 1);
         
         return isSolidTile(rightTopTile) || isSolidTile(rightBottomTile);
