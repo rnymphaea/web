@@ -28,40 +28,81 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('howToPlay').addEventListener('click', function() {
         showHowToPlay();
     });
+    
+    // Добавляем обработчик для закрытия модальных окон
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal-close')) {
+            closeModal();
+        }
+        // Закрытие по клику вне модального окна
+        if (event.target.classList.contains('modal')) {
+            closeModal();
+        }
+    });
 });
 
 function showRecordsTable() {
     const records = JSON.parse(localStorage.getItem('gameRecords') || '[]');
     
+    // Фильтруем только тех, кто прошел уровень (прогресс = 100%)
+    const completedGames = records.filter(record => record.progress === 100);
+    
     let html = '<div class="modal"><div class="modal-content">';
     html += '<h3>Таблица рекордов</h3>';
     
-    if (records.length === 0) {
-        html += '<p>Пока нет записей</p>';
+    if (completedGames.length === 0) {
+        html += '<p>Пока нет завершенных уровней</p>';
     } else {
-        html += '<table class="records-table">';
-        html += '<tr><th>Место</th><th>Имя</th><th>Время</th><th>Прогресс</th><th>Дата</th></tr>';
+        // Группируем по уровням и сортируем по времени
+        const level1Records = completedGames.filter(r => r.level === 1).sort((a, b) => a.time - b.time);
+        const level2Records = completedGames.filter(r => r.level === 2).sort((a, b) => a.time - b.time);
         
-        records.sort((a, b) => b.score - a.score || a.time - b.time);
-        
-        records.slice(0, 10).forEach((record, index) => {
-            const minutes = Math.floor(record.time / 60);
-            const seconds = record.time % 60;
-            const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        html += '<h4>Уровень 1</h4>';
+        if (level1Records.length === 0) {
+            html += '<p>Нет завершенных попыток</p>';
+        } else {
+            html += '<table class="records-table">';
+            html += '<tr><th>Место</th><th>Имя</th><th>Время</th></tr>';
             
-            html += `<tr>
-                <td>${index + 1}</td>
-                <td>${record.name}</td>
-                <td>${timeStr}</td>
-                <td>${record.progress}%</td>
-                <td>${new Date(record.date).toLocaleDateString()}</td>
-            </tr>`;
-        });
+            level1Records.slice(0, 10).forEach((record, index) => {
+                const minutes = Math.floor(record.time / 60);
+                const seconds = record.time % 60;
+                const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${record.name}</td>
+                    <td>${timeStr}</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+        }
         
-        html += '</table>';
+        html += '<h4>Уровень 2</h4>';
+        if (level2Records.length === 0) {
+            html += '<p>Нет завершенных попыток</p>';
+        } else {
+            html += '<table class="records-table">';
+            html += '<tr><th>Место</th><th>Имя</th><th>Время</th></tr>';
+            
+            level2Records.slice(0, 10).forEach((record, index) => {
+                const minutes = Math.floor(record.time / 60);
+                const seconds = record.time % 60;
+                const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${record.name}</td>
+                    <td>${timeStr}</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+        }
     }
     
-    html += '<button class="modal-close" onclick="closeModal()">Закрыть</button>';
+    html += '<button class="modal-close">Закрыть</button>';
     html += '</div></div>';
     
     document.body.insertAdjacentHTML('beforeend', html);
@@ -73,7 +114,8 @@ function showHowToPlay() {
         <div class="modal-content">
             <h3>Как играть</h3>
             <div class="instructions-list">
-                <p><strong>Цель игры:</strong> Добраться до правого края карты, избегая врагов.</p>
+                <p><strong>Уровень 1:</strong> Добраться до правого края карты.</p>
+                <p><strong>Уровень 2:</strong> Добраться до самого верха карты.</p>
                 <p><strong>Управление:</strong></p>
                 <ul>
                     <li>← → или A D - движение</li>
@@ -87,9 +129,10 @@ function showHowToPlay() {
                     <li>За каждого убитого врага получаете заряд рывка</li>
                     <li>Падение с большой высоты смертельно</li>
                     <li>Столкновение с врагом убивает вас</li>
+                    <li>После прохождения уровня 1 автоматически начинается уровень 2</li>
                 </ul>
             </div>
-            <button class="modal-close" onclick="closeModal()">Закрыть</button>
+            <button class="modal-close">Закрыть</button>
         </div>
     </div>
     `;

@@ -1,14 +1,14 @@
-/* Minimal Reset */
+/* ОЧЕНЬ МИНИМАЛИСТИЧНЫЙ СТИЛЬ */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Body */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #111;
+    font-family: system-ui, sans-serif;
+    background: #000;
     color: #fff;
     min-height: 100vh;
     display: grid;
@@ -16,169 +16,134 @@ body {
     padding: 20px;
 }
 
-/* Game Container */
 .game-container {
-    width: fit-content;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
 }
 
-/* Title */
 h1, h2 {
     font-size: 1.5rem;
-    font-weight: 400;
-    color: #ccc;
-    letter-spacing: 0.5px;
+    font-weight: normal;
+    color: #fff;
+    text-align: center;
 }
 
-/* Status */
+.subtitle {
+    color: #666;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
 #gameStatus {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #888;
     text-align: center;
-    min-height: 1.2rem;
 }
 
-/* Canvas */
 #gameCanvas {
     display: block;
     background: #000;
-    border: 1px solid #333;
+    border: 1px solid #222;
 }
 
-/* Controls */
 .controls {
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
-/* Buttons */
 button {
-    padding: 8px 20px;
-    font-size: 0.9rem;
-    background: #222;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    background: #111;
     color: #fff;
-    border: 1px solid #444;
-    border-radius: 2px;
+    border: 1px solid #333;
     cursor: pointer;
-    transition: all 0.2s;
 }
 
 button:hover {
-    background: #333;
-    border-color: #666;
-}
-
-#startGame, #endGame, #toMenu {
     background: #222;
 }
 
-/* Hide outline on focus for minimal look */
-button:focus {
-    outline: 1px solid #666;
-}
-
-/* Mobile */
-@media (max-width: 1300px) {
-    #gameCanvas {
-        max-width: 95vw;
-        height: auto;
-    }
-    
-    .game-container {
-        gap: 15px;
-    }
-}
-
-/* Страница входа */
 .menu {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 8px;
     width: 100%;
-    max-width: 500px;
+    max-width: 300px;
 }
 
 .menu-item {
-    background: #222;
-    border: 1px solid #444;
-    padding: 20px;
+    background: #111;
+    border: 1px solid #222;
+    padding: 16px 20px;
     cursor: pointer;
-    transition: all 0.2s;
     text-align: center;
 }
 
 .menu-item:hover {
-    background: #333;
-    border-color: #666;
-    transform: translateY(-2px);
+    background: #222;
 }
 
 .menu-item h3 {
     color: #fff;
-    margin-bottom: 5px;
-    font-size: 1.2rem;
+    margin-bottom: 4px;
+    font-size: 1rem;
 }
 
 .menu-item p {
-    color: #888;
-    font-size: 0.9rem;
-}
-
-.menu-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    max-width: 500px;
-    margin-top: 30px;
-}
-
-.player-name input {
-    background: #222;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 8px 12px;
-    width: 200px;
-    font-size: 0.9rem;
-}
-
-.player-name input::placeholder {
-    color: #666;
-}
-
-.version {
-    color: #666;
+    color: #777;
     font-size: 0.8rem;
 }
 
-.subtitle {
-    color: #888;
-    font-size: 0.9rem;
-    margin-top: 5px;
+.player-name-input {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: default;
 }
 
-/* Модальные окна */
+.player-name-input:hover {
+    background: transparent;
+}
+
+.name-input-wrapper {
+    width: 100%;
+}
+
+.player-name-input input {
+    width: 100%;
+    background: #111;
+    border: 1px solid #222;
+    color: #fff;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.player-name-input input:focus {
+    outline: none;
+    border-color: #444;
+}
+
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
 }
 
 .modal-content {
-    background: #222;
-    border: 1px solid #444;
-    padding: 30px;
-    max-width: 600px;
+    background: #111;
+    border: 1px solid #222;
+    padding: 24px;
+    max-width: 400px;
     width: 90%;
     max-height: 80vh;
     overflow-y: auto;
@@ -186,92 +151,109 @@ button:focus {
 
 .modal h3 {
     color: #fff;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     text-align: center;
 }
 
 .modal-close {
-    background: #333;
+    background: #111;
     color: #fff;
-    border: 1px solid #444;
-    padding: 8px 20px;
-    margin-top: 20px;
+    border: 1px solid #222;
+    padding: 8px 16px;
+    margin-top: 16px;
     cursor: pointer;
     width: 100%;
-    transition: background 0.2s;
 }
 
 .modal-close:hover {
-    background: #444;
+    background: #222;
 }
 
-/* Таблица рекордов */
 .records-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 20px 0;
+    margin: 16px 0;
+    font-size: 0.8rem;
 }
 
 .records-table th,
 .records-table td {
-    border: 1px solid #444;
+    border: 1px solid #222;
     padding: 8px;
     text-align: center;
     color: #fff;
 }
 
 .records-table th {
-    background: #333;
-    color: #ccc;
+    background: #151515;
+    color: #aaa;
 }
 
 .records-table tr:nth-child(even) {
-    background: #2a2a2a;
+    background: #151515;
 }
 
-/* Инструкции */
 .instructions-list ul {
     list-style: none;
     padding-left: 0;
-    margin: 15px 0;
+    margin: 12px 0;
 }
 
 .instructions-list li {
     color: #ccc;
+    margin: 6px 0;
+    font-size: 0.9rem;
+}
+
+.instructions-list p {
+    color: #aaa;
     margin: 8px 0;
-    padding-left: 20px;
-    position: relative;
 }
 
-.instructions-list li:before {
-    content: "•";
-    color: #666;
-    position: absolute;
-    left: 0;
-}
-
-/* Таймер в игре */
 .timer-display {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.7);
+    top: 16px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.8);
     color: #fff;
-    padding: 5px 10px;
-    border: 1px solid #444;
+    padding: 4px 8px;
+    border: 1px solid #222;
     font-family: monospace;
-    font-size: 1.1rem;
-    z-index: 100;
+    font-size: 0.8rem;
 }
 
-/* Инструкции в игре */
 .instructions {
-    margin-top: 20px;
-    color: #888;
-    font-size: 0.9rem;
+    margin-top: 12px;
+    color: #777;
+    font-size: 0.8rem;
     text-align: center;
 }
 
 .instructions p {
-    margin: 5px 0;
+    margin: 4px 0;
+}
+
+@media (max-width: 1300px) {
+    #gameCanvas {
+        max-width: 95vw;
+        height: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .menu {
+        max-width: 280px;
+    }
+    
+    .menu-item {
+        padding: 14px 16px;
+    }
+    
+    .modal-content {
+        padding: 20px;
+    }
+    
+    .records-table {
+        font-size: 0.7rem;
+    }
 }
