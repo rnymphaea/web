@@ -13,12 +13,14 @@ export let eventsManager = {
         this.bind[87] = 'jump';
         
         // Левая кнопка мыши
-        this.bind[0] = 'attack'; // Код левой кнопки мыши
+        this.bind[0] = 'attack';
+        
+        // SHIFT для рывка
+        this.bind[16] = 'dash'; // Код клавиши Shift
         
         document.body.addEventListener("keydown", this.onKeyDown);
         document.body.addEventListener("keyup", this.onKeyUp);
         
-        // Обработка мыши
         document.addEventListener("mousedown", this.onMouseDown);
         document.addEventListener("mouseup", this.onMouseUp);
     },

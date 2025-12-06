@@ -1,5 +1,6 @@
 import { spriteManager } from "./sprite.js";
-import { ATTACK_COOLDOWN, ENEMY_TYPES } from "./utils.js";
+import { ATTACK_COOLDOWN, ENEMY_TYPES, DASH_DISTANCE, DASH_SPEED, DASH_DURATION, isSolidTile } from "./utils.js";
+import { mapManager } from "./map.js";
 
 export let Entity = {
     pos_x: 0, 
@@ -46,6 +47,12 @@ export let Player = Entity.extend({
     animationFrame: 0,
     runAnimationFrames: ["1", "2", "3", "4"],
     
+    // Новые поля для рывка
+    dashCharges: 0,
+    isDashing: false,
+    dashTimer: 0,
+    dashDirection: 0,
+    
     draw: function(ctx){
         spriteManager.drawSprite(ctx, this.currentState, this.pos_x, this.pos_y);
     },
@@ -60,6 +67,15 @@ export let Player = Entity.extend({
             }
         }
         
+        // Обновляем рывок
+        if (this.isDashing) {
+            this.dashTimer--;
+            if (this.dashTimer <= 0) {
+                this.isDashing = false;
+                this.dashTimer = 0;
+            }
+        }
+        
         this.updateAnimation();
         this.changeState();
     },
@@ -67,11 +83,11 @@ export let Player = Entity.extend({
     updateAnimation: function(){
         this.animationTimer++;
         
-        if (this.move_x !== 0 && this.animationTimer % 5 === 0 && !this.isAttacking) {
+        if (this.move_x !== 0 && this.animationTimer % 5 === 0 && !this.isAttacking && !this.isDashing) {
             this.animationFrame = (this.animationFrame + 1) % this.runAnimationFrames.length;
         }
         
-        if (this.move_x === 0 && !this.isAttacking) {
+        if (this.move_x === 0 && !this.isAttacking && !this.isDashing) {
             this.animationFrame = 0;
         }
     },
@@ -83,6 +99,15 @@ export let Player = Entity.extend({
                 this.currentState = "attack_right_" + attackFrame;
             } else {
                 this.currentState = "attack_left_" + attackFrame;
+            }
+            return;
+        }
+        
+        if (this.isDashing) {
+            if (this.dashDirection === 1) {
+                this.currentState = "run_right_2";
+            } else {
+                this.currentState = "run_left_2";
             }
             return;
         }
@@ -127,7 +152,31 @@ export let Player = Entity.extend({
         return false;
     },
     
-    // Зона атаки (справа или слева от игрока)
+    // Рывок
+    startDash: function() {
+        if (this.dashCharges > 0 && !this.isDashing) {
+            this.isDashing = true;
+            this.dashTimer = DASH_DURATION;
+            this.dashDirection = this.lastDirection === "right" ? 1 : -1;
+            this.dashCharges--;
+            return true;
+        }
+        return false;
+    },
+    
+    // Добавить заряд рывка (при убийстве врага)
+    addDashCharge: function() {
+        this.dashCharges++;
+    },
+    
+    // Получить текущую скорость (может пригодиться)
+    getCurrentSpeed: function() {
+        if (this.isDashing) {
+            return DASH_SPEED;
+        }
+        return this.speed;
+    },
+    
     getAttackRange: function() {
         const attackRange = 50;
         const attackHeight = this.size_y;
@@ -149,7 +198,6 @@ export let Player = Entity.extend({
         }
     },
     
-    // Проверка столкновения с врагом
     isCollidingWith: function(enemy) {
         return (
             this.pos_x < enemy.pos_x + enemy.size_x &&
@@ -159,7 +207,6 @@ export let Player = Entity.extend({
         );
     },
     
-    // Проверка попадания атаки по врагу
     isAttackingEnemy: function(enemy) {
         if (!this.isAttacking) return false;
         
@@ -199,9 +246,7 @@ export let Enemy = Entity.extend({
             Math.pow(this.pos_y - player.pos_y, 2)
         );
         
-        // Если игрок в зоне обнаружения
         if (distance < this.detectionRadius) {
-            // Определяем направление к игроку
             if (player.pos_x > this.pos_x) {
                 this.move_x = 1;
                 this.lastDirection = "right";
@@ -209,26 +254,38 @@ export let Enemy = Entity.extend({
                 this.move_x = -1;
                 this.lastDirection = "left";
             }
-            
-            // Обновляем спрайт в зависимости от направления
-            if (this.move_x > 0) {
-                // Для врага 1 и 2 используем соответствующие спрайты для движения вправо
-                if (this.currentState === "enemy_1" || this.currentState === "enemy_2") {
-                    this.currentState = this.currentState;
-                }
-            } else {
-                // Для движения влево можно использовать те же спрайты или другие
-                if (this.currentState === "enemy_1" || this.currentState === "enemy_2") {
-                    this.currentState = this.currentState;
-                }
-            }
         } else {
             this.move_x = 0;
         }
         
-        // Движение врага
+        // Движение врага с проверкой препятствий
         if (this.move_x !== 0) {
-            this.pos_x += this.move_x * this.speed;
+            let newX = this.pos_x + (this.move_x * this.speed);
+            
+            // Проверяем препятствия
+            let canMove = true;
+            
+            if (this.move_x > 0) { // Движение вправо
+                // Проверяем правую нижнюю точку
+                let checkX = newX + this.size_x;
+                let checkY = this.pos_y + this.size_y - 5;
+                let tileId = mapManager.getTilesetIdx(checkX, checkY);
+                if (isSolidTile(tileId)) {
+                    canMove = false;
+                }
+            } else { // Движение влево
+                // Проверяем левую нижнюю точку
+                let checkX = newX;
+                let checkY = this.pos_y + this.size_y - 5;
+                let tileId = mapManager.getTilesetIdx(checkX, checkY);
+                if (isSolidTile(tileId)) {
+                    canMove = false;
+                }
+            }
+            
+            if (canMove) {
+                this.pos_x = newX;
+            }
         }
     }
 });
@@ -236,7 +293,7 @@ export let Enemy = Entity.extend({
 export function createEnemy(type = 0){
     let enemy = Entity.extend(Enemy);
     enemy.currentState = ENEMY_TYPES[type] || "enemy_1";
-    enemy.speed = 1.5 + Math.random() * 1; // Скорость 1.5-2.5
-    enemy.detectionRadius = 250 + Math.random() * 100; // Радиус 250-350
+    enemy.speed = 1 + Math.random() * 1;
+    enemy.detectionRadius = 250 + Math.random() * 100;
     return enemy;
 }

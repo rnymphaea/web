@@ -11,7 +11,7 @@ export let gameManager = {
     gameLoopInterval: null,
     isRunning: false,
     gameOver: false,
-    gameWon: false, // Добавляем флаг победы
+    gameWon: false,
     
     init: function(player) {
         this.player = player;
@@ -72,12 +72,17 @@ export let gameManager = {
             this.player.startAttack();
         }
         
-        // Обновляем физику
+        // Обработка рывка (Shift)
+        if (eventsManager.action['dash']) {
+            this.player.startDash();
+        }
+        
+        // Обновляем физику - ВСЯ физика теперь в physicManager
         if (mapManager.jsonLoaded && mapManager.imgLoaded) {
             physicManager.update(this.player);
         }
         
-        // Обновляем игрока
+        // Обновляем игрока (анимации)
         this.player.update();
         
         // Обновляем врагов
@@ -104,11 +109,18 @@ export let gameManager = {
             
             if (enemy.isAlive) {
                 enemy.update(this.player);
+
+                if (mapManager.jsonLoaded && mapManager.imgLoaded) {
+                    physicManager.update(enemy); // Теперь враги используют ту же физику
+                }
                 
-                // Проверяем, попал ли игрок атакой по врагу
                 if (this.player.isAttackingEnemy(enemy)) {
                     enemy.isAlive = false;
                     console.log("Враг убит!");
+                    
+                    this.player.addDashCharge();
+                    console.log(`Добавлен заряд рывка! Всего зарядов: ${this.player.dashCharges}`);
+                    
                     continue;
                 }
             }
@@ -119,10 +131,8 @@ export let gameManager = {
     },
     
     checkEnemyCollisions: function() {
-        // Проверяем столкновение врага с игроком
         for (let enemy of this.enemies) {
             if (enemy.isAlive && this.player.isCollidingWith(enemy)) {
-                // Игрок погибает при касании врага
                 this.player.isAlive = false;
                 this.gameOver = true;
                 console.log("Игрок погиб от врага!");
@@ -132,7 +142,6 @@ export let gameManager = {
     },
     
     checkFallDeath: function() {
-        // Проверка падения в пропасть
         if (this.player.pos_y > mapManager.mapSize.y + 100) {
             this.player.isAlive = false;
             this.gameOver = true;
@@ -151,7 +160,7 @@ export let gameManager = {
             statusElement.style.color = 'red';
         } else {
             const progress = Math.min(100, Math.floor((this.player.pos_x / mapManager.mapSize.x) * 100));
-            statusElement.textContent = `Прогресс: ${progress}% | Врагов: ${this.enemies.length}`;
+            statusElement.textContent = `Прогресс: ${progress}% | Врагов: ${this.enemies.length} | Рывков: ${this.player.dashCharges}`;
             statusElement.style.color = 'white';
         }
     },
@@ -171,24 +180,10 @@ export let gameManager = {
             }
         });
         
-        // Если нужно, можно раскомментировать для отладки зоны атаки
-        /*
-        if (this.player && this.player.isAttacking) {
-            const attackRange = this.player.getAttackRange();
-            ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(
-                attackRange.x - mapManager.view.x,
-                attackRange.y - mapManager.view.y,
-                attackRange.width,
-                attackRange.height
-            );
-        }
-        */
-    },
+        // Визуализация рывка (опционально)
+     },
     
     stop: function() {
         this.isRunning = false;
-    },
-    
+    }
 };
