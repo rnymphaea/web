@@ -58,6 +58,18 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeGame();
     });
     
+    document.getElementById("toMenu").addEventListener('click', () => {
+        gameStarted = false;
+        gameManager.stop();
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById('gameStatus').textContent = 'Возврат в меню...';
+        
+        setTimeout(() => {
+            window.location.href = 'entrance.html';
+        }, 500);
+    });
+    
     document.getElementById("endGame").addEventListener('click', () => {
         gameStarted = false;
         gameManager.stop();
