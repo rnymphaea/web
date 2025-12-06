@@ -25,19 +25,32 @@ export let mapManager = {
     },
 
     parseMap: function(tilesJSON){
-        this.mapData = JSON.parse(tilesJSON);
-        this.xCount = this.mapData.width;
-        this.yCount = this.mapData.height;
-        this.tSize.x = this.mapData.tilewidth;
-        this.tSize.y = this.mapData.tileheight;
-        this.mapSize.x = this.xCount * this.tSize.x;
-        this.mapSize.y = this.yCount * this.tSize.y;
+        try {
+            this.mapData = JSON.parse(tilesJSON);
+            this.xCount = this.mapData.width;
+            this.yCount = this.mapData.height;
+            this.tSize.x = this.mapData.tilewidth;
+            this.tSize.y = this.mapData.tileheight;
+            this.mapSize.x = this.xCount * this.tSize.x;
+            this.mapSize.y = this.yCount * this.tSize.y;
 
-        for (let i = 0; i < this.mapData.tilesets.length; i++){
-            let tileset = this.mapData.tilesets[i];
-            this.loadTileset(tileset);
+            // Инициализируем tLayer сразу при парсинге
+            for (let i = 0; i < this.mapData.layers.length; i++){
+                let layer = this.mapData.layers[i];
+                if (layer.type === "tilelayer"){
+                    this.tLayer = layer;
+                    break;
+                }
+            }
+
+            for (let i = 0; i < this.mapData.tilesets.length; i++){
+                let tileset = this.mapData.tilesets[i];
+                this.loadTileset(tileset);
+            }
+            this.jsonLoaded = true;
+        } catch (error) {
+            console.error('Ошибка парсинга карты:', error);
         }
-        this.jsonLoaded = true;
     },
 
     loadTileset: function(tileset){
@@ -67,7 +80,12 @@ export let mapManager = {
             mapManager.imgLoadCount++;
             if (mapManager.imgLoadCount === mapManager.mapData.tilesets.length){
                 mapManager.imgLoaded = true;
+                console.log('Все изображения карты загружены');
             }
+        };
+        
+        tilesetObj.image.onerror = function() {
+            console.error('Ошибка загрузки изображения tileset:', tsjData.image);
         };
         
         tilesetObj.image.src = this.directory + "/" + tsjData.image;
@@ -75,34 +93,40 @@ export let mapManager = {
     },
 
     draw: function(ctx){
-        if (!this.imgLoaded || !this.jsonLoaded){
+        if (!this.imgLoaded || !this.jsonLoaded || !this.tLayer){
+            // Показываем сообщение о загрузке
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText('Загрузка карты...', 50, 50);
             setTimeout(function(){ this.draw(ctx); }.bind(this), 100);
+            return;
         }
-        else{
-            if (this.tLayer === null){
-                for (let id = 0; id < this.mapData.layers.length; id++){
-                    let layer = this.mapData.layers[id];
-                    if (layer.type === "tilelayer"){
-                        this.tLayer = layer;
-                        break;
-                    }
-                }
+        
+        for (let i = 0; i < this.tLayer.data.length; i++){
+            let tile = this.getTile(this.tLayer.data[i]);
+            if (!tile || !tile.img) continue;
+            
+            let pX = (i % this.xCount) * this.tSize.x;
+            let pY = Math.floor(i / this.xCount) * this.tSize.y;
+
+            // Проверяем видимость тайла
+            if (!this.isVisible(pX, pY, this.tSize.x, this.tSize.y)) {
+                continue;
             }
-            for (let i = 0; i < this.tLayer.data.length; i++){
-                let tile = this.getTile(this.tLayer.data[i]);
-                let pX = (i % this.xCount) * this.tSize.x;
-                let pY = Math.floor(i / this.xCount) * this.tSize.y;
 
-                pX -= this.view.x;
-                pY -= this.view.y;
+            pX -= this.view.x;
+            pY -= this.view.y;
 
-                ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x,
-                    this.tSize.y, pX, pY, this.tSize.x, this.tSize.y);
-            }            
-        }
+            ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x,
+                this.tSize.y, pX, pY, this.tSize.x, this.tSize.y);
+        }            
     },
 
     getTile: function(tileIndex){
+        if (tileIndex === 0) return null;
+        
         let tile = {
             img: null,
             px: 0,
@@ -110,11 +134,13 @@ export let mapManager = {
         }
 
         let tileset = this.getTileset(tileIndex);
+        if (!tileset || !tileset.image) return null;
+        
         tile.img = tileset.image;
         let id = tileIndex - tileset.firstgid;
 
         let x = id % tileset.xCount;
-        let y = Math.floor(id / tileset.yCount);
+        let y = Math.floor(id / tileset.xCount);
 
         tile.px = x * this.tSize.x;
         tile.py = y * this.tSize.y;
@@ -125,7 +151,7 @@ export let mapManager = {
     getTileset: function(tileIndex){
         for (let i = this.tilesets.length - 1; i >= 0; i--){
             if (this.tilesets[i].firstgid <= tileIndex){
-                return mapManager.tilesets[i];
+                return this.tilesets[i];
             }
         }
         return null;
@@ -139,40 +165,28 @@ export let mapManager = {
         return true;
     },
 
-    parseEntities: function(){
-        if (!mapManager.imgLoaded || !mapManager.jsonLoaded){
-            setTimeout(function() { mapManager.parseEntities(); }, 100);
-        }
-        else{
-            for (let j = 0; j < this.mapData.layers.length; j++){
-                if (this.mapData.layers[j].type === 'objectgroup'){
-                    let entities = this.mapData.layers[j];
-                    for (let i = 0; i < entities.objects.length; i++){
-                        let e = entities.objects[i];
-                        try{
-                            let obj = Object.create(gameManager.factory[e.type]);
-                            obj.name = e.name;
-                            obj.pos_x = e.x;
-                            obj.pos_y = e.y;
-                            obj.size_x = e.width;
-                            obj.size_y = e.height;
-                            gameManager.entities.push(obj);
-                            if (obj.name === "player"){
-                                gameManager.initPlayer(obj);
-                            }
-                        } catch (ex){
-                            console.log("Error with creating: [" + e.gid + "] " + e.type + ", " + ex);
-                        }
-                    }
-                }
-            }
-        }
-    },
-
     getTilesetIdx: function(x, y){
+        // Защитная проверка как в учебнике
+        if (!this.tLayer || !this.tLayer.data) {
+            return 0; // Возвращаем значение по умолчанию
+        }
+        
         let wX = x;
         let wY = y;
+        
+        // Проверяем границы карты
+        if (wX < 0 || wY < 0 || 
+            wX >= this.mapSize.x || wY >= this.mapSize.y) {
+            return 0; // Возвращаем значение по умолчанию
+        }
+        
         let idx = Math.floor(wY / this.tSize.y) * this.xCount + Math.floor(wX / this.tSize.x);
+        
+        // Проверяем границы массива
+        if (idx < 0 || idx >= this.tLayer.data.length) {
+            return 0;
+        }
+        
         return this.tLayer.data[idx];
     },
 
@@ -201,29 +215,9 @@ export let mapManager = {
         }
     },
 
-    waitForLoad: function() {
-        return new Promise((resolve) => {
-            const checkLoad = () => {
-                if (this.imgLoaded && this.jsonLoaded) {
-                    resolve();
-                } else {
-                    setTimeout(checkLoad, 100);
-                }
-            };
-            checkLoad();
-        });
-    },
-
-    setEmptyCell: function(x, y){
-        let wX = x;
-        let wY = y;
-        let idx = Math.floor(wY / this.tSize.y) * this.xCount + Math.floor(wX / this.tSize.x);
-        this.tLayer.data[idx] = emptyCell;
-    },
-
     clearMap: function(){
         this.mapData = null;
-        this.tLayer = null,
+        this.tLayer = null;
         this.xCount = 0;
         this.yCount = 0;
         this.tSize = {x: 32, y: 32};
@@ -236,4 +230,3 @@ export let mapManager = {
         this.view = {x: 0, y: 0, w: 1200, h: 800};
     }
 };
-

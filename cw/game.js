@@ -53,6 +53,13 @@ export let gameManager = {
     update: function() {
         if (!this.player || !this.player.isAlive || this.gameOver) return;
         
+        // Проверяем загрузку карты как в учебнике
+        if (!mapManager.jsonLoaded || !mapManager.imgLoaded || 
+            !mapManager.tLayer || !mapManager.tLayer.data) {
+            console.log('Ожидание загрузки карты для обновления игры...');
+            return;
+        }
+        
         // Проверка достижения правого края карты (победа)
         if (this.player.pos_x >= mapManager.mapSize.x - this.player.size_x - 3) {
             this.gameWon = true;
@@ -77,10 +84,8 @@ export let gameManager = {
             this.player.startDash();
         }
         
-        // Обновляем физику - ВСЯ физика теперь в physicManager
-        if (mapManager.jsonLoaded && mapManager.imgLoaded) {
-            physicManager.update(this.player);
-        }
+        // Обновляем физику
+        physicManager.update(this.player);
         
         // Обновляем игрока (анимации)
         this.player.update();
@@ -95,9 +100,7 @@ export let gameManager = {
         this.checkFallDeath();
         
         // Центрируем камеру
-        if (mapManager.jsonLoaded) {
-            mapManager.centerAt(this.player.pos_x, this.player.pos_y);
-        }
+        mapManager.centerAt(this.player.pos_x, this.player.pos_y);
         
         // Обновляем статус игры
         this.updateGameStatus();
@@ -110,8 +113,10 @@ export let gameManager = {
             if (enemy.isAlive) {
                 enemy.update(this.player);
 
-                if (mapManager.jsonLoaded && mapManager.imgLoaded) {
-                    physicManager.update(enemy); // Теперь враги используют ту же физику
+                // Проверяем загрузку карты перед физикой врага
+                if (mapManager.jsonLoaded && mapManager.imgLoaded && 
+                    mapManager.tLayer && mapManager.tLayer.data) {
+                    physicManager.update(enemy);
                 }
                 
                 if (this.player.isAttackingEnemy(enemy)) {
@@ -179,9 +184,7 @@ export let gameManager = {
                 enemy.draw(ctx);
             }
         });
-        
-        // Визуализация рывка (опционально)
-     },
+    },
     
     stop: function() {
         this.isRunning = false;

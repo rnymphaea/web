@@ -9,14 +9,10 @@ let canvas = document.getElementById('gameCanvas');
 export let ctx = canvas.getContext('2d');
 let gameStarted = false;
 
-function preloadGame(mapPath) {
-    mapManager.loadMap(mapPath, "map");
-    spriteManager.loadAtlas("map/sprites.json", "map/spritesheet.png");
-}
-
 function initializeGame() {
     const checkAndInit = () => {
         if (mapManager.imgLoaded && mapManager.jsonLoaded && 
+            mapManager.tLayer && mapManager.tLayer.data &&
             spriteManager.imgLoaded && spriteManager.jsonLoaded) {
             
             try {
@@ -54,7 +50,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('gameStatus').textContent = 'Загрузка...';
         console.log('Начало загрузки');
         
-        preloadGame(maps[0]);
+        // Загружаем карту
+        mapManager.loadMap(maps[0], "map");
+        // Загружаем спрайты
+        spriteManager.loadAtlas("map/sprites.json", "map/spritesheet.png");
+        
         initializeGame();
     });
     

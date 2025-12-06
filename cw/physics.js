@@ -7,7 +7,10 @@ export let physicManager = {
     maxFallSpeed: 20,
     
     update: function(obj){
-        if (!mapManager.jsonLoaded || !mapManager.imgLoaded || !mapManager.tLayer) {
+        // Проверяем загрузку карты как в учебнике
+        if (!mapManager.jsonLoaded || !mapManager.imgLoaded || 
+            !mapManager.tLayer || !mapManager.tLayer.data) {
+            console.log('Ожидание загрузки карты для физики...');
             return;
         }
         
@@ -66,52 +69,42 @@ export let physicManager = {
         }
     },
     
-    // ФИЗИКА РЫВКА
     updateDash: function(obj) {
-        // Уменьшаем таймер рывка
         obj.dashTimer--;
         
-        // Получаем направление рывка
         const dashDirection = obj.dashDirection || (obj.lastDirection === "right" ? 1 : -1);
         const dashSpeed = DASH_SPEED;
         
-        // Вычисляем новую позицию
         let newX = obj.pos_x + (dashDirection * dashSpeed);
         
-        // ПРОВЕРКА ГРАНИЦ КАРТЫ ДЛЯ РЫВКА: X не может быть меньше 0
         if (newX < 0) {
             newX = 0;
-            obj.isDashing = false; // Останавливаем рывок если уперлись в левую границу
+            obj.isDashing = false;
             obj.dashTimer = 0;
             return;
         }
         
-        // Проверяем столкновение для рывка
-        if (dashDirection > 0) { // Рывок вправо
+        if (dashDirection > 0) {
             if (!this.isBlockedRight(obj, newX)) {
                 obj.pos_x = newX;
             } else {
-                // Если столкнулись - останавливаем рывок
                 obj.isDashing = false;
                 obj.dashTimer = 0;
             }
-        } else { // Рывок влево
+        } else {
             if (!this.isBlockedLeft(obj, newX) && newX >= 0) {
                 obj.pos_x = newX;
             } else {
-                // Если столкнулись - останавливаем рывок
                 obj.isDashing = false;
                 obj.dashTimer = 0;
             }
         }
         
-        // Если таймер рывка закончился
         if (obj.dashTimer <= 0) {
             obj.isDashing = false;
             obj.dashTimer = 0;
         }
         
-        // Вертикальная физика во время рывка (гравитация работает)
         let onGround = this.isOnGround(obj);
         
         if (!onGround) {
@@ -121,7 +114,6 @@ export let physicManager = {
             }
             obj.pos_y += obj.velocityY;
             
-            // Проверяем не застряли ли мы в земле
             if (this.isUnderGround(obj)) {
                 this.alignToGround(obj);
                 obj.velocityY = 0;
@@ -131,9 +123,7 @@ export let physicManager = {
         }
     },
     
-    // Проверка блокировки слева
     isBlockedLeft: function(obj, newX) {
-        // ПРОВЕРКА ГРАНИЦ: не выходим за левый край карты
         if (newX < 0) {
             return true;
         }
@@ -146,9 +136,7 @@ export let physicManager = {
         return isSolidTile(leftTopTile) || isSolidTile(leftBottomTile);
     },
     
-    // Проверка блокировки справа
     isBlockedRight: function(obj, newX) {
-        // ПРОВЕРКА ГРАНИЦ: не выходим за правый край карты
         if (newX + obj.size_x > mapManager.mapSize.x) {
             return true;
         }
@@ -162,10 +150,8 @@ export let physicManager = {
     },
     
     isOnGround: function(obj){
-        // Простая проверка - если под ногами земля
         let checkY = obj.pos_y + obj.size_y + 1;
         
-        // Проверяем несколько точек под ногами
         let points = [
             obj.pos_x + 5,
             obj.pos_x + obj.size_x / 2,
