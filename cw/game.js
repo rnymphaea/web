@@ -1,23 +1,43 @@
 import { physicManager } from "./physics.js";
 import { eventsManager } from "./events.js";
 import { mapManager } from "./map.js";
+import { createEnemy } from "./entity.js";
+import { enemiesPositionsLevel1 } from "./utils.js";
 import { ctx } from "./app.js";
 
 export let gameManager = {
     player: null,
+    enemies: [],
     gameLoopInterval: null,
     isRunning: false,
+    gameOver: false,
+    gameWon: false, // Добавляем флаг победы
     
     init: function(player) {
         this.player = player;
         eventsManager.setup();
+        this.spawnEnemies();
         this.startGameLoop();
+    },
+    
+    spawnEnemies: function() {
+        this.enemies = [];
+        
+        enemiesPositionsLevel1.forEach(enemyData => {
+            let enemy = createEnemy(enemyData.type);
+            enemy.pos_x = enemyData.x;
+            enemy.pos_y = enemyData.y;
+            this.enemies.push(enemy);
+        });
+        
+        console.log(`Создано врагов: ${this.enemies.length}`);
     },
     
     startGameLoop: function() {
         this.isRunning = true;
+        this.gameOver = false;
+        this.gameWon = false;
         
-        // Основной игровой цикл
         const gameLoop = () => {
             if (!this.isRunning) return;
             
@@ -31,7 +51,15 @@ export let gameManager = {
     },
     
     update: function() {
-        if (!this.player) return;
+        if (!this.player || !this.player.isAlive || this.gameOver) return;
+        
+        // Проверка достижения правого края карты (победа)
+        if (this.player.pos_x >= mapManager.mapSize.x - this.player.size_x - 3) {
+            this.gameWon = true;
+            this.gameOver = true;
+            this.updateGameStatus();
+            return;
+        }
         
         // Обновляем управление
         this.player.move_x = eventsManager.action['runRight'] ? 1 : 
@@ -39,34 +67,128 @@ export let gameManager = {
         
         this.player.isJumping = eventsManager.action['jump'] || false;
         
-        // Обновляем физику только если карта загружена
+        // Обработка атаки мыши
+        if (eventsManager.action['attack']) {
+            this.player.startAttack();
+        }
+        
+        // Обновляем физику
         if (mapManager.jsonLoaded && mapManager.imgLoaded) {
             physicManager.update(this.player);
         }
         
-        // Обновляем анимации игрока
+        // Обновляем игрока
         this.player.update();
         
-        // Центрируем камеру на игроке
+        // Обновляем врагов
+        this.updateEnemies();
+        
+        // Проверяем столкновения с врагами
+        this.checkEnemyCollisions();
+        
+        // Проверяем падение в пропасть
+        this.checkFallDeath();
+        
+        // Центрируем камеру
         if (mapManager.jsonLoaded) {
             mapManager.centerAt(this.player.pos_x, this.player.pos_y);
+        }
+        
+        // Обновляем статус игры
+        this.updateGameStatus();
+    },
+    
+    updateEnemies: function() {
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            let enemy = this.enemies[i];
+            
+            if (enemy.isAlive) {
+                enemy.update(this.player);
+                
+                // Проверяем, попал ли игрок атакой по врагу
+                if (this.player.isAttackingEnemy(enemy)) {
+                    enemy.isAlive = false;
+                    console.log("Враг убит!");
+                    continue;
+                }
+            }
+        }
+        
+        // Удаляем мертвых врагов
+        this.enemies = this.enemies.filter(enemy => enemy.isAlive);
+    },
+    
+    checkEnemyCollisions: function() {
+        // Проверяем столкновение врага с игроком
+        for (let enemy of this.enemies) {
+            if (enemy.isAlive && this.player.isCollidingWith(enemy)) {
+                // Игрок погибает при касании врага
+                this.player.isAlive = false;
+                this.gameOver = true;
+                console.log("Игрок погиб от врага!");
+                break;
+            }
+        }
+    },
+    
+    checkFallDeath: function() {
+        // Проверка падения в пропасть
+        if (this.player.pos_y > mapManager.mapSize.y + 100) {
+            this.player.isAlive = false;
+            this.gameOver = true;
+            console.log("Игрок упал в пропасть!");
+        }
+    },
+    
+    updateGameStatus: function() {
+        const statusElement = document.getElementById('gameStatus');
+        
+        if (this.gameWon) {
+            statusElement.textContent = 'Победа! Вы достигли конца уровня!';
+            statusElement.style.color = 'green';
+        } else if (!this.player.isAlive) {
+            statusElement.textContent = 'Игра окончена! Вы погибли.';
+            statusElement.style.color = 'red';
+        } else {
+            const progress = Math.min(100, Math.floor((this.player.pos_x / mapManager.mapSize.x) * 100));
+            statusElement.textContent = `Прогресс: ${progress}% | Врагов: ${this.enemies.length}`;
+            statusElement.style.color = 'white';
         }
     },
     
     draw: function() {
-        // Очищаем канвас
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         
-        // Рисуем карту - метод draw сам проверит загрузку
         mapManager.draw(ctx);
         
-        // Рисуем игрока
-        if (this.player) {
+        if (this.player && this.player.isAlive) {
             this.player.draw(ctx);
         }
+        
+        this.enemies.forEach(enemy => {
+            if (enemy.isAlive) {
+                enemy.draw(ctx);
+            }
+        });
+        
+        // Если нужно, можно раскомментировать для отладки зоны атаки
+        /*
+        if (this.player && this.player.isAttacking) {
+            const attackRange = this.player.getAttackRange();
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                attackRange.x - mapManager.view.x,
+                attackRange.y - mapManager.view.y,
+                attackRange.width,
+                attackRange.height
+            );
+        }
+        */
     },
     
     stop: function() {
         this.isRunning = false;
-    }
+    },
+    
 };

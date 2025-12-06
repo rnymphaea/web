@@ -233,7 +233,7 @@ export let mapManager = {
         this.imgLoaded = false;
         this.jsonLoaded = false;
         this.directory = "";
-        this.view = {x: 0, y: 0, w: 1000, h: 600};
+        this.view = {x: 0, y: 0, w: 1200, h: 800};
     }
 };
 

@@ -15,22 +15,20 @@ function preloadGame(mapPath) {
 }
 
 function initializeGame() {
-    // Ждем загрузки всех ресурсов
     const checkAndInit = () => {
         if (mapManager.imgLoaded && mapManager.jsonLoaded && 
             spriteManager.imgLoaded && spriteManager.jsonLoaded) {
             
             try {
-                // Создаем игрока с начальной позицией
                 let player = createPlayer();
                 player.pos_x = PLAYER_START_X;
                 player.pos_y = PLAYER_START_Y;
+                player.isAlive = true;
                 
-                // Запускаем игровой менеджер
                 gameManager.init(player);
                 
                 document.getElementById('gameStatus').textContent = 'Игра началась!';
-                console.log('Игрок создан на позиции:', player.pos_x, player.pos_y);
+                document.getElementById('gameStatus').style.color = 'white';
                 
             } catch (error) {
                 document.getElementById('gameStatus').textContent = 'Ошибка инициализации';
@@ -47,6 +45,7 @@ function initializeGame() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM загружен');
     
+    // Только "Начать игру" и "Остановить"
     document.getElementById("startGame").addEventListener('click', () => {
         if (gameStarted) {
             return;
