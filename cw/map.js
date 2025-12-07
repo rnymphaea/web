@@ -12,12 +12,11 @@ export let mapManager = {
     directory: "",
     view: {x: 0, y: 0, w: 1200, h: 800},
     
-    // Новые свойства для объектов
     objectLayers: [],
     entities: {
         player: null,
         enemies: [],
-        fireSpawnPoints: []  // Точки спавна огня
+        fireSpawnPoints: []
     },
 
     loadMap: function(path, dir){
@@ -45,14 +44,12 @@ export let mapManager = {
             this.tLayers = [];
             this.objectLayers = [];
             
-            // Сбрасываем сущности
             this.entities = {
                 player: null,
                 enemies: [],
                 fireSpawnPoints: []
             };
 
-            // Парсим все слои
             for (let i = 0; i < this.mapData.layers.length; i++){
                 let layer = this.mapData.layers[i];
                 
@@ -85,9 +82,6 @@ export let mapManager = {
         console.log(`Парсинг объектного слоя: ${layer.name}`);
         
         for (let obj of layer.objects) {
-            // ВАЖНО: Tiled использует координаты Y от нижнего края карты,
-            // а в Canvas Y идет от верхнего края
-            // Также объекты в Tiled позиционируются по нижнему левому углу
             const canvasY = obj.y - obj.height;
             
             const entityData = {
@@ -95,20 +89,18 @@ export let mapManager = {
                 name: obj.name || "",
                 type: obj.type || "",
                 x: obj.x,
-                y: canvasY, // Конвертированная координата для Canvas
+                y: canvasY,
                 width: obj.width || 32,
                 height: obj.height || 32
             };
 
-            // Определяем тип сущности
             if (obj.type === "player" || obj.name === "player") {
                 this.entities.player = entityData;
                 console.log("Найден игрок:", entityData);
             }
             else if (obj.type && obj.type.startsWith("enemy") || 
                      obj.name && obj.name.startsWith("enemy")) {
-                // Определяем тип врага из имени или типа
-                let enemyType = 0; // По умолчанию тип 0
+                let enemyType = 0;
                 
                 if (obj.type === "enemy_1") enemyType = 0;
                 else if (obj.type === "enemy_2") enemyType = 1;
@@ -121,11 +113,9 @@ export let mapManager = {
             else if (obj.type === "fire_spawn" || obj.type === "fire" || 
                      obj.name === "fire_spawn" || obj.name === "fire" ||
                      obj.name && obj.name.includes("fire")) {
-                // Точка спавна огня
                 this.entities.fireSpawnPoints.push(entityData);
                 console.log("Найдена точка спавна огня:", entityData);
             }
-            // Можно добавить обработку других типов объектов
         }
     },
 

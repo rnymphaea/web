@@ -44,20 +44,17 @@ export let gameManager = {
     spawnEnemies: function() {
         this.enemies = [];
         
-        // Получаем данные врагов из mapManager
         const enemyDataList = mapManager.entities.enemies;
         
         if (enemyDataList && enemyDataList.length > 0) {
             enemyDataList.forEach(enemyData => {
                 let enemy = createEnemy(enemyData.enemyType || 0);
                 
-                // Устанавливаем позицию и размер из объекта Tiled
                 enemy.pos_x = enemyData.x;
                 enemy.pos_y = enemyData.y;
                 enemy.size_x = enemyData.width || 32;
                 enemy.size_y = enemyData.height || 32;
                 
-                // Применяем дополнительные свойства
                 if (enemyData.name) {
                     enemy.name = enemyData.name;
                 }
@@ -66,7 +63,6 @@ export let gameManager = {
                 console.log(`Создан враг: ${enemyData.name || 'enemy'} на (${enemy.pos_x}, ${enemy.pos_y})`);
             });
         } else {
-            // Резервный вариант - старые константы
             console.warn("Враги не найдены в карте, используем константы");
             let enemyPositions;
             if (this.currentLevel === 0) {
@@ -87,7 +83,6 @@ export let gameManager = {
     },
     
     spawnFire: function() {
-        // Огонь появляется только на втором уровне (уровень 1)
         if (this.currentLevel !== 1 || this.fires.length >= FIRE_COUNT) {
             return;
         }
@@ -97,20 +92,17 @@ export let gameManager = {
             return;
         }
         
-        // Получаем точки спавна огня из карты или используем старые константы
         let spawnPoints = [];
         const fireSpawnData = mapManager.entities.fireSpawnPoints;
         
         if (fireSpawnData && fireSpawnData.length > 0) {
-            // Используем точки из карты
             spawnPoints = fireSpawnData;
             console.log(`Используем ${spawnPoints.length} точек спавна огня из карты`);
         } else {
-            // Резервный вариант - старые константы
             console.warn("Точки спавна огня не найдены в карте, используем константы");
             spawnPoints = fireSpawnPositions.map(pos => ({
                 x: pos.x,
-                y: -50  // Стартовая позиция выше экрана
+                y: -50
             }));
         }
         
@@ -119,7 +111,6 @@ export let gameManager = {
             return;
         }
         
-        // Выбираем случайную точку спавна
         const spawnPos = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
         
         let fire = createFire(spawnPos.x, spawnPos.y);
@@ -415,22 +406,7 @@ export let gameManager = {
             }
         });
         
-        // Отладочная отрисовка точек спавна огня
-        if (false) { // Поставьте true для отладки
-            const fireSpawns = mapManager.entities.fireSpawnPoints;
-            if (fireSpawns && fireSpawns.length > 0) {
-                fireSpawns.forEach(spawn => {
-                    ctx.fillStyle = 'rgba(255, 165, 0, 0.5)'; // Оранжевый с прозрачностью
-                    ctx.fillRect(
-                        spawn.x - mapManager.view.x,
-                        spawn.y - mapManager.view.y,
-                        spawn.width || 10,
-                        spawn.height || 10
-                    );
-                });
-            }
-        }
-    },
+        },
     
     stop: function() {
         this.isRunning = false;

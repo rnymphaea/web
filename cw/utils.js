@@ -16,7 +16,6 @@ export function isSolidTile(tileId) {
     return tileId != 55 && tileId != 56 && tileId != 46;
 }
 
-// Резервные константы на случай отсутствия объектов в карте
 export const PLAYER_START_X_LEVEL1 = 0;
 export const PLAYER_START_Y_LEVEL1 = 1024;
 
@@ -27,7 +26,6 @@ export const ENEMY_TYPES = ["enemy_1", "enemy_2", "enemy_3"];
 
 export const maps = ["lvl1.json", "lvl2.json"];
 
-// Резервные позиции врагов (используются только если нет объектов в карте)
 export const enemiesPositionsLevel1 = [
     {x: 300, y: 1024, type: 0},
     {x: 600, y: 1024, type: 1},
