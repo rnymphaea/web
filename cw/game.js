@@ -1,9 +1,10 @@
 import { physicManager } from "./physics.js";
 import { eventsManager } from "./events.js";
 import { mapManager } from "./map.js";
-import { createEnemy } from "./entity.js";
+import { createEnemy, createFire } from "./entity.js";
 import { enemiesPositionsLevel1, enemiesPositionsLevel2 } from "./utils.js";
 import { ctx, nextLevel, soundManager } from "./app.js";
+import { FIRE_TYPE, FIRE_SPAWN_INTERVAL, FIRE_COUNT, fireSpawnPositions } from "./utils.js";
 
 let gameStartTime = 0;
 let gameTimerInterval = null;
@@ -12,12 +13,14 @@ let animationFrameId = null;
 export let gameManager = {
     player: null,
     enemies: [],
+    fires: [], // НОВОЕ: массив огней
     isRunning: false,
     gameOver: false,
     gameWon: false,
     gameTime: 0,
     currentLevel: 0,
     lastTime: 0,
+    lastFireSpawn: 0,
     
     init: function(player, levelIndex) {
         console.log(`Инициализация уровня ${levelIndex + 1}`);
@@ -29,6 +32,8 @@ export let gameManager = {
         this.gameOver = false;
         this.gameWon = false;
         this.lastTime = performance.now();
+        this.fires = [];
+        this.lastFireSpawn = Date.now();
         
         eventsManager.setup();
         this.spawnEnemies();
@@ -54,6 +59,24 @@ export let gameManager = {
         });
         
         console.log(`Создано врагов: ${this.enemies.length} на уровне ${this.currentLevel + 1}`);
+    },
+    
+    spawnFire: function() {
+        if (this.currentLevel !== 1 || this.fires.length >= FIRE_COUNT) {
+            return;
+        }
+        
+        const now = Date.now();
+        if (now - this.lastFireSpawn < FIRE_SPAWN_INTERVAL) {
+            return;
+        }
+        
+        const spawnPos = fireSpawnPositions[Math.floor(Math.random() * fireSpawnPositions.length)];
+        
+        let fire = createFire(spawnPos.x, -50);
+        this.fires.push(fire);
+        
+        this.lastFireSpawn = now;
     },
     
     startTimer: function() {
@@ -121,7 +144,6 @@ export let gameManager = {
                 level: this.currentLevel + 1
             };
             
-            // ИСПРАВЛЕНИЕ: корректное получение массива рекордов
             let records = localStorage.getItem('gameRecords');
             if (!records) {
                 records = [];
@@ -138,7 +160,7 @@ export let gameManager = {
             }
             
             records.push(record);
-            localStorage.setItem('gameRecords', JSON.stringify(records));
+            localStorage.setItem('gameRecords', JSON.stringify(record));
             
             console.log('Рекорд сохранен:', record);
         }
@@ -186,7 +208,9 @@ export let gameManager = {
         physicManager.update(this.player);
         this.player.update();
         this.updateEnemies(deltaTime);
+        this.updateFires(deltaTime);
         this.checkEnemyCollisions();
+        this.checkFireCollisions();
         this.checkFallDeath();
         mapManager.centerAt(this.player.pos_x, this.player.pos_y);
         this.updateGameStatus();
@@ -228,6 +252,25 @@ export let gameManager = {
         this.enemies = this.enemies.filter(enemy => enemy.isAlive);
     },
     
+    updateFires: function(deltaTime = 1) {
+        this.spawnFire();
+        
+        for (let i = this.fires.length - 1; i >= 0; i--) {
+            let fire = this.fires[i];
+            
+            if (fire.isActive) {
+                fire.update();
+                
+                if (!fire.isActive || fire.pos_y > mapManager.mapSize.y + 100) {
+                    this.fires.splice(i, 1);
+                    continue;
+                }
+            } else {
+                this.fires.splice(i, 1);
+            }
+        }
+    },
+    
     checkEnemyCollisions: function() {
         for (let enemy of this.enemies) {
             if (enemy.isAlive && this.player.isCollidingWith(enemy)) {
@@ -235,6 +278,20 @@ export let gameManager = {
                 this.gameOver = true;
                 this.saveRecord();
                 console.log("Игрок погиб от врага!");
+                
+                soundManager.play("sound/lose.mp3", { volume: 0.7 });
+                break;
+            }
+        }
+    },
+    
+    checkFireCollisions: function() {
+        for (let fire of this.fires) {
+            if (fire.isActive && fire.isCollidingWithPlayer(this.player)) {
+                this.player.isAlive = false;
+                this.gameOver = true;
+                this.saveRecord();
+                console.log("Игрок погиб от огня!");
                 
                 soundManager.play("sound/lose.mp3", { volume: 0.7 });
                 break;
@@ -270,7 +327,8 @@ export let gameManager = {
             const progress = this.getProgress();
             const minutes = Math.floor(this.gameTime / 60);
             const seconds = this.gameTime % 60;
-            statusElement.textContent = `Уровень ${this.currentLevel + 1} | ${progress} | Время: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} | Врагов: ${this.enemies.length} | Рывков: ${this.player.dashCharges}`;
+            const fireCount = this.fires.filter(f => f.isActive).length;
+            statusElement.textContent = `Уровень ${this.currentLevel + 1} | ${progress} | Время: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} | Врагов: ${this.enemies.length} | Рывков: ${this.player.dashCharges} | Огней: ${fireCount}`;
             statusElement.style.color = 'white';
         }
     },
@@ -300,6 +358,12 @@ export let gameManager = {
                 enemy.draw(ctx);
             }
         });
+        
+        this.fires.forEach(fire => {
+            if (fire.isActive) {
+                fire.draw(ctx);
+            }
+        });
     },
     
     stop: function() {
@@ -314,6 +378,8 @@ export let gameManager = {
             clearInterval(gameTimerInterval);
             gameTimerInterval = null;
         }
+        
+        this.fires = [];
         
         const timerElement = document.getElementById('gameTimer');
         if (timerElement) {

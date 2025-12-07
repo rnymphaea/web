@@ -1,5 +1,5 @@
 import { spriteManager } from "./sprite.js";
-import { ATTACK_COOLDOWN, ENEMY_TYPES, DASH_DISTANCE, DASH_SPEED, DASH_DURATION, isSolidTile } from "./utils.js";
+import { ATTACK_COOLDOWN, ENEMY_TYPES, DASH_DISTANCE, DASH_SPEED, DASH_DURATION, FIRE_FALL_SPEED, FIRE_TYPE, isSolidTile } from "./utils.js";
 import { mapManager } from "./map.js";
 import { soundManager } from "./app.js";
 
@@ -257,7 +257,6 @@ export let Enemy = Entity.extend({
         if (this.move_x !== 0) {
             let newX = this.pos_x + (this.move_x * this.speed);
             
-            // ИЗМЕНЕНО: проверяем наличие слоев
             if (mapManager.tLayers && mapManager.tLayers.length > 0) {
                 let canMove = true;
                 
@@ -291,4 +290,50 @@ export function createEnemy(type = 0){
     enemy.speed = 1 + Math.random() * 1;
     enemy.detectionRadius = 250 + Math.random() * 100;
     return enemy;
+}
+
+
+export let Fire = Entity.extend({
+    fallSpeed: 6,
+    isActive: true,
+    spawnTime: 0,
+    
+    draw: function(ctx){
+        if (this.isActive) {
+            spriteManager.drawSprite(ctx, FIRE_TYPE, this.pos_x, this.pos_y);
+        }
+    },
+    
+    update: function(){
+        if (!this.isActive) return;
+        
+        this.pos_y += this.fallSpeed;
+        
+        if (this.pos_y > mapManager.mapSize.y + 100) {
+            this.isActive = false;
+        }
+    },
+    
+    isCollidingWithPlayer: function(player) {
+        if (!this.isActive || !player || !player.isAlive) return false;
+        
+        return (
+            this.pos_x < player.pos_x + player.size_x &&
+            this.pos_x + this.size_x > player.pos_x &&
+            this.pos_y < player.pos_y + player.size_y &&
+            this.pos_y + this.size_y > player.pos_y
+        );
+    }
+});
+
+export function createFire(x, y){
+    let fire = Entity.extend(Fire);
+    fire.pos_x = x;
+    fire.pos_y = y;
+    fire.size_x = 32;
+    fire.size_y = 32;
+    fire.isActive = true;
+    fire.spawnTime = Date.now();
+    fire.fallSpeed = FIRE_FALL_SPEED + Math.random() * 2 - 1;
+    return fire;
 }

@@ -1,18 +1,14 @@
-// entrance.js
 document.addEventListener('DOMContentLoaded', function() {
-    // Загружаем имя игрока из localStorage
     const playerNameInput = document.getElementById('playerName');
     const savedName = localStorage.getItem('playerName');
     if (savedName) {
         playerNameInput.value = savedName;
     }
     
-    // Сохраняем имя при изменении
     playerNameInput.addEventListener('input', function() {
         localStorage.setItem('playerName', this.value.trim());
     });
     
-    // Обработчики меню
     document.getElementById('startGame').addEventListener('click', function() {
         const playerName = playerNameInput.value.trim();
         if (playerName) {
@@ -29,12 +25,10 @@ document.addEventListener('DOMContentLoaded', function() {
         showHowToPlay();
     });
     
-    // Добавляем обработчик для закрытия модальных окон
     document.addEventListener('click', function(event) {
         if (event.target.classList.contains('modal-close')) {
             closeModal();
         }
-        // Закрытие по клику вне модального окна
         if (event.target.classList.contains('modal')) {
             closeModal();
         }
@@ -42,7 +36,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showRecordsTable() {
-    // ИСПРАВЛЕНИЕ: корректное получение массива рекордов
     let records;
     try {
         const recordsStr = localStorage.getItem('gameRecords');
@@ -59,7 +52,6 @@ function showRecordsTable() {
         records = [];
     }
     
-    // Фильтруем только тех, кто прошел уровень (прогресс = 100%)
     const completedGames = records.filter(record => record.progress === 100);
     
     let html = '<div class="modal"><div class="modal-content">';
@@ -142,7 +134,6 @@ function showHowToPlay() {
                 <ul>
                     <li>Убивайте врагов атакой</li>
                     <li>За каждого убитого врага получаете заряд рывка</li>
-                    <li>Падение с большой высоты смертельно</li>
                     <li>Столкновение с врагом убивает вас</li>
                     <li>После прохождения уровня 1 автоматически начинается уровень 2</li>
                 </ul>
