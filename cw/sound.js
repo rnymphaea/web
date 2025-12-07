@@ -1,4 +1,3 @@
-// sound.js
 export let soundManager = {
     clips: {},
     context: null,
@@ -10,7 +9,7 @@ export let soundManager = {
         this.context = new (window.AudioContext || window.webkitAudioContext)();
         this.gainNode = this.context.createGain ? this.context.createGain() : this.context.createGainNode();
         this.gainNode.connect(this.context.destination);
-        this.gainNode.gain.value = 1; // Полная громкость по умолчанию
+        this.gainNode.gain.value = 1;
         console.log('Менеджер звука инициализирован');
     },
 

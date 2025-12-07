@@ -11,7 +11,6 @@ export let eventsManager = {
         this.bind[68] = 'runRight';
         this.bind[87] = 'jump';
         
-        // Левая кнопка мыши
         this.bind[0] = 'attack';
         
         this.bind[16] = 'dash';

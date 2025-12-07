@@ -1,5 +1,5 @@
 import { spriteManager } from "./sprite.js";
-import { ATTACK_COOLDOWN, ENEMY_TYPES, DASH_DISTANCE, DASH_SPEED, DASH_DURATION, FIRE_FALL_SPEED, FIRE_TYPE, isSolidTile } from "./utils.js";
+import { ATTACK_COOLDOWN, ENEMY_TYPES, DASH_SPEED, DASH_DURATION, FIRE_FALL_SPEED, FIRE_TYPE, isSolidTile } from "./utils.js";
 import { mapManager } from "./map.js";
 import { soundManager } from "./app.js";
 
@@ -166,13 +166,6 @@ export let Player = Entity.extend({
         this.dashCharges++;
     },
     
-    getCurrentSpeed: function() {
-        if (this.isDashing) {
-            return DASH_SPEED;
-        }
-        return this.speed;
-    },
-    
     getAttackRange: function() {
         const attackRange = 50;
         const attackHeight = this.size_y;
@@ -291,7 +284,6 @@ export function createEnemy(type = 0){
     enemy.detectionRadius = 250 + Math.random() * 100;
     return enemy;
 }
-
 
 export let Fire = Entity.extend({
     fallSpeed: 6,

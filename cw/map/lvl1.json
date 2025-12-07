@@ -103,9 +103,141 @@
          "width":120,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":3,
+         "name":"\u0421\u043b\u043e\u0439 \u043e\u0431\u044a\u0435\u043a\u0442\u043e\u0432 1",
+         "objects":[
+                {
+                 "height":32,
+                 "id":1,
+                 "name":"player",
+                 "rotation":0,
+                 "type":"player",
+                 "visible":true,
+                 "width":32,
+                 "x":0,
+                 "y":1024.18181818182
+                }, 
+                {
+                 "height":32,
+                 "id":2,
+                 "name":"enemy_1",
+                 "rotation":0,
+                 "type":"enemy_1",
+                 "visible":true,
+                 "width":32,
+                 "x":641.333333333333,
+                 "y":1021.33333333333
+                }, 
+                {
+                 "height":32,
+                 "id":3,
+                 "name":"enemy_3",
+                 "rotation":0,
+                 "type":"enemy_3",
+                 "visible":true,
+                 "width":32,
+                 "x":960,
+                 "y":892.666666666667
+                }, 
+                {
+                 "height":32,
+                 "id":4,
+                 "name":"enemy_2",
+                 "rotation":0,
+                 "type":"enemy_2",
+                 "visible":true,
+                 "width":32,
+                 "x":1250,
+                 "y":1022.66666666667
+                }, 
+                {
+                 "height":32,
+                 "id":5,
+                 "name":"enemy_2",
+                 "rotation":0,
+                 "type":"enemy_2",
+                 "visible":true,
+                 "width":32,
+                 "x":1281.66666666667,
+                 "y":800
+                }, 
+                {
+                 "height":32,
+                 "id":6,
+                 "name":"enemy_3",
+                 "rotation":0,
+                 "type":"enemy_3",
+                 "visible":true,
+                 "width":32,
+                 "x":1635,
+                 "y":866
+                }, 
+                {
+                 "height":32,
+                 "id":7,
+                 "name":"enemy_1",
+                 "rotation":0,
+                 "type":"enemy_1",
+                 "visible":true,
+                 "width":32,
+                 "x":2092.33333333333,
+                 "y":860.333333333333
+                }, 
+                {
+                 "height":32,
+                 "id":8,
+                 "name":"enemy_2",
+                 "rotation":0,
+                 "type":"enemy_2",
+                 "visible":true,
+                 "width":32,
+                 "x":2226,
+                 "y":1008
+                }, 
+                {
+                 "height":32,
+                 "id":9,
+                 "name":"enemy_3",
+                 "rotation":0,
+                 "type":"enemy_3",
+                 "visible":true,
+                 "width":32,
+                 "x":2678,
+                 "y":832
+                }, 
+                {
+                 "height":32,
+                 "id":10,
+                 "name":"enemy_1",
+                 "rotation":0,
+                 "type":"enemy_1",
+                 "visible":true,
+                 "width":32,
+                 "x":2944,
+                 "y":1016
+                }, 
+                {
+                 "height":32,
+                 "id":11,
+                 "name":"enemy_2",
+                 "rotation":0,
+                 "type":"enemy_2",
+                 "visible":true,
+                 "width":32,
+                 "x":3218,
+                 "y":890
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":3,
- "nextobjectid":1,
+ "nextlayerid":4,
+ "nextobjectid":12,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.8.6",
@@ -114,10 +246,6 @@
         {
          "firstgid":1,
          "source":"Tileset.tsj"
-        }, 
-        {
-         "firstgid":82,
-         "source":"Overlay.tsj"
         }],
  "tilewidth":32,
  "type":"map",

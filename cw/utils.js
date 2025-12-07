@@ -3,24 +3,23 @@ export const ENEMY_DETECTION_RADIUS = 300;
 export const ATTACK_COOLDOWN = 500;
 export const ENEMY_ATTACK_COOLDOWN = 1000;
 
-export const DASH_DISTANCE = 200; // Дистанция рывка в пикселях
-export const DASH_SPEED = 30;     // Скорость рывка
-export const DASH_DURATION = 10;  // Длительность рывка в кадрах
+export const DASH_DISTANCE = 200;
+export const DASH_SPEED = 30;
+export const DASH_DURATION = 10;
 
-export const FIRE_TYPE = "fire"; // название спрайта огня
-export const FIRE_SPAWN_INTERVAL = 2000; // интервал появления огня в мс (2 секунды)
-export const FIRE_FALL_SPEED = 6; // скорость падения
-export const FIRE_COUNT = 7; // количество одновременно активных огней
+export const FIRE_TYPE = "fire";
+export const FIRE_SPAWN_INTERVAL = 2000;
+export const FIRE_FALL_SPEED = 6;
+export const FIRE_COUNT = 7;
 
 export function isSolidTile(tileId) {
     return tileId != 55 && tileId != 56 && tileId != 46;
 }
 
-// Стартовые позиции для уровня 1
+// Резервные константы на случай отсутствия объектов в карте
 export const PLAYER_START_X_LEVEL1 = 0;
 export const PLAYER_START_Y_LEVEL1 = 1024;
 
-// Стартовые позиции для уровня 2
 export const PLAYER_START_X_LEVEL2 = 0;
 export const PLAYER_START_Y_LEVEL2 = 2880;
 
@@ -28,6 +27,7 @@ export const ENEMY_TYPES = ["enemy_1", "enemy_2", "enemy_3"];
 
 export const maps = ["lvl1.json", "lvl2.json"];
 
+// Резервные позиции врагов (используются только если нет объектов в карте)
 export const enemiesPositionsLevel1 = [
     {x: 300, y: 1024, type: 0},
     {x: 600, y: 1024, type: 1},

@@ -1,5 +1,5 @@
 import { mapManager } from "./map.js";
-import { emptyCell, isSolidTile, DASH_SPEED, DASH_DURATION } from "./utils.js";
+import { isSolidTile, DASH_SPEED, DASH_DURATION } from "./utils.js";
 
 export let physicManager = {
     gravity: 0.8,

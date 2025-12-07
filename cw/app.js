@@ -20,12 +20,27 @@ function initializeGame() {
             try {
                 let player = createPlayer();
                 
-                if (currentLevel === 0) {
-                    player.pos_x = PLAYER_START_X_LEVEL1;
-                    player.pos_y = PLAYER_START_Y_LEVEL1;
+                // Используем позицию из объектов карты
+                const playerData = mapManager.entities.player;
+                
+                if (playerData) {
+                    // Устанавливаем позицию из объекта Player в Tiled
+                    player.pos_x = playerData.x;
+                    player.pos_y = playerData.y;
+                    player.size_x = playerData.width || 32;
+                    player.size_y = playerData.height || 32;
+                    
+                    console.log("Игрок создан на позиции из карты:", player.pos_x, player.pos_y);
                 } else {
-                    player.pos_x = PLAYER_START_X_LEVEL2;
-                    player.pos_y = PLAYER_START_Y_LEVEL2;
+                    // Резервный вариант - старые константы
+                    console.warn("Объект Player не найден в карте, используем константы");
+                    if (currentLevel === 0) {
+                        player.pos_x = PLAYER_START_X_LEVEL1;
+                        player.pos_y = PLAYER_START_Y_LEVEL1;
+                    } else {
+                        player.pos_x = PLAYER_START_X_LEVEL2;
+                        player.pos_y = PLAYER_START_Y_LEVEL2;
+                    }
                 }
                 
                 player.isAlive = true;
