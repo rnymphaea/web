@@ -10,7 +10,7 @@ export const DASH_SPEED = 30;     // Скорость рывка (очень б�
 export const DASH_DURATION = 10;  // Длительность рывка в кадрах
 
 export function isSolidTile(tileId) {
-    return tileId != 55 && tileId != 56;
+    return tileId != 55 && tileId != 56 && tileId != 46;
 }
 
 // Стартовые позиции для уровня 1

@@ -196,7 +196,7 @@ export let gameManager = {
         if (this.currentLevel === 0) {
             return this.player.pos_x >= mapManager.mapSize.x - this.player.size_x - 3;
         } else if (this.currentLevel === 1) {
-            return this.player.pos_y < 100;
+            return this.player.pos_y < 5;
         }
         return false;
     },
