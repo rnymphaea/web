@@ -13,7 +13,7 @@ let animationFrameId = null;
 export let gameManager = {
     player: null,
     enemies: [],
-    fires: [], // НОВОЕ: массив огней
+    fires: [],
     isRunning: false,
     gameOver: false,
     gameWon: false,
@@ -339,7 +339,7 @@ export let gameManager = {
             return `Прогресс: ${progress}%`;
         } else if (this.currentLevel === 1) {
             const progress = Math.min(100, Math.floor((1 - this.player.pos_y / mapManager.mapSize.y) * 100));
-            return `Высота: ${progress}%`;
+            return `Прогресс: ${progress}%`;
         }
         return '';
     },

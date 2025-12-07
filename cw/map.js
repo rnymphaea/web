@@ -1,6 +1,6 @@
 export let mapManager = {
     mapData: null,
-    tLayers: [],  // МАССИВ СЛОЕВ вместо одного
+    tLayers: [],
     xCount: 0,
     yCount: 0,
     tSize: {x: 32, y: 32},
@@ -34,7 +34,6 @@ export let mapManager = {
             this.mapSize.x = this.xCount * this.tSize.x;
             this.mapSize.y = this.yCount * this.tSize.y;
 
-            // СОБИРАЕМ ВСЕ СЛОИ
             this.tLayers = [];
             for (let i = 0; i < this.mapData.layers.length; i++){
                 let layer = this.mapData.layers[i];
@@ -96,7 +95,6 @@ export let mapManager = {
 
     draw: function(ctx){
         if (!this.imgLoaded || !this.jsonLoaded || this.tLayers.length === 0){
-            // Показываем сообщение о загрузке
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
             ctx.fillStyle = 'white';
@@ -106,11 +104,9 @@ export let mapManager = {
             return;
         }
         
-        // РИСУЕМ ВСЕ СЛОИ ПО ОЧЕРЕДИ
         for (let layerIndex = 0; layerIndex < this.tLayers.length; layerIndex++) {
             let layer = this.tLayers[layerIndex];
             
-            // Проверяем видимость слоя
             if (layer.visible === false) {
                 continue;
             }
@@ -122,7 +118,6 @@ export let mapManager = {
                 let pX = (i % this.xCount) * this.tSize.x;
                 let pY = Math.floor(i / this.xCount) * this.tSize.y;
 
-                // Проверяем видимость тайла
                 if (!this.isVisible(pX, pY, this.tSize.x, this.tSize.y)) {
                     continue;
                 }
@@ -130,7 +125,6 @@ export let mapManager = {
                 pX -= this.view.x;
                 pY -= this.view.y;
 
-                // Применяем прозрачность слоя если есть
                 if (layer.opacity && layer.opacity < 1) {
                     ctx.globalAlpha = layer.opacity;
                     ctx.drawImage(tile.img, tile.px, tile.py, this.tSize.x,
@@ -186,7 +180,6 @@ export let mapManager = {
     },
 
     getTilesetIdx: function(x, y){
-        // Берем ПЕРВЫЙ слой для коллизий (обычно это основной слой)
         if (this.tLayers.length === 0 || !this.tLayers[0].data) {
             return 0;
         }
@@ -194,7 +187,6 @@ export let mapManager = {
         let wX = x;
         let wY = y;
         
-        // Проверяем границы карты
         if (wX < 0 || wY < 0 || 
             wX >= this.mapSize.x || wY >= this.mapSize.y) {
             return 0;
@@ -202,7 +194,6 @@ export let mapManager = {
         
         let idx = Math.floor(wY / this.tSize.y) * this.xCount + Math.floor(wX / this.tSize.x);
         
-        // Проверяем границы массива
         if (idx < 0 || idx >= this.tLayers[0].data.length) {
             return 0;
         }
@@ -237,7 +228,7 @@ export let mapManager = {
 
     clearMap: function(){
         this.mapData = null;
-        this.tLayers = [];  // Очищаем массив
+        this.tLayers = [];
         this.xCount = 0;
         this.yCount = 0;
         this.tSize = {x: 32, y: 32};

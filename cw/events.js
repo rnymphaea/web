@@ -3,7 +3,6 @@ export let eventsManager = {
     action: [],
     
     setup: function(){
-        // Клавиши клавиатуры
         this.bind[39] = 'runRight';
         this.bind[37] = 'runLeft';
         this.bind[38] = 'jump';
@@ -15,8 +14,7 @@ export let eventsManager = {
         // Левая кнопка мыши
         this.bind[0] = 'attack';
         
-        // SHIFT для рывка
-        this.bind[16] = 'dash'; // Код клавиши Shift
+        this.bind[16] = 'dash';
         
         document.body.addEventListener("keydown", this.onKeyDown);
         document.body.addEventListener("keyup", this.onKeyUp);

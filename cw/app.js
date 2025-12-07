@@ -15,7 +15,7 @@ let levelLoading = false;
 function initializeGame() {
     const checkAndInit = () => {
         if (mapManager.imgLoaded && mapManager.jsonLoaded && 
-            mapManager.tLayers && mapManager.tLayers.length > 0) {  // ИЗМЕНЕНО
+            mapManager.tLayers && mapManager.tLayers.length > 0) {
             
             try {
                 let player = createPlayer();

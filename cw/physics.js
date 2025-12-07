@@ -7,7 +7,6 @@ export let physicManager = {
     maxFallSpeed: 20,
     
     update: function(obj){
-        // ИЗМЕНЕНО: проверяем наличие слоев
         if (!mapManager.jsonLoaded || !mapManager.imgLoaded || 
             !mapManager.tLayers || mapManager.tLayers.length === 0) {
             console.log('Ожидание загрузки карты для физики...');

@@ -15,12 +15,10 @@ export let soundManager = {
     },
 
     load: function(path, callback) {
-        // Проверяем, не загружен ли уже этот клип
         if (this.clips[path]) {
             if (this.clips[path].loaded) {
                 callback(this.clips[path]);
             } else {
-                // Ждем загрузки
                 setTimeout(() => {
                     if (this.clips[path].loaded) {
                         callback(this.clips[path]);
@@ -50,14 +48,14 @@ export let soundManager = {
                 callback(clip);
             }, (error) => {
                 console.error('Ошибка декодирования аудио:', error);
-                clip.loaded = true; // Помечаем как загруженный даже при ошибке
+                clip.loaded = true;
                 callback(clip);
             });
         };
 
         request.onerror = (error) => {
             console.error('Ошибка загрузки аудио:', error);
-            clip.loaded = true; // Помечаем как загруженный даже при ошибке
+            clip.loaded = true;
             callback(clip);
         };
 
@@ -102,7 +100,6 @@ export let soundManager = {
             let sound = this.context.createBufferSource();
             sound.buffer = sd.buffer;
             
-            // Создаем отдельный gain для этого конкретного звука
             let soundGain = this.context.createGain();
             soundGain.gain.value = volume;
             
@@ -112,7 +109,6 @@ export let soundManager = {
             
             sound.start(0);
             
-            // Автоматическая очистка после завершения звука
             sound.onended = () => {
                 sound.disconnect();
                 soundGain.disconnect();
@@ -126,13 +122,7 @@ export let soundManager = {
     },
 
     playWorldSound: function(path, x, y, settings = {}) {
-        // Упрощенная версия с поддержкой расстояния
         let volume = settings.volume !== undefined ? settings.volume : 1;
-        
-        // Можно добавить логику расчета громкости по расстоянию, если нужно
-        // const distance = Math.sqrt(x*x + y*y);
-        // const maxDistance = 1000;
-        // volume = Math.max(0, 1 - distance / maxDistance);
         
         return this.play(path, { ...settings, volume: volume });
     },
@@ -149,7 +139,6 @@ export let soundManager = {
     },
 
     stopAll: function() {
-        // Останавливаем все звуки путем отключения gainNode
         this.gainNode.disconnect();
         this.gainNode = this.context.createGain();
         this.gainNode.connect(this.context.destination);

@@ -22,16 +22,14 @@ const mimeTypes = {
 const server = http.createServer((req, res) => {
   let url = req.url.split('?')[0];
   
-  // Основные маршруты
   if (url === '/') {
     url = '/entrance.html';
   } else if (url === '/game') {
     url = '/index.html';
   }
   
-  // Для карты и спрайтов
   if (url.startsWith('/map/')) {
-    url = url.substring(1); // Убираем первый слеш
+    url = url.substring(1);
   }
   
   let filePath = path.join(__dirname, url);

@@ -60,7 +60,6 @@ function showRecordsTable() {
     if (completedGames.length === 0) {
         html += '<p>Пока нет завершенных уровней</p>';
     } else {
-        // Группируем по уровням и сортируем по времени
         const level1Records = completedGames.filter(r => r.level === 1).sort((a, b) => a.time - b.time);
         const level2Records = completedGames.filter(r => r.level === 2).sort((a, b) => a.time - b.time);
         
