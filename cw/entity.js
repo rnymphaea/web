@@ -20,17 +20,7 @@ export let Entity = {
         return object;
     },
     
-    canAttack: function() {
-        return Date.now() - this.lastAttackTime > ATTACK_COOLDOWN;
-    },
-    
-    attack: function() {
-        if (this.canAttack()) {
-            this.lastAttackTime = Date.now();
-            return true;
-        }
-        return false;
-    }
+
 };
 
 export let Player = Entity.extend({
@@ -144,6 +134,18 @@ export let Player = Entity.extend({
             this.isAttacking = true;
             this.attackTimer = 0;
             soundManager.play("sound/attack.mp3", { volume: 0.6 });
+            return true;
+        }
+        return false;
+    },
+
+    canAttack: function() {
+        return Date.now() - this.lastAttackTime > ATTACK_COOLDOWN;
+    },
+    
+    attack: function() {
+        if (this.canAttack()) {
+            this.lastAttackTime = Date.now();
             return true;
         }
         return false;
