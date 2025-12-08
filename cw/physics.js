@@ -7,9 +7,7 @@ export let physicManager = {
     maxFallSpeed: 20,
     
     update: function(obj){
-        if (!mapManager.jsonLoaded || !mapManager.imgLoaded || 
-            !mapManager.tLayers || mapManager.tLayers.length === 0) {
-            console.log('Ожидание загрузки карты для физики...');
+        if (!mapManager.jsonLoaded || !mapManager.imgLoaded || !mapManager.tLayers || mapManager.tLayers.length === 0) {
             return;
         }
         
@@ -46,23 +44,20 @@ export let physicManager = {
         
         if (obj.isDashing && obj.dashTimer > 0) {
             this.updateDash(obj);
-        } else {
-            if (obj.move_x !== 0) {
-                let newX = obj.pos_x + (obj.move_x * obj.speed);
-                
-                if (newX < 0) {
-                    newX = 0;
+        } else if (obj.move_x !== 0) {
+            let newX = obj.pos_x + (obj.move_x * obj.speed);
+            
+            if (newX < 0) {
+                newX = 0;
+            }
+            
+            if (obj.move_x < 0) {
+                if (!this.isBlockedLeft(obj, newX) && newX >= 0) {
+                    obj.pos_x = newX;
                 }
-                
-                if (obj.move_x < 0) {
-                    if (!this.isBlockedLeft(obj, newX) && newX >= 0) {
-                        obj.pos_x = newX;
-                    }
-                }
-                else if (obj.move_x > 0) {
-                    if (!this.isBlockedRight(obj, newX)) {
-                        obj.pos_x = newX;
-                    }
+            } else if (obj.move_x > 0) {
+                if (!this.isBlockedRight(obj, newX)) {
+                    obj.pos_x = newX;
                 }
             }
         }
@@ -123,9 +118,7 @@ export let physicManager = {
     },
     
     isBlockedLeft: function(obj, newX) {
-        if (newX < 0) {
-            return true;
-        }
+        if (newX < 0) return true;
         
         let leftTopTile = mapManager.getTilesetIdx(newX + 1, obj.pos_y + 1);
         let leftBottomTile = mapManager.getTilesetIdx(newX + 1, obj.pos_y + obj.size_y - 1);
@@ -134,9 +127,7 @@ export let physicManager = {
     },
     
     isBlockedRight: function(obj, newX) {
-        if (newX + obj.size_x > mapManager.mapSize.x) {
-            return true;
-        }
+        if (newX + obj.size_x > mapManager.mapSize.x) return true;
         
         let rightTopTile = mapManager.getTilesetIdx(newX + obj.size_x - 1, obj.pos_y + 1);
         let rightBottomTile = mapManager.getTilesetIdx(newX + obj.size_x - 1, obj.pos_y + obj.size_y - 1);

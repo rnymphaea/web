@@ -1,7 +1,7 @@
 import { spriteManager } from "./sprite.js";
 import { ATTACK_COOLDOWN, ENEMY_TYPES, DASH_SPEED, DASH_DURATION, FIRE_FALL_SPEED, FIRE_TYPE, isSolidTile } from "./utils.js";
 import { mapManager } from "./map.js";
-import { soundManager } from "./app.js";
+import { soundManager } from "./sound.js";
 
 export let Entity = {
     pos_x: 0, 
@@ -15,9 +15,7 @@ export let Entity = {
     extend: function(extendProto){
         let object = Object.create(this);
         for (let property in extendProto){
-            if (this.hasOwnProperty(property) || typeof object[property] === 'undefined'){
-                object[property] = extendProto[property];
-            }
+            object[property] = extendProto[property];
         }
         return object;
     },
@@ -251,25 +249,10 @@ export let Enemy = Entity.extend({
             let newX = this.pos_x + (this.move_x * this.speed);
             
             if (mapManager.tLayers && mapManager.tLayers.length > 0) {
-                let canMove = true;
-                
-                if (this.move_x > 0) {
-                    let checkX = newX + this.size_x;
-                    let checkY = this.pos_y + this.size_y - 5;
-                    let tileId = mapManager.getTilesetIdx(checkX, checkY);
-                    if (isSolidTile(tileId)) {
-                        canMove = false;
-                    }
-                } else {
-                    let checkX = newX;
-                    let checkY = this.pos_y + this.size_y - 5;
-                    let tileId = mapManager.getTilesetIdx(checkX, checkY);
-                    if (isSolidTile(tileId)) {
-                        canMove = false;
-                    }
-                }
-                
-                if (canMove) {
+                let checkX = this.move_x > 0 ? newX + this.size_x : newX;
+                let checkY = this.pos_y + this.size_y - 5;
+                let tileId = mapManager.getTilesetIdx(checkX, checkY);
+                if (!isSolidTile(tileId)) {
                     this.pos_x = newX;
                 }
             }

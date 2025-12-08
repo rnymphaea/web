@@ -4,7 +4,7 @@ import { createPlayer } from "./entity.js";
 import { gameManager } from "./game.js";
 import { eventsManager } from "./events.js";
 import { soundManager } from "./sound.js";
-import { maps, PLAYER_START_X_LEVEL1, PLAYER_START_Y_LEVEL1, PLAYER_START_X_LEVEL2, PLAYER_START_Y_LEVEL2 } from "./utils.js";
+import { maps } from "./utils.js";
 
 let canvas = document.getElementById('gameCanvas');
 export let ctx = canvas.getContext('2d');
@@ -14,9 +14,7 @@ let levelLoading = false;
 
 function initializeGame() {
     const checkAndInit = () => {
-        if (mapManager.imgLoaded && mapManager.jsonLoaded && 
-            mapManager.tLayers && mapManager.tLayers.length > 0) {
-            
+        if (mapManager.imgLoaded && mapManager.jsonLoaded && mapManager.tLayers.length > 0) {
             try {
                 let player = createPlayer();
                 
@@ -27,17 +25,9 @@ function initializeGame() {
                     player.pos_y = playerData.y;
                     player.size_x = playerData.width || 32;
                     player.size_y = playerData.height || 32;
-                    
-                    console.log("Игрок создан на позиции из карты:", player.pos_x, player.pos_y);
                 } else {
-                    console.warn("Объект Player не найден в карте, используем константы");
-                    if (currentLevel === 0) {
-                        player.pos_x = PLAYER_START_X_LEVEL1;
-                        player.pos_y = PLAYER_START_Y_LEVEL1;
-                    } else {
-                        player.pos_x = PLAYER_START_X_LEVEL2;
-                        player.pos_y = PLAYER_START_Y_LEVEL2;
-                    }
+                    player.pos_x = 0;
+                    player.pos_y = currentLevel === 0 ? 1024 : 2880;
                 }
                 
                 player.isAlive = true;
@@ -77,14 +67,10 @@ function loadLevel(levelIndex) {
         spriteManager.loadAtlas("map/sprites.json", "map/spritesheet.png");
     }
     
-    setTimeout(() => {
-        initializeGame();
-    }, 500);
+    setTimeout(initializeGame, 500);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM загружен');
-    
     soundManager.init();
     soundManager.loadArray([
         "sound/attack.mp3",
@@ -93,12 +79,12 @@ document.addEventListener('DOMContentLoaded', function() {
     ]);
     
     document.getElementById("startGame").addEventListener('click', () => {
-        if (gameStarted) return;
-        gameStarted = true;
-        currentLevel = 0;
-        document.getElementById('gameStatus').textContent = 'Загрузка уровня 1...';
-        console.log('Начало загрузки');
-        loadLevel(0);
+        if (!gameStarted) {
+            gameStarted = true;
+            currentLevel = 0;
+            document.getElementById('gameStatus').textContent = 'Загрузка уровня 1...';
+            loadLevel(0);
+        }
     });
     
     document.getElementById("toMenu").addEventListener('click', () => {
@@ -119,17 +105,12 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         document.getElementById('gameStatus').textContent = 'Игра остановлена';
         mapManager.clearMap();
-        console.log('Игра остановлена');
     });
 });
 
-console.log('app.js загружен');
-
 export function nextLevel() {
     if (currentLevel + 1 < maps.length) {
-        setTimeout(() => {
-            loadLevel(currentLevel + 1);
-        }, 2000);
+        setTimeout(() => loadLevel(currentLevel + 1), 2000);
     } else {
         setTimeout(() => {
             gameManager.stop();
@@ -139,5 +120,3 @@ export function nextLevel() {
         }, 2000);
     }
 }
-
-export { soundManager };
