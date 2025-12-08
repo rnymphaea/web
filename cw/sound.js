@@ -120,12 +120,6 @@ export let soundManager = {
         }
     },
 
-    playWorldSound: function(path, x, y, settings = {}) {
-        let volume = settings.volume !== undefined ? settings.volume : 1;
-        
-        return this.play(path, { ...settings, volume: volume });
-    },
-
     toggleMute: function() {
         this.mute = !this.mute;
         this.gainNode.gain.value = this.mute ? 0 : 1;

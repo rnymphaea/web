@@ -19,8 +19,6 @@ export let Entity = {
         }
         return object;
     },
-    
-
 };
 
 export let Player = Entity.extend({
