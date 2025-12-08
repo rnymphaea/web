@@ -78,29 +78,11 @@ export let gameManager = {
         this.gameTime = 0;
         gameStartTime = Date.now();
         
-        let timerElement = document.getElementById('gameTimer');
-        if (!timerElement) {
-            timerElement = document.createElement('div');
-            timerElement.className = 'timer-display';
-            timerElement.id = 'gameTimer';
-            document.querySelector('main').appendChild(timerElement);
-        }
-        
         if (gameTimerInterval) clearInterval(gameTimerInterval);
         
         gameTimerInterval = setInterval(() => {
             this.gameTime = Math.floor((Date.now() - gameStartTime) / 1000);
-            this.updateTimerDisplay();
         }, 1000);
-    },
-    
-    updateTimerDisplay: function() {
-        const timerElement = document.getElementById('gameTimer');
-        if (timerElement) {
-            const minutes = Math.floor(this.gameTime / 60);
-            const seconds = this.gameTime % 60;
-            timerElement.textContent = `Уровень ${this.currentLevel + 1} | Время: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
     },
     
     startGameLoop: function() {
@@ -109,10 +91,7 @@ export let gameManager = {
         const gameLoop = (currentTime) => {
             if (!this.isRunning) return;
             
-            const deltaTime = Math.min(currentTime - this.lastTime, 100) / 16.67;
-            this.lastTime = currentTime;
-            
-            this.update(deltaTime);
+            this.update();
             this.draw();
             
             animationFrameId = requestAnimationFrame(gameLoop);
@@ -148,7 +127,7 @@ export let gameManager = {
         }
     },
     
-    update: function(deltaTime = 1) {
+    update: function() {
         if (!this.player || !this.player.isAlive || this.gameOver) return;
         
         if (this.checkLevelComplete()) {
@@ -176,12 +155,12 @@ export let gameManager = {
             this.player.startDash();
         }
         
-        this.player.speed = 5 * deltaTime;
+        this.player.speed = 5;
         
         physicManager.update(this.player);
         this.player.update();
-        this.updateEnemies(deltaTime);
-        this.updateFires(deltaTime);
+        this.updateEnemies();
+        this.updateFires();
         this.checkEnemyCollisions();
         this.checkFireCollisions();
         this.checkFallDeath();
@@ -197,13 +176,13 @@ export let gameManager = {
         }
     },
     
-    updateEnemies: function(deltaTime = 1) {
+    updateEnemies: function() {
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             let enemy = this.enemies[i];
             
             if (enemy.isAlive) {
                 enemy.update(this.player);
-                enemy.speed = (1 + Math.random() * 1) * deltaTime;
+                enemy.speed = 1 + Math.random() * 1;
                 physicManager.update(enemy);
                 
                 if (this.player.isAttackingEnemy(enemy)) {
@@ -216,7 +195,7 @@ export let gameManager = {
         this.enemies = this.enemies.filter(enemy => enemy.isAlive);
     },
     
-    updateFires: function(deltaTime = 1) {
+    updateFires: function() {
         this.spawnFire();
         
         for (let i = this.fires.length - 1; i >= 0; i--) {
@@ -329,8 +308,5 @@ export let gameManager = {
         }
         
         this.fires = [];
-        
-        const timerElement = document.getElementById('gameTimer');
-        if (timerElement) timerElement.remove();
     }
 };

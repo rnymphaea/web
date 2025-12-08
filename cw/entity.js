@@ -19,6 +19,7 @@ export let Entity = {
         }
         return object;
     },
+    
 };
 
 export let Player = Entity.extend({
@@ -148,7 +149,7 @@ export let Player = Entity.extend({
         }
         return false;
     },
-    
+
     startDash: function() {
         if (this.dashCharges > 0 && !this.isDashing) {
             this.isDashing = true;

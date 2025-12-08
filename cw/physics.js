@@ -19,7 +19,7 @@ export let physicManager = {
         
         let canJump = !this.isHittingCeiling(obj);
         
-        if (obj.isJumping && obj.jumpCount < 1 && canJump) {
+        if (obj.isJumping && obj.jumpCount < 2 && canJump) {
             obj.velocityY = -this.jumpPower;
             obj.jumpCount++;
         }
